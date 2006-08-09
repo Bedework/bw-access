@@ -1,0 +1,273 @@
+<?xml version="1.0"?>
+
+<!-- This is the ant build file for the access control suite.
+
+     The target of interest is build which should leave a jar file
+     in the dist directory..
+
+     Authors: Mike Douglass   douglm@rpi.edu
+-->
+
+<project name="access" default="build">
+  <property name="base.name" value="access"/>
+  <dirname property="this.dir" file="${ant.file}"/>
+
+  <property file="${this.dir}/build.properties" />
+
+  <property name="source.home" location="${this.dir}/src"/>
+  <property name="dist.home" location="${this.dir}/dist"/>
+  <property name="lib.dir" location="${this.dir}/lib"/>
+
+  <property name="build.dir" location="${this.dir}/build"/>
+  <property name="buildjar" location="${build.dir}/buildjar.xml"/>
+
+  <property name="product.name" value="${edu.rpi.cmt.access.package.name}"/>
+  <property name="product.version" value="${edu.rpi.cmt.access.version}"/>
+
+  <target name="init">
+    <mkdir dir="${dist.home}" />
+
+    <property name="test.data.dir"
+              location="${dist.home}/test-data" />
+
+    <property name="test.reports.dir"
+              location="${dist.home}/test-reports" />
+
+    <property name="edu.rpi.cmt.access.empty.dir"
+              location="${dist.home}/empty-dir" />
+    <mkdir dir="${edu.rpi.cmt.access.empty.dir}" />
+
+    <fileset id="empty.fileset" dir="${edu.rpi.cmt.access.empty.dir}"
+             excludes="*" />
+    <!-- default to empty -->
+    <fileset id="base.resource.files" refid="empty.fileset" />
+
+    <property name="generated.jar.file"
+              location="${dist.home}/${edu.rpi.cmt.access.jar}-${edu.rpi.cmt.access.version}.jar" />
+
+    <property name="test.jar.file"
+              location="${dist.home}/${edu.rpi.cmt.access.jar}-test-${edu.rpi.cmt.access.version}.jar" />
+
+    <!-- ==================== Compilation Classpath ==================== -->
+
+    <path id="compile.classpath">
+      <fileset dir="${lib.dir}">
+         <include name="*.jar"/>
+      </fileset>
+      <fileset dir="${dist.home}">
+         <include name="*.jar"/>
+      </fileset>
+    </path>
+  </target>
+
+  <!-- =================================================================
+       Clean all generated files
+       ================================================================= -->
+  <target name="clean">
+    <delete dir="${dist.home}" />
+  </target>
+
+  <!-- =================================================================
+       Clean up afetr a build.
+       ================================================================= -->
+  <target name="cleanup">
+    <delete dir="${edu.rpi.cmt.access.empty.dir}" />
+  </target>
+
+  <!-- ========================== Base build Targets ===================
+       Here we have one target building the classes and interfaces that make
+       up the access control suite.
+       ================================================================= -->
+
+  <target name="clean-build" depends="clean,build"
+          description="Clean and compile access control classes"/>
+
+  <target name="clean-build-all" depends="clean,build-all"
+          description="Clean and compile access control classes"/>
+
+  <target name="build" depends="init,build-source,cleanup"
+          description="Compile access control classes"/>
+
+  <target name="build-all" depends="init,build-source,javadoc,cleanup"
+          description="Compile access control classes"/>
+
+  <target name="build-source">
+    <!-- ==================== Sources and classes ====================== -->
+
+    <fileset id="base.java.sources" dir="${source.home}" >
+      <include name="edu/rpi/cmt/access/*.java"/>
+    </fileset>
+
+    <patternset id="base.class.patternset">
+      <include name="edu/rpi/cmt/access/*.class"/>
+    </patternset>
+
+    <!-- ==================== Build the jar ============================= -->
+
+    <ant antfile="${buildjar}" inheritRefs="true" target="build" >
+      <property name="build.jar.file"
+                location="${generated.jar.file}" />
+    </ant>
+  </target>
+
+  <target name="build-test">
+    <!-- ==================== Sources and classes ====================== -->
+
+    <fileset id="base.java.sources" dir="${source.home}" >
+      <include name="edu/rpi/cmt/access/test/*.java"/>
+    </fileset>
+
+    <patternset id="base.class.patternset">
+      <include name="edu/rpi/cmt/access/test/*.class"/>
+    </patternset>
+
+    <!-- ==================== Build the jar ============================= -->
+
+    <ant antfile="${buildjar}" inheritRefs="true" target="build" >
+      <property name="build.jar.file"
+                location="${test.jar.file}" />
+    </ant>
+  </target>
+
+  <!-- =================================================================
+                            javadoc.
+       ================================================================= -->
+  <target name="javadoc" depends="init"
+          description="Create Javadoc API documentation">
+    <mkdir dir="${dist.home}/docs/api"/>
+
+    <javadoc sourcepath="${source.home}"
+           classpathref="compile.classpath"
+                destdir="${dist.home}/docs/api"
+           packagenames="edu.rpi.cmt.access.*"
+                 access="public"
+                 author="true"
+                version="true"
+          breakiterator="yes"
+            windowtitle="${product.name} ${product.version} API Documentation">
+      <doctitle><![CDATA[${product.name} ${product.version}<br/>API Documentation]]></doctitle>
+      <header><![CDATA[${product.name} ${product.version}<br/>API Documentation]]></header>
+    </javadoc>
+  </target>
+
+  <!-- =================================================================
+                            unittest.
+       ================================================================= -->
+  <target name="unittest" depends="init,build-source,build-test,run-unittest,cleanup"
+          description="Test the access control classes"/>
+
+  <target name="run-unittest" >
+    <!-- ................................................................
+                            unpackthe tests jar
+         ............................................................... -->
+    <delete dir="${dist.home}/tests" />
+    <mkdir dir="${dist.home}/tests" />
+    <unjar src="${test.jar.file}" dest="${dist.home}/tests"/>
+
+    <path id="test.class.path">
+      <fileset dir="${dist.home}">
+        <include name="*.jar"/>
+      </fileset>
+
+      <fileset dir="${lib.dir}">
+        <include name="*.jar"/>
+      </fileset>
+    </path>
+
+    <pathconvert property="test.classpath.string"
+                 pathSep=":">
+      <path refid="test.class.path" />
+    </pathconvert>
+
+    <mkdir dir="${test.data.dir}" />
+
+    <echo message="CP=${test.classpath.string}" />
+    <junit printsummary="no"
+           errorProperty="test.failed"
+           failureProperty="test.failed"
+           fork="true">
+      <classpath>
+        <path refid="test.class.path"/>
+        <pathelement path="${java.class.path}"/>
+      </classpath>
+      <formatter type="brief" usefile="false"/>
+<!--      <formatter type="xml"/> -->
+      <test name="${testcase}" todir="${test.data.dir}" if="testcase"/>
+      <batchtest todir="${test.data.dir}" unless="testcase">
+        <fileset dir="${dist.home}/tests" includes="**/*Test.class"/>
+      </batchtest>
+    </junit>
+
+    <junitreport todir="${test.data.dir}">
+      <fileset dir="${test.data.dir}">
+        <include name="TEST-*.xml"/>
+      </fileset>
+      <report format="frames" todir="${test.reports.dir}"/>
+    </junitreport>
+
+    <fail message="Tests failed. Check log and/or reports." if="test.failed"/>
+  </target>
+
+  <!-- =================================================================
+                            non-junit test - needs fixing or scrapping.
+       ================================================================= -->
+  <target name="initRun" depends="build" >
+    <property name="synchmltest.run.base"
+              location="${org.bedework.temp.test.dir}/synchmltest"/>
+
+    <property name="synchmltest.run.lib" location="${synchmltest.run.base}/lib"/>
+
+    <mkdir dir="${synchmltest.run.lib}" />
+
+    <copy todir="${synchmltest.run.lib}" failonerror="false">
+      <fileset dir="${org.bedework.default.lib}" includes="*.jar"/>
+      <fileset dir="${org.bedework.default.lib}/hibernate" includes="*.jar"/>
+      <fileset dir="${struts.dir}" includes="*.jar"/>
+      <fileset dir="${org.bedework.temp.jars}" includes="*.jar"/>
+    </copy>
+    <copy todir="${synchmltest.run.lib}" file="${appserver.jdbcdriver.jar}" />
+
+    <path id="lib.class.path">
+      <fileset dir="${synchmltest.run.lib}">
+        <include name="*.jar"/>
+      </fileset>
+
+      <pathelement location="${log4j.jar}"/>
+      <pathelement location="${uwcal.env.properties.root}" />
+      <pathelement location="${org.bedework.core.base}/resources/properties" />
+
+      <pathelement location="${org.bedework.testsuite.base}/resources" />
+    </path>
+  </target>
+
+  <target name="synchmltest.initdb" depends="initRun"
+          description="Init db for synchml test">
+    <pathconvert property="lib.txt.classpath"
+                 refid="lib.class.path"
+                 targetos="unix"  pathsep=":" />
+
+    <echo message="cp: ${lib.txt.classpath}" />
+    <java	classname="org.bedework.tests.synchml.TestSynchml"
+          fork="true"
+          failonerror="true">
+      <classpath refid="lib.class.path" />
+      <arg value="-initdb" />
+    </java>
+  </target>
+
+  <target name="synchmltest" depends="initRun"
+          description="Init db and run synchml test">
+    <pathconvert property="lib.txt.classpath"
+                 refid="lib.class.path"
+                 targetos="unix"  pathsep=":" />
+
+    <echo message="cp: ${lib.txt.classpath}" />
+
+    <java	classname="org.bedework.tests.synchml.TestSynchml"
+          fork="true"
+          failonerror="true">
+      <classpath refid="lib.class.path" />
+      <arg value="-runtest" />
+    </java>
+  </target>
+</project>
