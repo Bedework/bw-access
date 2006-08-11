@@ -10,19 +10,20 @@
 
 <project name="access" default="build">
   <property name="base.name" value="access"/>
-  <dirname property="this.dir" file="${ant.file}"/>
+  <dirname property="project.home" file="${ant.file}"/>
 
-  <property file="${this.dir}/build.properties" />
+  <property file="${project.home}/build.properties" />
 
-  <property name="source.home" location="${this.dir}/src"/>
-  <property name="dist.home" location="${this.dir}/dist"/>
-  <property name="lib.dir" location="${this.dir}/lib"/>
+  <property name="project.name" value="${edu.rpi.cmt.project.name}"/>
+  <property name="project.version" value="${edu.rpi.cmt.version}"/>
 
-  <property name="build.dir" location="${this.dir}/build"/>
+  <property name="source.home" location="${project.home}/src"/>
+  <property name="dist.home" location="${project.home}/dist"/>
+  <property name="lib.dir" location="${project.home}/lib"/>
+  <property name="libapi.dir" location="${project.home}/libapi"/>
+
+  <property name="build.dir" location="${project.home}/build"/>
   <property name="buildjar" location="${build.dir}/buildjar.xml"/>
-
-  <property name="product.name" value="${edu.rpi.cmt.access.package.name}"/>
-  <property name="product.version" value="${edu.rpi.cmt.access.version}"/>
 
   <target name="init">
     <mkdir dir="${dist.home}" />
@@ -43,10 +44,10 @@
     <fileset id="base.resource.files" refid="empty.fileset" />
 
     <property name="generated.jar.file"
-              location="${dist.home}/${edu.rpi.cmt.access.jar}-${edu.rpi.cmt.access.version}.jar" />
+              location="${dist.home}/${edu.rpi.cmt.access.jar}-${project.version}.jar" />
 
     <property name="test.jar.file"
-              location="${dist.home}/${edu.rpi.cmt.access.jar}-test-${edu.rpi.cmt.access.version}.jar" />
+              location="${dist.home}/${edu.rpi.cmt.access.jar}-test-${project.version}.jar" />
 
     <!-- ==================== Compilation Classpath ==================== -->
 
@@ -65,6 +66,7 @@
        ================================================================= -->
   <target name="clean">
     <delete dir="${dist.home}" />
+    <delete dir="${libapi.dir}" />
   </target>
 
   <!-- =================================================================
@@ -108,6 +110,8 @@
       <property name="build.jar.file"
                 location="${generated.jar.file}" />
     </ant>
+
+    <antcall inheritrefs="true" target="copy.to.api.repository" />
   </target>
 
   <target name="build-test">
@@ -129,6 +133,12 @@
     </ant>
   </target>
 
+  <target name="copy.to.api.repository" >
+    <mkdir dir="${libapi.dir}" />
+
+    <copy todir="${libapi.dir}" file="${generated.jar.file}" />
+  </target>
+
   <!-- =================================================================
                             javadoc.
        ================================================================= -->
@@ -144,9 +154,9 @@
                  author="true"
                 version="true"
           breakiterator="yes"
-            windowtitle="${product.name} ${product.version} API Documentation">
-      <doctitle><![CDATA[${product.name} ${product.version}<br/>API Documentation]]></doctitle>
-      <header><![CDATA[${product.name} ${product.version}<br/>API Documentation]]></header>
+            windowtitle="${project.name} ${project.version} API Documentation">
+      <doctitle><![CDATA[${project.name} ${project.version}<br/>API Documentation]]></doctitle>
+      <header><![CDATA[${project.name} ${project.version}<br/>API Documentation]]></header>
     </javadoc>
   </target>
 
