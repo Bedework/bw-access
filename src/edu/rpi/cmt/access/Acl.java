@@ -274,6 +274,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     if (how.length == 0) {
       // Means any access will do
 
+      debugMsg(debugsb.toString() + "...Check access allowed (any requested)");
       ca.accessAllowed = ca.privileges.getAnyAllowed();
       return ca;
     }
