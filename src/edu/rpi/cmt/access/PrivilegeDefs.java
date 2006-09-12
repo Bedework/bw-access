@@ -177,8 +177,10 @@ public interface PrivilegeDefs extends Serializable {
     's',     // privScheduleFreeBusy
 
     'u',     // privUnbind
+             // unbind and bind usually correspond to create and destroy
 
     'U',     // privUnlock
+             // not implemented
 
     'N',     // privNone
   };
