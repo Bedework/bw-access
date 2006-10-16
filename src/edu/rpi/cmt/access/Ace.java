@@ -142,7 +142,7 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
 
   /** Privilege objects defining the access. Used when manipulating acls
    */
-  Collection privs;
+  Collection<Privilege> privs;
 
   private boolean inherited;
 
@@ -279,7 +279,7 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
    *
    * @param val Collection of Privilege objects defining the access. Used when manipulating acls
    */
-  public void setPrivs(Collection val) {
+  public void setPrivs(Collection<Privilege> val) {
     privs = val;
   }
 
@@ -287,9 +287,9 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
    *
    * @return Collection of Privilege objects defining the access. Used when manipulating acls
    */
-  public Collection getPrivs() {
+  public Collection<Privilege> getPrivs() {
     if (privs == null) {
-      privs = new ArrayList();
+      privs = new ArrayList<Privilege>();
     }
     return privs;
   }

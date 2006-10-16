@@ -27,7 +27,6 @@ package edu.rpi.cmt.access;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.TreeSet;
 
 /** Object to represent an acl for a calendar entity or service. We should
@@ -53,7 +52,7 @@ import java.util.TreeSet;
 public class Acl extends EncodedAcl implements PrivilegeDefs {
   boolean debug;
 
-  private TreeSet aces;
+  private TreeSet<Ace> aces;
 
   /** Used while evaluating access */
 
@@ -219,10 +218,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       // No specific user access - look for group access
 
       if (who.getGroupNames() != null) {
-        Iterator it = who.getGroupNames().iterator();
-
-        while (it.hasNext()) {
-          String group = (String)it.next();
+        for (String group: who.getGroupNames()) {
           if (debug) {
             debugsb.append("...Try access for group " + group);
           }
@@ -305,7 +301,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return Collection of Ace's representing the acls
    * @throws AccessException
    */
-  public Collection getAccess(char[] acl) throws AccessException {
+  public Collection<Ace> getAccess(char[] acl) throws AccessException {
     decode(acl);
 
     return aces;
@@ -316,8 +312,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @param val    Collection of aces
    * @throws AccessException
    */
-  public void setAces(Collection val) throws AccessException {
-    aces = (TreeSet)val;
+  public void setAces(Collection<Ace> val) throws AccessException {
+    aces = (TreeSet<Ace>)val;
   }
 
   /** Return the ace collection for previously decoded access
@@ -325,7 +321,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return Collection ace collection for previously decoded access
    * @throws AccessException
    */
-  public Collection getAces() throws AccessException {
+  public Collection<Ace> getAces() throws AccessException {
     return aces;
   }
 
@@ -335,7 +331,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    */
   public void addAce(Ace val) {
     if (aces == null) {
-      aces = new TreeSet();
+      aces = new TreeSet<Ace>();
     }
 
     aces.add(val);
@@ -385,10 +381,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
      * We can't remove as we check or we get concurrent mod exception.
      */
     boolean remove = false;
-    Iterator it = aces.iterator();
-    while (it.hasNext()) {
-      Ace ace = (Ace)it.next();
-
+    for (Ace ace: aces) {
       if (ace.compareWho(whoDef) == 0) {
         remove = true;
         break;
@@ -399,11 +392,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       return false;
     }
 
-    TreeSet newAces = new TreeSet();
-    it = aces.iterator();
-    while (it.hasNext()) {
-      Ace ace = (Ace)it.next();
-
+    TreeSet<Ace> newAces = new TreeSet<Ace>();
+    for (Ace ace: aces) {
       if (ace.compareWho(whoDef) != 0) {
         newAces.add(ace);
       }
@@ -435,7 +425,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public void decode(char[] val) throws AccessException {
-    TreeSet ts = new TreeSet();
+    TreeSet<Ace> ts = new TreeSet<Ace>();
 
     setEncoded(val);
 
@@ -481,7 +471,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       ace.setInherited(true);
 
       if (aces == null) {
-        aces = new TreeSet();
+        aces = new TreeSet<Ace>();
         aces.add(ace);
       } else if (!aces.contains(ace)) {
         aces.add(ace);
@@ -505,16 +495,13 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public void merge(Acl val) throws AccessException {
-    TreeSet valAces = (TreeSet)val.getAces();
+    Collection<Ace> valAces = val.getAces();
 
     if (valAces == null) {
       return;
     }
 
-    Iterator it = valAces.iterator();
-    while (it.hasNext()) {
-      Ace ace = (Ace)it.next();
-
+    for (Ace ace: valAces) {
       ace.setInherited(true);
 
       if (!aces.contains(ace)) {
@@ -537,10 +524,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     startEncoding();
 
     if (aces != null) {
-      Iterator it = aces.iterator();
-      while (it.hasNext()) {
-        Ace ace = (Ace)it.next();
-
+      for (Ace ace: aces) {
         if (!ace.getInherited()) {
           ace.encode(this);
         }
@@ -560,10 +544,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     startEncoding();
 
     if (aces != null) {
-      Iterator it = aces.iterator();
-      while (it.hasNext()) {
-        Ace ace = (Ace)it.next();
-
+      for (Ace ace: aces) {
         ace.encode(this);
       }
     }
@@ -584,12 +565,9 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     StringBuffer sb = new StringBuffer();
 
     try {
-      Collection aces = getAccess(getEncoded());
+      Collection<Ace> aces = getAccess(getEncoded());
 
-      Iterator it = aces.iterator();
-      while (it.hasNext()) {
-        Ace ace = (Ace)it.next();
-
+      for (Ace ace: aces) {
         sb.append(ace.toString());
         sb.append(" ");
       }
@@ -621,10 +599,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
           decode(getEncoded());
         }
 
-        Iterator it = aces.iterator();
-        while (it.hasNext()) {
-          Ace ace = (Ace)it.next();
-
+        for (Ace ace: aces) {
           sb.append("\n");
           sb.append(ace.toString());
         }

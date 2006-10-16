@@ -84,11 +84,11 @@ public interface AccessPrincipal extends Serializable, Comparable {
    *
    * @param val        Set of String
    */
-  public void setGroupNames(Collection val);
+  public void setGroupNames(Collection<String> val);
 
   /** Get the group names of which principal is a member.
    *
    * @return Set    of String
    */
-  public Collection getGroupNames();
+  public Collection<String> getGroupNames();
 }

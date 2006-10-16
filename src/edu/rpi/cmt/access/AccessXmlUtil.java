@@ -283,9 +283,8 @@ public class AccessXmlUtil implements Serializable {
 
     xml.property(accessTags.getTag("description"), priv.getDescription());
 
-    Iterator it = priv.iterateContainedPrivileges();
-    while (it.hasNext()) {
-      emitSupportedPriv((Privilege)it.next());
+    for (Privilege p: priv.getContainedPrivileges()) {
+      emitSupportedPriv(p);
     }
 
     xml.closeTag(accessTags.getTag("supported-privilege"));

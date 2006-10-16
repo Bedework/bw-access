@@ -43,10 +43,10 @@ public abstract class Principal implements Comparator, AccessPrincipal {
   private String account;  // null for guest
 
   /* groups of which this user is a member */
-  protected Collection groups;
+  protected Collection<Principal> groups;
 
   // Derived from the groups.
-  protected Collection groupNames;
+  protected Collection<String> groupNames;
 
   // For acl evaluation
   protected AccessPrincipal aclPrincipal;
@@ -113,7 +113,7 @@ public abstract class Principal implements Comparator, AccessPrincipal {
    *
    * @param val        Collection of Principal
    */
-  public void setGroups(Collection val) {
+  public void setGroups(Collection<Principal> val) {
     groupNames = null;
     groups = val;
   }
@@ -122,9 +122,9 @@ public abstract class Principal implements Comparator, AccessPrincipal {
    *
    * @return Collection    of Principal
    */
-  public Collection getGroups() {
+  public Collection<Principal> getGroups() {
     if (groups == null) {
-      groups = new TreeSet();
+      groups = new TreeSet<Principal>();
     }
 
     return groups;
@@ -159,7 +159,7 @@ public abstract class Principal implements Comparator, AccessPrincipal {
    *
    * @param val        Set of String
    */
-  public void setGroupNames(Collection val) {
+  public void setGroupNames(Collection<String> val) {
     groupNames = val;
   }
 
@@ -167,12 +167,10 @@ public abstract class Principal implements Comparator, AccessPrincipal {
    *
    * @return Set    of String
    */
-  public Collection getGroupNames() {
+  public Collection<String> getGroupNames() {
     if (groupNames == null) {
-      groupNames = new TreeSet();
-      Iterator it = iterateGroups();
-      while (it.hasNext()) {
-        Principal group = (Principal)it.next();
+      groupNames = new TreeSet<String>();
+      for (Principal group: getGroups()) {
         groupNames.add(group.getAccount());
       }
     }

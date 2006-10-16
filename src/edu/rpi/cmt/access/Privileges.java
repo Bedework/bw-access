@@ -27,7 +27,6 @@ package edu.rpi.cmt.access;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 /** Define the privileges we recognize for the calendar.
  *
@@ -258,8 +257,8 @@ public class Privileges implements PrivilegeDefs {
    * @return Collection
    * @throws AccessException
    */
-  public static Collection getPrivs(EncodedAcl acl) throws AccessException {
-    ArrayList al = new ArrayList();
+  public static Collection<Privilege> getPrivs(EncodedAcl acl) throws AccessException {
+    ArrayList<Privilege> al = new ArrayList<Privilege>();
 
     while (acl.hasMore()) {
       char c = acl.getChar();
@@ -288,9 +287,8 @@ public class Privileges implements PrivilegeDefs {
 
     /* Iterate over the children */
 
-    Iterator it = p.iterateContainedPrivileges();
-    while (it.hasNext()) {
-      setState(states, (Privilege)it.next(), denial);
+    for (Privilege pr: p.getContainedPrivileges()) {
+      setState(states, pr, denial);
     }
   }
 }

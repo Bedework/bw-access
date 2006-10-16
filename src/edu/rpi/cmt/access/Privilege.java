@@ -26,7 +26,7 @@
 package edu.rpi.cmt.access;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
 
 /** Define the properties of a privilege for the calendar.
  *
@@ -54,7 +54,7 @@ public class Privilege implements PrivilegeDefs {
 
   private char encoding;
 
-  private ArrayList containedPrivileges = new ArrayList();
+  private ArrayList<Privilege> containedPrivileges = new ArrayList<Privilege>();
 
   /** Constructor
    *
@@ -124,17 +124,16 @@ public class Privilege implements PrivilegeDefs {
   }
 
   /**
+   * @return containedPrivileges
+   */
+  public Collection<Privilege> getContainedPrivileges() {
+    return containedPrivileges;
+  }
+  /**
    * @param val
    */
   void addContainedPrivilege(Privilege val) {
     containedPrivileges.add(val);
-  }
-
-  /**
-   * @return String
-   */
-  public Iterator iterateContainedPrivileges() {
-    return containedPrivileges.iterator();
   }
 
   /* ====================================================================
@@ -215,9 +214,8 @@ public class Privilege implements PrivilegeDefs {
 
     acl.back();
 
-    Iterator it = subRoot.iterateContainedPrivileges();
-    while (it.hasNext()) {
-      Privilege p = matchEncoding((Privilege)it.next(), acl);
+    for (Privilege cp: subRoot.getContainedPrivileges()) {
+      Privilege p = matchEncoding(cp, acl);
       if (p != null) {
         return p;
       }
@@ -260,9 +258,8 @@ public class Privilege implements PrivilegeDefs {
                                      true,
                                      val.getIndex());
 
-    Iterator it = val.iterateContainedPrivileges();
-    while (it.hasNext()) {
-      newval.addContainedPrivilege(cloneDenied((Privilege)it.next()));
+    for (Privilege p: val.getContainedPrivileges()) {
+      newval.addContainedPrivilege(cloneDenied(p));
     }
 
     return newval;

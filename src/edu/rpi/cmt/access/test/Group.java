@@ -26,7 +26,6 @@
 package edu.rpi.cmt.access.test;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.TreeSet;
 
 /** Group object for access suite tests.
@@ -37,7 +36,7 @@ import java.util.TreeSet;
 public class Group extends Principal {
   /** members of the group
    */
-  private Collection groupMembers;
+  private Collection<Principal> groupMembers;
 
   /* ====================================================================
    *                   Constructors
@@ -65,7 +64,7 @@ public class Group extends Principal {
    *
    * @param   val     Collection of group members.
    */
-  public void setGroupMembers(Collection val) {
+  public void setGroupMembers(Collection<Principal> val) {
     groupMembers = val;
   }
 
@@ -73,9 +72,9 @@ public class Group extends Principal {
    *
    * @return Collection        group members
    */
-  public Collection getGroupMembers() {
+  public Collection<Principal> getGroupMembers() {
     if (groupMembers == null) {
-      groupMembers = new TreeSet();
+      groupMembers = new TreeSet<Principal>();
     }
     return groupMembers;
   }
@@ -91,11 +90,7 @@ public class Group extends Principal {
    * @return true if the account name is in the group members.
    */
   public boolean isMember(String account, boolean group) {
-    Iterator it = getGroupMembers().iterator();
-
-    while (it.hasNext()) {
-      Principal mbr = (Principal)it.next();
-
+    for (Principal mbr: getGroupMembers()) {
       if (mbr.getAccount().equals(account)) {
         if (group == (mbr instanceof Group)) {
           return true;
@@ -131,9 +126,7 @@ public class Group extends Principal {
     sb.append(", groupMembers={");
     boolean first = true;
 
-    Iterator it = getGroupMembers().iterator();
-    while (it.hasNext()) {
-      Principal mbr = (Principal)it.next();
+    for (Principal mbr: getGroupMembers()) {
       String name = "";
       if (first) {
         name = null;

@@ -26,7 +26,6 @@
 package edu.rpi.cmt.access;
 
 import java.io.Serializable;
-import java.util.Iterator;
 
 /** Allowed privileges for a principal
  *
@@ -226,9 +225,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
 
     /* Iterate over the children */
 
-    Iterator it = priv.iterateContainedPrivileges();
-    while (it.hasNext()) {
-      setPrivilege((Privilege)it.next());
+    for (Privilege p: priv.getContainedPrivileges()) {
+      setPrivilege(p);
     }
   }
 
