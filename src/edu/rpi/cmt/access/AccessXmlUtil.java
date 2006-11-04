@@ -160,6 +160,12 @@ public class AccessXmlUtil implements Serializable {
           }
 
           if (aceOpen) {
+            if (ace.getInherited()) {
+              QName tag = accessTags.getTag("inherited");
+              xml.openTag(tag);
+              xml.property(accessTags.getTag("href"), ace.getInheritedFrom());
+              xml.closeTag(tag);
+            }
             xml.closeTag(accessTags.getTag("ace"));
           }
         }
@@ -285,6 +291,9 @@ public class AccessXmlUtil implements Serializable {
     xml.closeTag(accessTags.getTag("supported-privilege"));
   }
 
+  /* This ges called twice, once to do denials, once to do grants
+   *
+   */
   private boolean emitAce(Ace ace, boolean denials, boolean aceOpen) throws Throwable {
     boolean tagOpen = false;
 
@@ -313,12 +322,6 @@ public class AccessXmlUtil implements Serializable {
     }
 
     if (tagOpen) {
-      xml.closeTag(tag);
-    }
-    if (ace.getInherited()) {
-      tag = accessTags.getTag("inherited");
-      xml.openTag(tag);
-      xml.property(accessTags.getTag("href"), ace.getInheritedFrom());
       xml.closeTag(tag);
     }
 
