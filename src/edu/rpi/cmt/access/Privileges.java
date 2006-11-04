@@ -79,6 +79,7 @@ import java.util.Collection;
  */
 public class Privileges implements PrivilegeDefs {
 
+  // ENUM - use EnumNap
   private final static Privilege[] privs = new Privilege[privMaxType + 1];
 
   static {

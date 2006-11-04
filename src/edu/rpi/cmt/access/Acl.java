@@ -27,7 +27,7 @@ package edu.rpi.cmt.access;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 /** Object to represent an acl for a calendar entity or service. We should
  * have one of these per session - or perhaps thread - and lock it during
@@ -47,12 +47,15 @@ import java.util.TreeSet;
  * addition, any aces that contain names should be in ascending alphabetic
  * order.
  *
- *  @author Mike Douglass   douglm @ rpi.edu
+ * <p>In the list of Ace there can only be one entry per AceWho so we can
+ * represent the list as a SortedMap. Replacement then becomes easy.
+ *
+ *  @author Mike Douglass   douglm - rpi.edu
  */
 public class Acl extends EncodedAcl implements PrivilegeDefs {
   boolean debug;
 
-  private TreeSet<Ace> aces;
+  private TreeMap<AceWho, Ace> aces;
 
   /** Used while evaluating access */
 
@@ -296,33 +299,13 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return ca;
   }
 
-  /**
-   * @param acl
-   * @return Collection of Ace's representing the acls
-   * @throws AccessException
-   */
-  public Collection<Ace> getAccess(char[] acl) throws AccessException {
-    decode(acl);
-
-    return aces;
-  }
-
-  /** Set the ace collection for this acl
-   *
-   * @param val    Collection of aces
-   * @throws AccessException
-   */
-  public void setAces(Collection<Ace> val) throws AccessException {
-    aces = (TreeSet<Ace>)val;
-  }
-
   /** Return the ace collection for previously decoded access
    *
    * @return Collection ace collection for previously decoded access
    * @throws AccessException
    */
   public Collection<Ace> getAces() throws AccessException {
-    return aces;
+    return aces.values();
   }
 
   /** Add an entry to the Acl
@@ -331,10 +314,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    */
   public void addAce(Ace val) {
     if (aces == null) {
-      aces = new TreeSet<Ace>();
+      aces = new TreeMap<AceWho, Ace>();
     }
 
-    aces.add(val);
+    aces.put(val.getWho(), val);
   }
 
   /** Set to default access
@@ -350,57 +333,17 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
                    Privileges.makePriv(Privileges.privNone)));
   }
 
-  /* * Remove access for a given 'who' entry
-   *
-   * @param who
-   * @param notWho
-   * @param whoType
-   * @return boolean true if removed
-   * /
-  public boolean removeWho(String who, boolean notWho, int whoType) {
-    if (aces == null) {
-      return false;
-    }
-
-    return aces.remove(new Ace(who, notWho, whoType, (PrivilegeSet)null));
-  }*/
-
   /** Remove access for a given 'who' entry
    *
-   * @param whoDef
+   * @param who
    * @return boolean true if removed
    */
-  public boolean removeWho(Ace whoDef) {
+  public boolean removeWho(AceWho who) {
     if (aces == null) {
       return false;
     }
 
-    /* We're called to remove any 'who' entries before adding. Usually there will
-     * be nothing to remove (I assume) so check first.
-     *
-     * We can't remove as we check or we get concurrent mod exception.
-     */
-    boolean remove = false;
-    for (Ace ace: aces) {
-      if (ace.compareWho(whoDef) == 0) {
-        remove = true;
-        break;
-      }
-    }
-
-    if (!remove) {
-      return false;
-    }
-
-    TreeSet<Ace> newAces = new TreeSet<Ace>();
-    for (Ace ace: aces) {
-      if (ace.compareWho(whoDef) != 0) {
-        newAces.add(ace);
-      }
-    }
-
-    aces = newAces;
-    return remove;
+    return aces.remove(who) != null;
   }
 
   /* ====================================================================
@@ -425,22 +368,20 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public void decode(char[] val) throws AccessException {
-    TreeSet<Ace> ts = new TreeSet<Ace>();
-
     setEncoded(val);
 
     if (empty()) {
       defaultAccess();
     } else {
+      aces = new TreeMap<AceWho, Ace>();
+
       while (hasMore()) {
         Ace ace = new Ace();
 
         ace.decode(this, true);
 
-        ts.add(ace);
+        aces.put(ace.getWho(), ace);
       }
-
-      aces = ts;
     }
   }
 
@@ -451,7 +392,25 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * <p>The inherited flag will be set on all merged Ace objects.
    *
+   * <p>For example, if we have the path structure
+   * <pre>
+   *     /user                 owner=sys,access=write-content owner
+   *        /jeb               owner=jeb,access=write-content owner
+   *           /calendar       owner=jeb    no special access
+   *           /rocalendar     owner=jeb    read owner
+   * </pre>
+   * then, while evaluating the access for rocalendar we start at rocalendar
+   * and move up the tree. The "read owner" access on rocalendar overrides any
+   * access we find further up the tree, e.g. "write-content owner"
+   *
+   * <p>While evaluating the access for calendar we start at calendar
+   * and move up the tree. There is no overriding access so the final access is
+   * "write-content owner" inherited from /user/jeb
+   *
    * <p>Also note the encoded value will not reflect the eventual Acl.
+   *
+   * <p>And what did that mean? I think I meant that we can derive the acl for
+   * an entity from the merged result.
    *
    * @param val char[] val to decode and merge
    * @throws AccessException
@@ -471,15 +430,19 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       ace.setInherited(true);
 
       if (aces == null) {
-        aces = new TreeSet<Ace>();
-        aces.add(ace);
-      } else if (!aces.contains(ace)) {
-        aces.add(ace);
+        aces = new TreeMap<AceWho, Ace>();
+      }
+
+      /* If we don't have this who yet then add it to the result. Otherwise the
+       * who from lower down takes precedence.
+       */
+      if (aces.get(ace.getWho()) == null) {
+        aces.put(ace.getWho(), ace);
       }
     }
   }
 
-  /** Given a decoded acl merge it into this objects ace list. This process
+  /* * Given a decoded acl merge it into this objects ace list. This process
    * should be carried out moving up from the end of the path to the root as
    * entries will only be added to the merged list if the notWho + whoType + who
    * do not match.
@@ -493,7 +456,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * @param val Acl to merge
    * @throws AccessException
-   */
+   * /
   public void merge(Acl val) throws AccessException {
     Collection<Ace> valAces = val.getAces();
 
@@ -508,7 +471,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         aces.add(ace);
       }
     }
-  }
+  }*/
 
   /* ====================================================================
    *                 Encoding methods
@@ -524,7 +487,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     startEncoding();
 
     if (aces != null) {
-      for (Ace ace: aces) {
+      for (Ace ace: aces.values()) {
         if (!ace.getInherited()) {
           ace.encode(this);
         }
@@ -544,7 +507,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     startEncoding();
 
     if (aces != null) {
-      for (Ace ace: aces) {
+      for (Ace ace: aces.values()) {
         ace.encode(this);
       }
     }
@@ -565,9 +528,9 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     StringBuffer sb = new StringBuffer();
 
     try {
-      Collection<Ace> aces = getAccess(getEncoded());
+      decode(getEncoded());
 
-      for (Ace ace: aces) {
+      for (Ace ace: aces.values()) {
         sb.append(ace.toString());
         sb.append(" ");
       }
@@ -599,7 +562,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
           decode(getEncoded());
         }
 
-        for (Ace ace: aces) {
+        for (Ace ace: aces.values()) {
           sb.append("\n");
           sb.append(ace.toString());
         }

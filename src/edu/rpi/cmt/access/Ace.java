@@ -25,10 +25,8 @@
 */
 package edu.rpi.cmt.access;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 /** Oject to represent an ace for a calendar entity or service.
  *
@@ -60,81 +58,10 @@ import java.util.Iterator;
  *
  *  @author Mike Douglass   douglm@rpi.edu
  */
-public class Ace implements PrivilegeDefs, Serializable, Comparable {
+public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
   boolean debug;
 
-  /* Who defines a principal, NotWho means the principal must not be
-     defined by the 'who',e.g NOT IN group bgroup
-   */
-  private static final char whoFlag = 'W';
-  private static final char notWhoFlag = 'N';
-
-  private static final char whoFlagOwner = 'O';
-  private static final char whoFlagUser = 'U';
-  private static final char whoFlagGroup = 'G';
-  private static final char whoFlagHost = 'H';
-  private static final char whoFlagUnauthenticated = 'X';
-  private static final char whoFlagAuthenticated = 'A';
-  private static final char whoFlagOther = 'Z';
-  private static final char whoFlagAll = 'L';
-
-  /** Define for whom we are checking access */
-
-  /** The entity owner */
-  public static final int whoTypeOwner = 0;
-
-  /** A named user */
-  public static final int whoTypeUser = 1;
-
-  /** A named group */
-  public static final int whoTypeGroup = 2;
-
-  /** A named host */
-  public static final int whoTypeHost = 3;  // Named host
-
-  /** An unauthenticated user */
-  public static final int whoTypeUnauthenticated = 4;  // Unauthenticated user
-
-  /** An authenticated user */
-  public static final int whoTypeAuthenticated = 5;  // Authenticated user
-
-  /** Somebody other than the owner */
-  public static final int whoTypeOther = 6;
-
-  /** Anywho */
-  public static final int whoTypeAll = 7; // Unauth + auth
-
-  private static final char[] whoTypeFlags = {
-    whoFlagOwner,
-    whoFlagUser,
-    whoFlagGroup,
-    whoFlagHost,
-    whoFlagUnauthenticated,
-    whoFlagAuthenticated,
-    whoFlagOther,
-    whoFlagAll
-  };
-
-  /** String name of each who type. These are keys to the resources for locale
-   * specific displays
-   *
-   */
-  private static final String[] whoTypeNames = {
-    "owner",              // whoTypeOwner,
-    "user",               // whoTypeUser,
-    "group",              // whoTypeGroup,
-    "host",               // whoTypeHost,
-    "unauthenticated",    // whoTypeUnauthenticated,
-    "authenticated",      // whoTypeAuthenticated
-    "other",              // whoFlagOther
-    "all",                // whoFlagAll
-  };
-
-  private String who;
-
-  private int whoType;
-
-  private boolean notWho;
+  private AceWho who;
 
   /** allowed/denied/undefined indexed by Privilege index
    */
@@ -171,9 +98,7 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
              boolean notWho,
              int whoType,
              PrivilegeSet how) {
-    this.who = who;
-    this.notWho = notWho;
-    this.whoType = whoType;
+    this.who = new AceWho(who, whoType, notWho);
     this.how = how;
   }
 
@@ -188,9 +113,7 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
              boolean notWho,
              int whoType,
              Privilege p) {
-    this.who = who;
-    this.notWho = notWho;
-    this.whoType = whoType;
+    this.who = new AceWho(who, whoType, notWho);
     addPriv(p);
   }
 
@@ -203,57 +126,23 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
   public Ace(String who,
              boolean notWho,
              int whoType) {
-    this.who = who;
-    this.notWho = notWho;
-    this.whoType = whoType;
+    this.who = new AceWho(who, whoType, notWho);
   }
 
   /** Set who this entry is for
    *
    * @param val
    */
-  public void setWho(String val) {
+  public void setWho(AceWho val) {
     who = val;
   }
 
   /** Get who this entry is for
    *
-   * @return String who
+   * @return AceWho who
    */
-  public String getWho() {
+  public AceWho getWho() {
     return who;
-  }
-
-  /** Set the who/not who flag
-   *
-   * @param val
-   */
-  public void setNotWho(boolean val) {
-    notWho = val;
-  }
-
-  /**
-   *
-   * @return boolean who/not who flag
-   */
-  public boolean getNotWho() {
-    return notWho;
-  }
-
-  /** Set type of who
-   *
-   * @param val
-   */
-  public void setWhoType(int val) {
-    whoType = val;
-  }
-
-  /**
-   *
-   * @return boolean  type of who
-   */
-  public int getWhoType() {
-    return whoType;
   }
 
   /**
@@ -330,15 +219,11 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
                                                  String name,
                                                  int whoType) throws AccessException {
     PrivilegeSet privileges = null;
-    Iterator it = acl.getAces().iterator();
-
-    while (it.hasNext()) {
-      Ace ace = (Ace)it.next();
-
-      if ((whoType == ace.getWhoType()) &&
-          ((whoType == whoTypeUnauthenticated) ||
-           (whoType == whoTypeOwner) ||
-            ace.whoMatch(name))) {
+    for (Ace ace: acl.getAces()) {
+      if ((whoType == ace.who.getWhoType()) &&
+          ((whoType == AceWho.whoTypeUnauthenticated) ||
+           (whoType == AceWho.whoTypeOwner) ||
+            ace.getWho().whoMatch(name))) {
         privileges = PrivilegeSet.mergePrivileges(privileges, ace.getHow(),
                                                   ace.getInherited());
       }
@@ -389,9 +274,9 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
     acl.rewind();
 
     while (acl.hasMore()) {
-      decodeWhoType(acl);
+      getWho().decode(acl);
 
-      if ((whoType != getWhoType()) || !whoMatch(name)) {
+      if ((whoType != who.getWhoType()) || !who.whoMatch(name)) {
         skipHow(acl);
       } else {
         decodeHow(acl, getPrivileges);
@@ -414,7 +299,8 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
    */
   public void decode(EncodedAcl acl,
                      boolean getPrivileges) throws AccessException {
-    decodeWhoType(acl);
+    who = new AceWho();
+    getWho().decode(acl);
     decodeHow(acl, getPrivileges);
   }
 
@@ -428,19 +314,9 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
    * @throws AccessException
    */
   public void encode(EncodedAcl acl) throws AccessException {
-    if (notWho) {
-      acl.addChar(notWhoFlag);
-    } else {
-      acl.addChar(whoFlag);
-    }
+    getWho().encode(acl);
 
-    acl.addChar(whoTypeFlags[whoType]);
-
-    acl.encodeString(who);
-
-    Iterator it = getPrivs().iterator();
-    while (it.hasNext()) {
-      Privilege p = (Privilege)it.next();
+    for (Privilege p: privs) {
       p.encode(acl);
     }
 
@@ -460,53 +336,16 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
   public String toUserString() {
     StringBuffer sb = new StringBuffer("(");
 
-    if (getNotWho()) {
-      sb.append("NOT ");
-    }
-
-    sb.append(whoTypeNames[whoType]);
-
-    if ((whoType == whoTypeUser) ||
-        (whoType == whoTypeGroup) ||
-        (whoType == whoTypeHost)) {
-      sb.append("=");
-      sb.append(getWho());
-    }
-
+    sb.append(getWho().toUserString());
     sb.append(" ");
 
-    Iterator it = privs.iterator();
-    while (it.hasNext()) {
-      Privilege p = (Privilege)it.next();
+    for (Privilege p: privs) {
       sb.append(p.toUserString());
       sb.append(" ");
     }
     sb.append(")");
 
     return sb.toString();
-  }
-
-  /**
-   * @param whoMatch
-   * @return int -1, 0, 1
-   */
-  public int compareWho(Ace whoMatch) {
-    if (notWho != whoMatch.notWho) {
-      if (notWho) {
-        return -1;
-      }
-      return 1;
-    }
-
-    if (whoType < whoMatch.whoType) {
-      return -1;
-    }
-
-    if (whoType > whoMatch.whoType) {
-      return 1;
-    }
-
-    return compareWho(who, whoMatch.who);
   }
 
   /* ====================================================================
@@ -524,7 +363,7 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
 
     Ace that = (Ace)o;
 
-    int res = compareWho(that);
+    int res = getWho().compareTo(that.getWho());
     if (res == 0) {
       res = getHow().compareTo(that.getHow());
     }
@@ -539,11 +378,7 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
       hc *= who.hashCode();
     }
 
-    if (notWho) {
-      hc *= 2;
-    }
-
-    return hc *= whoType;
+    return hc *= getHow().hashCode();
   }
 
   public boolean equals(Object o) {
@@ -553,15 +388,8 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
   public String toString() {
     StringBuffer sb = new StringBuffer();
 
-    sb.append("Ace{who=");
-    sb.append(who);
-    sb.append(", notWho=");
-    sb.append(notWho);
-    sb.append(", whoType=");
-    sb.append(whoTypeNames[whoType]);
-    sb.append("(");
-    sb.append(whoType);
-    sb.append(")");
+    sb.append("Ace{");
+    sb.append(getWho().toString());
     if (how != null) {
       sb.append(", how=");
       sb.append(how);
@@ -569,9 +397,7 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
 
     sb.append(", \nprivs=[");
 
-    Iterator it = getPrivs().iterator();
-    while (it.hasNext()) {
-      Privilege p = (Privilege)it.next();
+    for (Privilege p: privs) {
       sb.append(p.toString());
       sb.append("\n");
     }
@@ -580,73 +406,6 @@ public class Ace implements PrivilegeDefs, Serializable, Comparable {
     sb.append("}");
 
     return sb.toString();
-  }
-
-  /* ====================================================================
-   *                   Private methods
-   * ==================================================================== */
-
-//  private boolean sameWho(String who1, String who2) {
-//    return compareWho(who1, who2) == 0;
-//  }
-
-  private int compareWho(String who1, String who2) {
-    if ((who1 == null) && (who2 == null)) {
-      return 0;
-    }
-
-    if (who1 == null) {
-      return -1;
-    }
-
-    if (who2 == null) {
-      return 1;
-    }
-
-    return who1.compareTo(who2);
-  }
-
-  private boolean whoMatch(String name) {
-    if ((name == null) && (getWho() == null)) {
-      return !getNotWho();
-    }
-
-    if ((name == null) || (getWho() == null)) {
-      return getNotWho();
-    }
-
-    boolean match = name.equals(getWho());
-    if (getNotWho()) {
-      match = !match;
-    }
-
-    return match;
-  }
-
-  private void decodeWhoType(EncodedAcl acl) throws AccessException {
-    char c = acl.getChar();
-
-    if (c == notWhoFlag) {
-      notWho = true;
-    } else if (c == whoFlag) {
-      notWho = false;
-    } else {
-      throw AccessException.badACE("who/notWho flag");
-    }
-
-    c = acl.getChar();
-
-    getWhoType:{
-      for (whoType = 0; whoType < whoTypeFlags.length; whoType++) {
-        if (c == whoTypeFlags[whoType]) {
-          break getWhoType;
-        }
-      }
-
-      throw AccessException.badACE("who type");
-    }
-
-    setWho(acl.getString());
   }
 
   private void skipHow(EncodedAcl acl) throws AccessException {

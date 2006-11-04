@@ -28,7 +28,6 @@ package edu.rpi.cmt.access;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Collection;
-import java.util.Iterator;
 
 import edu.rpi.sss.util.xml.QName;
 import edu.rpi.sss.util.xml.XmlEmit;
@@ -136,8 +135,7 @@ public class AccessXmlUtil implements Serializable {
  */
   public void emitAcl(Acl acl) throws AccessException {
     try {
-      Collection aces = acl.getAces();
-      emitAces(aces);
+      emitAces(acl.getAces());
     } catch (AccessException ae) {
       throw ae;
     } catch (Throwable t) {
@@ -150,15 +148,12 @@ public class AccessXmlUtil implements Serializable {
    * @param aces
    * @throws AccessException
    */
-  public void emitAces(Collection aces) throws AccessException {
+  public void emitAces(Collection<Ace> aces) throws AccessException {
     try {
       xml.openTag(accessTags.getTag("acl"));
 
       if (aces != null) {
-        Iterator it = aces.iterator();
-        while (it.hasNext()) {
-          Ace ace = (Ace)it.next();
-
+        for (Ace ace: aces) {
           boolean aceOpen = emitAce(ace, true, false);
           if (emitAce(ace, false, aceOpen)) {
             aceOpen = true;
@@ -291,7 +286,6 @@ public class AccessXmlUtil implements Serializable {
   }
 
   private boolean emitAce(Ace ace, boolean denials, boolean aceOpen) throws Throwable {
-    Collection privs = ace.getPrivs();
     boolean tagOpen = false;
 
     QName tag;
@@ -301,15 +295,12 @@ public class AccessXmlUtil implements Serializable {
       tag = accessTags.getTag("grant");
     }
 
-    Iterator it = privs.iterator();
-    while (it.hasNext()) {
-      Privilege p = (Privilege)it.next();
-
+    for (Privilege p: ace.getPrivs()) {
       if (denials == p.getDenial()) {
         if (!aceOpen) {
           xml.openTag(accessTags.getTag("ace"));
 
-          emitAceWho(ace);
+          emitAceWho(ace.getWho());
           aceOpen = true;
         }
 
@@ -334,10 +325,10 @@ public class AccessXmlUtil implements Serializable {
     return aceOpen;
   }
 
-  private void emitAceWho(Ace ace) throws Throwable {
-    boolean invert = ace.getNotWho();
+  private void emitAceWho(AceWho who) throws Throwable {
+    boolean invert = who.getNotWho();
 
-    if (ace.getWhoType() == Ace.whoTypeOther) {
+    if (who.getWhoType() == Ace.whoTypeOther) {
       invert = !invert;
     }
 
@@ -347,7 +338,7 @@ public class AccessXmlUtil implements Serializable {
 
     xml.openTag(accessTags.getTag("principal"));
 
-    int whoType = ace.getWhoType();
+    int whoType = who.getWhoType();
 
     /*
            <!ELEMENT principal (href)
@@ -356,9 +347,9 @@ public class AccessXmlUtil implements Serializable {
     */
 
     if (whoType == Ace.whoTypeUser) {
-      xml.property(accessTags.getTag("href"), makeUserHref(ace.getWho()));
+      xml.property(accessTags.getTag("href"), makeUserHref(who.getWho()));
     } else if (whoType == Ace.whoTypeGroup) {
-      xml.property(accessTags.getTag("href"), makeGroupHref(ace.getWho()));
+      xml.property(accessTags.getTag("href"), makeGroupHref(who.getWho()));
     } else if ((whoType == Ace.whoTypeOwner) ||
                (whoType == Ace.whoTypeOther)) {
       // Other is !owner

@@ -67,10 +67,16 @@ public class AccessTest extends TestCase {
       userInCgroup.addGroup(agroup); // cgroup is in agroup
 
       Privilege read = Privileges.makePriv(Privileges.privRead);
+      Privilege delete = Privileges.makePriv(Privileges.privUnbind);
       Privilege write = Privileges.makePriv(Privileges.privWrite);
+      Privilege writeContent = Privileges.makePriv(Privileges.privWriteContent);
 
       Privilege[] privSetRead = {read};
+      Privilege[] privSetWrite = {write};
+      Privilege[] privSetWriteContent = {writeContent};
       Privilege[] privSetReadWrite = {read, write};
+      Privilege[] privSetReadWriteContent = {read, writeContent};
+      Privilege[] privSetDelete = {delete};
 
       /* See what we get when we encode a null - that's default - acl. */
 
@@ -110,16 +116,24 @@ public class AccessTest extends TestCase {
 
       ace = new Ace("auser", false, Ace.whoTypeUser);
       ace.addPriv(Privileges.makePriv(Privileges.privRead));
-      ace.addPriv(Privileges.makePriv(Privileges.privWrite));
+      ace.addPriv(Privileges.makePriv(Privileges.privWriteContent));
       acl.addAce(ace);
       encoded = logEncoded(acl, "read g=agroup,rw auser");
       tryDecode(encoded, "read g=agroup,rw auser");
-      tryEvaluateAccess(owner, owner, privSetReadWrite, encoded, true,
+      tryEvaluateAccess(owner, owner, privSetReadWriteContent, encoded, true,
                         "Owner access for read g=agroup,rw auser");
       tryEvaluateAccess(auserInGroup, owner, privSetRead, encoded, true,
                         "User access for read g=agroup,rw auser");
       tryEvaluateAccess(userInCgroup, owner, privSetRead, encoded, true,
                         "userInCgroup access for read g=agroup,rw auser");
+      tryEvaluateAccess(auser, owner, privSetRead, encoded, true,
+                        "auser access for read g=agroup,rw auser");
+      tryEvaluateAccess(auser, owner, privSetWriteContent, encoded, true,
+                        "auser access for write g=agroup,rw auser");
+      tryEvaluateAccess(auser, owner, privSetWrite, encoded, false,
+      "auser access for write g=agroup,rw auser");
+      tryEvaluateAccess(auser, owner, privSetDelete, encoded, false,
+      "auser access for write g=agroup,rw auser");
 
       log("---------------------------------------------------------");
 

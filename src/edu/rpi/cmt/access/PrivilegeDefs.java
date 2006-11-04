@@ -140,7 +140,7 @@ public interface PrivilegeDefs extends Serializable {
    */
   public static final int privUnlock = 15;
 
-  /** Deny all access - used frequently? */
+  /** Deny all access */
   public static final int privNone = 16;
 
   /** Max access index
