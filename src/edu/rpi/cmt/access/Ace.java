@@ -73,6 +73,8 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
 
   private boolean inherited;
 
+  private String inheritedFrom;
+
   /** Constructor
    */
   public Ace() {
@@ -207,6 +209,21 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
     return inherited;
   }
 
+  /** Path defining from where we inherited access.
+   *
+   * @param val
+   */
+  public void setInheritedFrom(String val) {
+    inheritedFrom = val;
+  }
+
+  /**
+   * @return String
+   */
+  public String getInheritedFrom() {
+    return inheritedFrom;
+  }
+
   /** Return the merged privileges for all aces which match the name and whoType.
    *
    * @param acl
@@ -322,6 +339,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
 
     if (inherited) {
       acl.addChar(PrivilegeDefs.inheritedFlag);
+      acl.encodeString(inheritedFrom);
     }
 
     acl.addChar(' ');  // terminate privs.
@@ -425,6 +443,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
     acl.back();
     if (acl.getChar() == PrivilegeDefs.inheritedFlag) {
       inherited = true;
+      inheritedFrom = acl.getString();
       if (acl.getChar() != ' ') {
         throw new AccessException("malformedAcl");
       }

@@ -413,9 +413,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * an entity from the merged result.
    *
    * @param val char[] val to decode and merge
+   * @param path   path of current entity
    * @throws AccessException
    */
-  public void merge(char[] val) throws AccessException {
+  public void merge(char[] val, String path) throws AccessException {
     EncodedAcl ea = new EncodedAcl();
     ea.setEncoded(val);
 
@@ -427,7 +428,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       Ace ace = new Ace();
 
       ace.decode(ea, true);
-      ace.setInherited(true);
+      if (!ace.getInherited()) {
+        ace.setInherited(true);
+        ace.setInheritedFrom(path);
+      }
 
       if (aces == null) {
         aces = new TreeMap<AceWho, Ace>();

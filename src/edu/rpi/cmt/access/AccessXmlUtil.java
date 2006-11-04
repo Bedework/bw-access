@@ -143,7 +143,7 @@ public class AccessXmlUtil implements Serializable {
     }
   }
 
-  /** Emit the Collection of aces as an xml sing the current xml writer
+  /** Emit the Collection of aces as an xml using the current xml writer
    *
    * @param aces
    * @throws AccessException
@@ -313,12 +313,12 @@ public class AccessXmlUtil implements Serializable {
     }
 
     if (tagOpen) {
-      // XXX Wrong - need to encode an href in the acl
-      /*
-      if (ace.getInherited()) {
-        xml.emptyTag(accessTags.getTag("inherited);
-      }
-      */
+      xml.closeTag(tag);
+    }
+    if (ace.getInherited()) {
+      tag = accessTags.getTag("inherited");
+      xml.openTag(tag);
+      xml.property(accessTags.getTag("href"), ace.getInheritedFrom());
       xml.closeTag(tag);
     }
 
