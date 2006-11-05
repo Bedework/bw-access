@@ -84,7 +84,7 @@ public class AccessXmlUtil implements Serializable {
                                        QName[] privTags,
                                        AccessTags accessTags) throws AccessException {
     try {
-      XmlEmit xml = new XmlEmit(true);  // no headers
+      XmlEmit xml = new XmlEmit(true, false);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
       AccessXmlUtil au = new AccessXmlUtil(privTags, accessTags, xml);
@@ -252,7 +252,7 @@ public class AccessXmlUtil implements Serializable {
     try {
       char[] privileges = ps.getPrivileges();
 
-      XmlEmit xml = new XmlEmit(true);  // no headers
+      XmlEmit xml = new XmlEmit(true, false);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
       AccessXmlUtil.emitCurrentPrivSet(xml, privTags, accessTags, privileges);
