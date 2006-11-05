@@ -490,15 +490,34 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
   public char[] encode() throws AccessException {
     startEncoding();
 
-    if (aces != null) {
-      for (Ace ace: aces.values()) {
-        if (!ace.getInherited()) {
-          ace.encode(this);
-        }
+    if (aces == null) {
+      return null;
+    }
+
+    for (Ace ace: aces.values()) {
+      if (!ace.getInherited()) {
+        ace.encode(this);
       }
     }
 
     return getEncoding();
+  }
+
+  /** Encode this object after manipulation or creation. Inherited entries
+   * will be skipped. Returns null for no aces
+   *
+   * @return String encoded value or null
+   * @throws AccessException
+   */
+  public String encodeStr() throws AccessException {
+    startEncoding();
+
+    char[] encoded = encode();
+    if (encoded == null) {
+       return null;
+    }
+
+    return new String(encoded);
   }
 
   /** Encode this object after manipulation or creation. Inherited entries
@@ -510,10 +529,12 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
   public char[] encodeAll() throws AccessException {
     startEncoding();
 
-    if (aces != null) {
-      for (Ace ace: aces.values()) {
-        ace.encode(this);
-      }
+    if (aces == null) {
+      return null;
+    }
+
+    for (Ace ace: aces.values()) {
+      ace.encode(this);
     }
 
     return getEncoding();

@@ -92,6 +92,28 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
   /** Constructor
    *
    * @param who
+   * @param how
+   */
+  public Ace(AceWho who,
+             PrivilegeSet how) {
+    this.who = who;
+    this.how = how;
+  }
+
+  /** Constructor
+   *
+   * @param who
+   * @param p
+   */
+  public Ace(AceWho who,
+             Privilege p) {
+    this.who = who;
+    addPriv(p);
+  }
+
+  /** Constructor
+   *
+   * @param who
    * @param notWho
    * @param whoType
    * @param how
