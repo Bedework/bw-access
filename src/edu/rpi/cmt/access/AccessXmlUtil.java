@@ -25,12 +25,12 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.sss.util.xml.QName;
+import edu.rpi.sss.util.xml.XmlEmit;
+
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Collection;
-
-import edu.rpi.sss.util.xml.QName;
-import edu.rpi.sss.util.xml.XmlEmit;
 
 /** Class to generate xml from an access specification. The resulting xml follows
  * the webdav acl spec rfc3744
@@ -54,15 +54,38 @@ public class AccessXmlUtil implements Serializable {
     public QName getTag(String name);
   }
 
+  /**
+   * @author douglm - rpi.edu
+   */
+  public abstract static class HrefBuilder {
+    /**
+     * @param id
+     * @return String href
+     * @throws AccessException
+     */
+    public abstract String makeUserHref(String id) throws AccessException;
+
+    /**
+     * @param id
+     * @return String href
+     * @throws AccessException
+     */
+    public abstract String makeGroupHref(String id) throws AccessException;
+  }
+
   private AccessTags accessTags;
+
+  private HrefBuilder hrb;
 
   /** Acls use tags in the webdav and caldav namespace.
    *
    * @param privTags
    * @param accessTags
    * @param xml
+   * @param hrb
    */
-  public AccessXmlUtil(QName[] privTags, AccessTags accessTags, XmlEmit xml) {
+  public AccessXmlUtil(QName[] privTags, AccessTags accessTags, XmlEmit xml,
+                       HrefBuilder hrb) {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
       throw new RuntimeException("edu.rpi.cmt.access.BadParameter");
     }
@@ -70,6 +93,7 @@ public class AccessXmlUtil implements Serializable {
     this.privTags = privTags;
     this.accessTags = accessTags;
     this.xml = xml;
+    this.hrb = hrb;
   }
 
   /** Represent the acl as an xml string
@@ -77,17 +101,19 @@ public class AccessXmlUtil implements Serializable {
    * @param acl
    * @param privTags
    * @param accessTags
+   * @param hrb
    * @return String xml representation
    * @throws AccessException
    */
   public static String getXmlAclString(Acl acl,
                                        QName[] privTags,
-                                       AccessTags accessTags) throws AccessException {
+                                       AccessTags accessTags,
+                                       HrefBuilder hrb) throws AccessException {
     try {
       XmlEmit xml = new XmlEmit(true, false);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
-      AccessXmlUtil au = new AccessXmlUtil(privTags, accessTags, xml);
+      AccessXmlUtil au = new AccessXmlUtil(privTags, accessTags, xml, hrb);
 
       au.emitAcl(acl);
 
@@ -107,24 +133,6 @@ public class AccessXmlUtil implements Serializable {
    */
   public void setXml(XmlEmit val) {
     xml = val;
-  }
-
-  /** Override this to construct urls from the parameter
-   *
-   * @param who String
-   * @return String href
-   */
-  public String makeUserHref(String who) {
-    return escapeChars(who);
-  }
-
-  /** Override this to construct urls from the parameter
-   *
-   * @param who String
-   * @return String href
-   */
-  public String makeGroupHref(String who) {
-    return escapeChars(who);
   }
 
 /**
@@ -350,9 +358,11 @@ public class AccessXmlUtil implements Serializable {
     */
 
     if (whoType == Ace.whoTypeUser) {
-      xml.property(accessTags.getTag("href"), makeUserHref(who.getWho()));
+      String href = escapeChars(hrb.makeUserHref(who.getWho()));
+      xml.property(accessTags.getTag("href"), href);
     } else if (whoType == Ace.whoTypeGroup) {
-      xml.property(accessTags.getTag("href"), makeGroupHref(who.getWho()));
+      String href = escapeChars(hrb.makeGroupHref(who.getWho()));
+      xml.property(accessTags.getTag("href"), href);
     } else if ((whoType == Ace.whoTypeOwner) ||
                (whoType == Ace.whoTypeOther)) {
       // Other is !owner
