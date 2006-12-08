@@ -9,6 +9,7 @@
 -->
 
 <project name="access" default="build">
+  <property environment="env"/>
   <property name="base.name" value="access"/>
   <dirname property="project.home" file="${ant.file}"/>
 
@@ -161,11 +162,12 @@
        ================================================================= -->
   <target name="javadoc" depends="init"
           description="Create Javadoc API documentation">
-    <mkdir dir="${dist.home}/docs/api"/>
+    <property name="destdir" location="${dist.home}/docs/api"/>
+    <mkdir dir="${destdir}"/>
 
     <javadoc sourcepath="${source.home}"
            classpathref="compile.classpath"
-                destdir="${dist.home}/docs/api"
+                destdir="${destdir}"
            packagenames="edu.rpi.cmt.access.*"
                  access="public"
                  author="true"
@@ -174,6 +176,8 @@
             windowtitle="${project.name} ${project.version} API Documentation">
       <doctitle><![CDATA[${project.name} ${project.version}<br/>API Documentation]]></doctitle>
       <header><![CDATA[${project.name} ${project.version}<br/>API Documentation]]></header>
+      <link href="../../rpiutil/api" />
+      <link href="${env.JAVA_HOME}/docs/api" />
     </javadoc>
   </target>
 
