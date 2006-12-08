@@ -108,7 +108,7 @@
   <target name="build" depends="init,build-source,cleanup"
           description="Compile access control classes"/>
 
-  <target name="build-all" depends="init,build-source,javadoc,cleanup"
+  <target name="build-all" depends="init,build-source,cleanup"
           description="Compile access control classes"/>
 
   <target name="build-source">
