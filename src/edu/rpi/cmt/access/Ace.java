@@ -30,27 +30,6 @@ import java.util.Collection;
 
 /** Oject to represent an ace for a calendar entity or service.
  *
- * <p>An ACE consists of a 'who' and a denied or allowed 'how'. We encode
- * this as a sequence of characters with the who being a length encoded as
- * digits a blank then the characters.
- *
- * <p>The 'how' part is encoded as an allow/deny character followed by the
- * encoded privilege.
- *
- * <p>Encoded form is as follows:<ul>
- * <li><em>Byte 1</em><br/>
- * notWho or whoFlag </li>
- *
- * <li><em>Byte 2</em><br/>
- * whoType,   owner, user, group etc. </li>
- *
- * <li><em>Bytes 3...x</em><br/>
- * Encoded string who {@link EncodedAcl#encodeString(String)} </li>
- *
- * <li><em>Bytes x onwards</em><br/>
- * Encoded prvileges </li>
- * </ul>
- *
  * <p>The compareTo method orders the Aces according to the notWho, whoType and
  * who components. It does not take the actual privileges into account. There
  * should only be one entry per the above combination and the latest one on the

@@ -32,12 +32,56 @@ import edu.rpi.cmt.access.Acl.CurrentAccess;
 /** Class to handle access control. Because we may be evaluating access
  * frequently we try do so without creating (many) objects.
  *
+ * <p>Access is encoded to reduce the size into a number of ACEs (Access Control
+ * Entries).
+ *
+ * <p>An ACE consists of a 'who' and a denied or allowed 'how'. We encode
+ * this as a sequence of characters with the who being a length encoded as
+ * digits a blank then the characters.
+ *
+ * <p>The 'how' part is encoded as an allow/deny character followed by the
+ * encoded privilege. {@link WhoDefs}
+ *
+ * <p>Encoded who part is as follows:<pre>
+ *  Byte 1    who/notwho   N = notWho or
+ *                         W = who
+ *  Byte 2    whoType,     O = owner
+ *                         U = user
+ *                         G = group
+ *                         H = host
+ *                         X = Unauthenticated
+ *                         A = Authenticated
+ *                         Z = Other
+ *                         L = All
+ *  Byte 3    String name  N = null
+ *                         0 = length following
+ *                         int length n
+ *                         space
+ *                         n characters
+ *  </pre>
+ *  See {@link EncodedAcl#encodeString(String)}
+ *
+ * Encoded how part defined in {@link PrivilegeDefs} and {@link Privileges} as a
+ * blank terminated list of allowed or denied privileges.
+ *
+ * <p>Each member of the list is either <ul>
+ * <li>'y' for allowed (was '3')</li>
+ * <li>'n' for denied (was '2')</li>
+ * </ul>
+ *
+ * <p>An inherited privilege only appears in merged acl lists created during
+ * evaluation. They are not stored in the database. An inherited privilege will
+ * be followed by the flag 'I' and the path of the entity which defined that
+ * privilege. For example<code>'WONyAI05 /user '<code> defines:<br/>
+ * who = owner, (null name) <br/>
+ * Allowed All,  inherited from "/user" <br/>
+ *
  * <p>This class is created for a session or perhaps a thread and reused to
  * evaluate access. For the manipulation of acls when changing them or
  * displaying allowed access, efficiency isn't such a  great concern so we
  * will normally represent the access as a  number of objects.
  *
- *  @author Mike Douglass   douglm @ rpi.edu
+ *  @author Mike Douglass
  */
 public class Access implements Serializable {
   private boolean debug;
