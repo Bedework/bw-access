@@ -373,6 +373,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     setEncoded(val);
 
     if (empty()) {
+      // XXX This may be wrong. The default is set at the root and we inherit.
       defaultAccess();
     } else {
       aces = new TreeMap<AceWho, Ace>();
@@ -512,8 +513,6 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public String encodeStr() throws AccessException {
-    startEncoding();
-
     char[] encoded = encode();
     if (encoded == null) {
        return null;

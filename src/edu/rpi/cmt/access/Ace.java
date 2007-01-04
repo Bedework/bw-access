@@ -414,6 +414,12 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
       sb.append(how);
     }
 
+    if (getInherited()) {
+      sb.append(", inherited from \"");
+      sb.append(getInheritedFrom());
+      sb.append("\"");
+    }
+
     sb.append(", \nprivs=[");
 
     for (Privilege p: privs) {

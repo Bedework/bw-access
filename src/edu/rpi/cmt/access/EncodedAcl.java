@@ -320,12 +320,17 @@ public class EncodedAcl implements Serializable {
     }
   }
 
-  /** Get the current encoed value
+  /** Get the current encoded value
    *
    * @return char[] encoded value
    */
   public char[] getEncoding() {
-    return caw.toCharArray();
+    char[] enc = caw.toCharArray();
+    if ((enc == null) || (enc.length == 0)) {
+      return null;
+    }
+
+    return enc;
   }
 
   protected Logger getLog() {

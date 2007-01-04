@@ -250,7 +250,7 @@ public class AceWho implements WhoDefs, Comparable {
   public String toString() {
     StringBuffer sb = new StringBuffer();
 
-    sb.append("Ace{who=");
+    sb.append("AceWho{who=");
     sb.append(who);
     sb.append(", notWho=");
     sb.append(notWho);
