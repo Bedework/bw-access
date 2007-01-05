@@ -187,9 +187,7 @@ public class AceWho implements WhoDefs, Comparable {
 
     sb.append(whoTypeNames[whoType]);
 
-    if ((whoType == whoTypeUser) ||
-        (whoType == whoTypeGroup) ||
-        (whoType == whoTypeHost)) {
+    if ((Ace.whoTypeNamed[whoType])) {
       sb.append("=");
       sb.append(getWho());
     }
@@ -224,6 +222,10 @@ public class AceWho implements WhoDefs, Comparable {
 
     if (whoType > that.whoType) {
       return 1;
+    }
+
+    if (!Ace.whoTypeNamed[whoType]) {
+      return 0;
     }
 
     return compareWho(who, that.who);

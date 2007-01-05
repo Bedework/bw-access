@@ -81,7 +81,7 @@ public interface WhoDefs extends Serializable {
   /** Anywho */
   public static final int whoTypeAll = 7; // Unauth + auth
 
-  /** inexed by whoType */
+  /** indexed by whoType */
   public static final char[] whoTypeFlags = {
     whoFlagOwner,
     whoFlagUser,
@@ -91,6 +91,18 @@ public interface WhoDefs extends Serializable {
     whoFlagAuthenticated,
     whoFlagOther,
     whoFlagAll
+  };
+
+  /** indexed by whoType - flag who types that require a name*/
+  public static final boolean[] whoTypeNamed = {
+    false,              // whoTypeOwner,
+    true,               // whoTypeUser,
+    true,              // whoTypeGroup,
+    true,               // whoTypeHost,
+    false,    // whoTypeUnauthenticated,
+    false,      // whoTypeAuthenticated
+    false,              // whoFlagOther
+    false,                // whoFlagAll
   };
 
   /** String name of each who type. These are keys to the resources for locale
