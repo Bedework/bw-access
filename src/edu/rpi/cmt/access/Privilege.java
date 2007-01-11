@@ -88,6 +88,20 @@ public class Privilege implements PrivilegeDefs {
     this(name, description, false, false, index);
   }
 
+  /** Constructor for non-abstract
+   *
+   * @param name
+   * @param description
+   * @param denial
+   * @param index
+   */
+  public Privilege(String name,
+                   String description,
+                   boolean denial,
+                   int index) {
+    this(name, description, false, denial, index);
+  }
+
   /**
    * @return String
    */
