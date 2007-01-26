@@ -221,6 +221,19 @@ public class Privileges implements PrivilegeDefs {
     return al;
   }
 
+  /* As an example, say we are setting read access. From above:
+   *      +-- [DAV: read] 'R'
+   *      |      |
+   *      |      +-- [DAV: read-acl]  'r'
+   *      |      +-- [DAV: read-current-user-privilege-set] 'P'
+   *      |      +-- [CALDAV:view-free-busy] 'F'
+   *
+   *  That is, read includes read-acl, read-current-user-privilege-set and
+   *  view-free-busy.
+   *
+   *  So for this we set allowed or denied in the states array for each of those
+   *  privileges.
+   */
   private static void setState(char[] states, Privilege p, boolean denial) {
     if (!denial) {
       states[p.getIndex()] = allowed;

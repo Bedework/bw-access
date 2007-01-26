@@ -352,30 +352,6 @@ public class EncodedAcl implements Serializable {
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
-/*
-  public int hashCode() {
-    return 31 * entityId * entityType;
-  }
-
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-
-    if (obj == null) {
-      return false;
-    }
-
-    if (!(obj instanceof AttendeeVO)) {
-      return false;
-    }
-
-    AttendeePK that = (AttendeePK)obj;
-
-    return (entityId == that.entityId) &&
-           (entityType == that.entityType);
-  }
-  */
 
   public String toString() {
     StringBuffer sb = new StringBuffer();
@@ -386,11 +362,5 @@ public class EncodedAcl implements Serializable {
 
     return sb.toString();
   }
-
-  /*
-  public Object clone() {
-    return new AttendeePK(getEntityId(),
-                          getEntityType());
-  }*/
 }
 
