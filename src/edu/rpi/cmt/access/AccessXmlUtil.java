@@ -99,13 +99,14 @@ public class AccessXmlUtil implements Serializable {
   /** Represent the acl as an xml string
    *
    * @param acl
+   * @param forWebDAV  - true if we should split deny from grant.
    * @param privTags
    * @param accessTags
    * @param hrb
    * @return String xml representation
    * @throws AccessException
    */
-  public static String getXmlAclString(Acl acl,
+  public static String getXmlAclString(Acl acl, boolean forWebDAV,
                                        QName[] privTags,
                                        AccessTags accessTags,
                                        HrefBuilder hrb) throws AccessException {
@@ -115,7 +116,7 @@ public class AccessXmlUtil implements Serializable {
       xml.startEmit(su);
       AccessXmlUtil au = new AccessXmlUtil(privTags, accessTags, xml, hrb);
 
-      au.emitAcl(acl);
+      au.emitAcl(acl, forWebDAV);
 
       su.close();
 
@@ -135,51 +136,16 @@ public class AccessXmlUtil implements Serializable {
     xml = val;
   }
 
-/**
- * Emit an acl as an xml string the current xml writer
- *
- * @param acl
- * @throws AccessException
- */
-  public void emitAcl(Acl acl) throws AccessException {
-    try {
-      emitAces(acl.getAces());
-    } catch (AccessException ae) {
-      throw ae;
-    } catch (Throwable t) {
-      throw new AccessException(t);
-    }
-  }
-
-  /** Emit the Collection of aces as an xml using the current xml writer
+  /**
+   * Emit an acl as an xml string the current xml writer
    *
-   * @param aces
+   * @param acl
+   * @param forWebDAV  - true if we should split deny from grant.
    * @throws AccessException
    */
-  public void emitAces(Collection<Ace> aces) throws AccessException {
+  public void emitAcl(Acl acl, boolean forWebDAV) throws AccessException {
     try {
-      xml.openTag(accessTags.getTag("acl"));
-
-      if (aces != null) {
-        for (Ace ace: aces) {
-          boolean aceOpen = emitAce(ace, true, false);
-          if (emitAce(ace, false, aceOpen)) {
-            aceOpen = true;
-          }
-
-          if (aceOpen) {
-            if (ace.getInherited()) {
-              QName tag = accessTags.getTag("inherited");
-              xml.openTag(tag);
-              xml.property(accessTags.getTag("href"), ace.getInheritedFrom());
-              xml.closeTag(tag);
-            }
-            xml.closeTag(accessTags.getTag("ace"));
-          }
-        }
-      }
-
-      xml.closeTag(accessTags.getTag("acl"));
+      emitAces(acl.getAces(), forWebDAV);
     } catch (AccessException ae) {
       throw ae;
     } catch (Throwable t) {
@@ -279,6 +245,53 @@ public class AccessXmlUtil implements Serializable {
    *                   Private methods
    * ==================================================================== */
 
+  /* Emit the Collection of aces as an xml using the current xml writer
+   *
+   * @param aces
+   * @throws AccessException
+   */
+  private void emitAces(Collection<Ace> aces,
+                        boolean forWebDAV) throws AccessException {
+    try {
+      xml.openTag(accessTags.getTag("acl"));
+
+      if (aces != null) {
+        for (Ace ace: aces) {
+          boolean aceOpen = emitAce(ace, false, false);
+
+          if (aceOpen && forWebDAV) {
+            closeAce(ace);
+            aceOpen = false;
+          }
+
+          if (emitAce(ace, true, aceOpen)) {
+            aceOpen = true;
+          }
+
+          if (aceOpen) {
+            closeAce(ace);
+          }
+        }
+      }
+
+      xml.closeTag(accessTags.getTag("acl"));
+    } catch (AccessException ae) {
+      throw ae;
+    } catch (Throwable t) {
+      throw new AccessException(t);
+    }
+  }
+
+  private void closeAce(Ace ace) throws Throwable {
+    if (ace.getInherited()) {
+      QName tag = accessTags.getTag("inherited");
+      xml.openTag(tag);
+      xml.property(accessTags.getTag("href"), ace.getInheritedFrom());
+      xml.closeTag(tag);
+    }
+    xml.closeTag(accessTags.getTag("ace"));
+  }
+
   private void emitSupportedPriv(Privilege priv) throws Throwable {
     xml.openTag(accessTags.getTag("supported-privilege"));
 
@@ -299,7 +312,7 @@ public class AccessXmlUtil implements Serializable {
     xml.closeTag(accessTags.getTag("supported-privilege"));
   }
 
-  /* This ges called twice, once to do denials, once to do grants
+  /* This gets called twice, once to do denials, once to do grants
    *
    */
   private boolean emitAce(Ace ace, boolean denials, boolean aceOpen) throws Throwable {
