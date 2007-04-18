@@ -42,8 +42,17 @@ public interface AccessPrincipal extends Serializable, Comparable {
   /** group */
   public static final int principalGroup = 1;
 
+  /** ticket * /
+  public static final int principalTicket = 2;
+
+  / ** projector etc * /
+  public static final int principalResource = 3;
+
+  / ** room, building etc * /
+  public static final int principalVenue = 4;
+
   /** host */
-  public static final int principalHost = 2;
+  public static final int principalHost = /*5*/2;
 
   /** Return the kind of Principal, e.g. user/group etc
    * @return int kind

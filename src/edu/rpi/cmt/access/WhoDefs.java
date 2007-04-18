@@ -44,6 +44,12 @@ public interface WhoDefs extends Serializable {
   public static final char whoFlagUser = 'U';
   /** */
   public static final char whoFlagGroup = 'G';
+  /** * /
+  public static final char whoFlagTicket = 'T';
+  / * * * /
+  public static final char whoFlagResource = 'R';
+  / * * * /
+  public static final char whoFlagVenue = 'V';
   /** */
   public static final char whoFlagHost = 'H';
   /** */
