@@ -235,9 +235,11 @@ public class Privileges implements PrivilegeDefs {
    *  privileges.
    */
   private static void setState(char[] states, Privilege p, boolean denial) {
+    // XXX Should we only set either way of the access is unspecified?
     if (!denial) {
       states[p.getIndex()] = allowed;
-    } else {
+//    } else {
+    } else if (states[p.getIndex()] == unspecified) {
       states[p.getIndex()] = denied;
     }
 
