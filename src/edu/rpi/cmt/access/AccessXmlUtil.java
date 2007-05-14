@@ -60,17 +60,11 @@ public class AccessXmlUtil implements Serializable {
   public abstract static class HrefBuilder {
     /**
      * @param id
+     * @param whoType - from WhoDefs
      * @return String href
      * @throws AccessException
      */
-    public abstract String makeUserHref(String id) throws AccessException;
-
-    /**
-     * @param id
-     * @return String href
-     * @throws AccessException
-     */
-    public abstract String makeGroupHref(String id) throws AccessException;
+    public abstract String makeHref(String id, int whoType) throws AccessException;
   }
 
   private AccessTags accessTags;
@@ -370,14 +364,8 @@ public class AccessXmlUtil implements Serializable {
                   | property | self)>
     */
 
-    if (whoType == Ace.whoTypeUser) {
-      String href = escapeChars(hrb.makeUserHref(who.getWho()));
-      xml.property(accessTags.getTag("href"), href);
-    } else if (whoType == Ace.whoTypeGroup) {
-      String href = escapeChars(hrb.makeGroupHref(who.getWho()));
-      xml.property(accessTags.getTag("href"), href);
-    } else if ((whoType == Ace.whoTypeOwner) ||
-               (whoType == Ace.whoTypeOther)) {
+    if ((whoType == Ace.whoTypeOwner) ||
+        (whoType == Ace.whoTypeOther)) {
       // Other is !owner
       xml.openTag(accessTags.getTag("property"));
       xml.emptyTag(accessTags.getTag("owner"));
@@ -389,7 +377,9 @@ public class AccessXmlUtil implements Serializable {
     } else if (whoType == Ace.whoTypeAll) {
       xml.emptyTag(accessTags.getTag("all"));
     } else  {
-      throw new AccessException("access.unknown.who");
+      /* Just emit href */
+      String href = escapeChars(hrb.makeHref(who.getWho(), whoType));
+      xml.property(accessTags.getTag("href"), href);
     }
 
     xml.closeTag(accessTags.getTag("principal"));

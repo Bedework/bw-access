@@ -44,11 +44,11 @@ public interface WhoDefs extends Serializable {
   public static final char whoFlagUser = 'U';
   /** */
   public static final char whoFlagGroup = 'G';
-  /** * /
+  /** */
   public static final char whoFlagTicket = 'T';
-  / * * * /
+  /** */
   public static final char whoFlagResource = 'R';
-  / * * * /
+  /** */
   public static final char whoFlagVenue = 'V';
   /** */
   public static final char whoFlagHost = 'H';
@@ -75,17 +75,26 @@ public interface WhoDefs extends Serializable {
   /** A named host */
   public static final int whoTypeHost = 3;  // Named host
 
+  /** A ticket */
+  public static final int whoTypeTicket = 4;
+
+  /** A resource */
+  public static final int whoTypeResource = 5;
+
+  /** A venue */
+  public static final int whoTypeVenue = 6; // or location e.g. room
+
   /** An unauthenticated user */
-  public static final int whoTypeUnauthenticated = 4;  // Unauthenticated user
+  public static final int whoTypeUnauthenticated = 7;  // Unauthenticated user
 
   /** An authenticated user */
-  public static final int whoTypeAuthenticated = 5;  // Authenticated user
+  public static final int whoTypeAuthenticated = 8;  // Authenticated user
 
   /** Somebody other than the owner */
-  public static final int whoTypeOther = 6;
+  public static final int whoTypeOther = 9;
 
   /** Anywho */
-  public static final int whoTypeAll = 7; // Unauth + auth
+  public static final int whoTypeAll = 10; // Unauth + auth
 
   /** indexed by whoType */
   public static final char[] whoTypeFlags = {
@@ -93,6 +102,9 @@ public interface WhoDefs extends Serializable {
     whoFlagUser,
     whoFlagGroup,
     whoFlagHost,
+    whoFlagTicket,
+    whoFlagResource,
+    whoFlagVenue,
     whoFlagUnauthenticated,
     whoFlagAuthenticated,
     whoFlagOther,
@@ -103,12 +115,15 @@ public interface WhoDefs extends Serializable {
   public static final boolean[] whoTypeNamed = {
     false,              // whoTypeOwner,
     true,               // whoTypeUser,
-    true,              // whoTypeGroup,
+    true,               // whoTypeGroup,
     true,               // whoTypeHost,
-    false,    // whoTypeUnauthenticated,
-    false,      // whoTypeAuthenticated
+    true,               // whoFlagTicket,
+    true,               // whoFlagResource,
+    true,               // whoFlagVenue,
+    false,              // whoTypeUnauthenticated,
+    false,              // whoTypeAuthenticated
     false,              // whoFlagOther
-    false,                // whoFlagAll
+    false,              // whoFlagAll
   };
 
   /** String name of each who type. These are keys to the resources for locale
@@ -120,6 +135,9 @@ public interface WhoDefs extends Serializable {
     "user",               // whoTypeUser,
     "group",              // whoTypeGroup,
     "host",               // whoTypeHost,
+    "ticket",             // whoFlagTicket,
+    "resource",           // whoFlagResource,
+    "venue",              // whoFlagVenue,
     "unauthenticated",    // whoTypeUnauthenticated,
     "authenticated",      // whoTypeAuthenticated
     "other",              // whoFlagOther

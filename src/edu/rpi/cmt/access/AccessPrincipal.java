@@ -36,6 +36,8 @@ import java.util.Collection;
 public interface AccessPrincipal extends Serializable, Comparable {
   /** The kind of Principal returned by getKind() */
 
+  // XXX change to use whoType? from WhoDefs
+
   /** user */
   public static final int principalUser = 0;
 
