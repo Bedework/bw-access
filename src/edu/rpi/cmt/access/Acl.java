@@ -255,6 +255,19 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         break getPrivileges;
       }
 
+      // "authenticated" access set?
+      if (authenticated) {
+        ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeAuthenticated);
+      }
+
+      if (ca.privileges != null) {
+        if (debug) {
+          debugsb.append("...For authenticated got: " + ca.privileges);
+        }
+
+        break getPrivileges;
+      }
+
       // "other" access set?
       ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeOther);
 
