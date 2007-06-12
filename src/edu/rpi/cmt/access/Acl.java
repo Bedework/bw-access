@@ -109,7 +109,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     public boolean accessAllowed;
 
     public String toString() {
-      StringBuffer sb = new StringBuffer("CurrentAccess{");
+      StringBuilder sb = new StringBuilder("CurrentAccess{");
       sb.append("acl=");
       sb.append(acl);
 
@@ -173,10 +173,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       isOwner = who.getAccount().equals(owner);
     }
 
-    StringBuffer debugsb = null;
+    StringBuilder debugsb = null;
 
     if (debug) {
-      debugsb = new StringBuffer("Check access for '");
+      debugsb = new StringBuilder("Check access for '");
       debugsb.append(new String(acl));
       debugsb.append("' with authenticated = ");
       debugsb.append(authenticated);
@@ -579,7 +579,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return String representation
    */
   public String toUserString() {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
 
     try {
       decode(getEncoded());
@@ -597,7 +597,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
 
     sb.append("Acl{");
     if (!empty()) {
