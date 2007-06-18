@@ -335,6 +335,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public Collection<Ace> getAces() throws AccessException {
+    if (aces == null) {
+      return null;
+    }
+
     return aces.values();
   }
 
