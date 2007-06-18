@@ -39,6 +39,8 @@ public class AccessException extends Exception {
 
   private static final String badACLRewindMsg = "edu.rpi.cmt.access.badaclrewinf";
 
+  private static final String badXmlACLMsg = "edu.rpi.cmt.access.badxmlacl";
+
   /**
    *
    * @param s String exception message
@@ -96,6 +98,15 @@ public class AccessException extends Exception {
    */
   public static AccessException badACLLength() {
     return new AccessException(badACLLengthMsg);
+  }
+
+  /** We got a bad xml acl
+   *
+   * @param extra
+   * @return AccessException
+   */
+  public static AccessException badXmlACL(String extra) {
+    return new AccessException(badXmlACLMsg, extra);
   }
 }
 

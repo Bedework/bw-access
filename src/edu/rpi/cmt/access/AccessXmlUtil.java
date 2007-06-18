@@ -27,10 +27,22 @@ package edu.rpi.cmt.access;
 
 import edu.rpi.sss.util.xml.QName;
 import edu.rpi.sss.util.xml.XmlEmit;
+import edu.rpi.sss.util.xml.XmlUtil;
+import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
+import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
 import java.io.Serializable;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 /** Class to generate xml from an access specification. The resulting xml follows
  * the webdav acl spec rfc3744
@@ -43,51 +55,89 @@ public class AccessXmlUtil implements Serializable {
 
   private QName[] privTags;
 
-  /** Passed to new object
-   */
-  public static interface AccessTags {
-    /** Get the (webdav) tag corresponding to the name
-     *
-     * @param name
-     * @return QName
-     */
-    public QName getTag(String name);
-  }
+  /* Following used when parsing an xml accl spec */
+  private Acl curAcl;
 
-  /**
+  private Ace curAce;
+
+  private AceWho awho;
+
+  /** xml privilege tags */
+  public static final QName[] caldavPrivTags = {
+    WebdavTags.all,              // privAll = 0;
+    WebdavTags.read,             // privRead = 1;
+    WebdavTags.readAcl,          // privReadAcl = 2;
+    WebdavTags.readCurrentUserPrivilegeSet,  // privReadCurrentUserPrivilegeSet = 3;
+    CaldavTags.readFreeBusy,     // privReadFreeBusy = 4;
+    WebdavTags.write,            // privWrite = 5;
+    WebdavTags.writeAcl,         // privWriteAcl = 6;
+    WebdavTags.writeProperties,  // privWriteProperties = 7;
+    WebdavTags.writeContent,     // privWriteContent = 8;
+    WebdavTags.bind,             // privBind = 9;
+
+    CaldavTags.schedule,         // privSchedule = 10;
+    CaldavTags.scheduleRequest,  // privScheduleRequest = 11;
+    CaldavTags.scheduleReply,    // privScheduleReply = 12;
+    CaldavTags.scheduleFreeBusy, // privScheduleFreeBusy = 13;
+
+    WebdavTags.unbind,           // privUnbind = 14;
+    WebdavTags.unlock,           // privUnlock = 15;
+    null                         // privNone = 16;
+  };
+
+  /** Callback for xml utility
+   *
    * @author douglm - rpi.edu
    */
-  public abstract static class HrefBuilder {
+  public interface AccessXmlCb {
     /**
      * @param id
      * @param whoType - from WhoDefs
      * @return String href
      * @throws AccessException
      */
-    public abstract String makeHref(String id, int whoType) throws AccessException;
+    public String makeHref(String id, int whoType) throws AccessException;
+
+    /** For parsing of acls - return the current account.
+     *
+     * @return String
+     * @throws AccessException
+     */
+    public String getAccount() throws AccessException;
+
+    /** Return PrincipalInfo for th egiven href
+     *
+     * @param href
+     * @return PrincipalInfo or null for unknown.
+     * @throws AccessException
+     */
+    public PrincipalInfo getPrincipalInfo(String href) throws AccessException;
+
+    /** Called during processing to indicate an error
+     *
+     * @param tag
+     * @throws AccessException
+     */
+    public void setErrorTag(QName tag) throws AccessException;
   }
 
-  private AccessTags accessTags;
-
-  private HrefBuilder hrb;
+  private AccessXmlCb cb;
 
   /** Acls use tags in the webdav and caldav namespace.
    *
    * @param privTags
-   * @param accessTags
    * @param xml
-   * @param hrb
+   * @param cb
    */
-  public AccessXmlUtil(QName[] privTags, AccessTags accessTags, XmlEmit xml,
-                       HrefBuilder hrb) {
+  public AccessXmlUtil(QName[] privTags, XmlEmit xml,
+                       AccessXmlCb cb) {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
       throw new RuntimeException("edu.rpi.cmt.access.BadParameter");
     }
 
     this.privTags = privTags;
-    this.accessTags = accessTags;
     this.xml = xml;
-    this.hrb = hrb;
+    this.cb = cb;
   }
 
   /** Represent the acl as an xml string
@@ -95,20 +145,18 @@ public class AccessXmlUtil implements Serializable {
    * @param acl
    * @param forWebDAV  - true if we should split deny from grant.
    * @param privTags
-   * @param accessTags
-   * @param hrb
+   * @param cb
    * @return String xml representation
    * @throws AccessException
    */
   public static String getXmlAclString(Acl acl, boolean forWebDAV,
                                        QName[] privTags,
-                                       AccessTags accessTags,
-                                       HrefBuilder hrb) throws AccessException {
+                                       AccessXmlCb cb) throws AccessException {
     try {
       XmlEmit xml = new XmlEmit(true, false);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
-      AccessXmlUtil au = new AccessXmlUtil(privTags, accessTags, xml, hrb);
+      AccessXmlUtil au = new AccessXmlUtil(privTags, xml, cb);
 
       au.emitAcl(acl, forWebDAV);
 
@@ -130,8 +178,67 @@ public class AccessXmlUtil implements Serializable {
     xml = val;
   }
 
+  /** Given a webdav like xml acl return the internalized form as an Acl.
+   *
+   * @param xmlStr
+   * @return Acl
+   * @throws AccessException
+   */
+  public Acl getAcl(String xmlStr) throws AccessException {
+    try {
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      factory.setNamespaceAware(true);
+
+      DocumentBuilder builder = factory.newDocumentBuilder();
+
+      Document doc = builder.parse(new InputSource(new StringReader(xmlStr)));
+
+      return getAcl(doc.getDocumentElement());
+    } catch (AccessException ae) {
+      throw ae;
+    } catch (Throwable t) {
+      throw new AccessException(t);
+    }
+  }
+
   /**
-   * Emit an acl as an xml string the current xml writer
+   * @param root
+   * @return Acl
+   * @throws AccessException
+   */
+  public Acl getAcl(Element root) throws AccessException {
+    try {
+      /* We expect an acl root element containing 0 or more ace elemnts
+       <!ELEMENT acl (ace)* >
+       */
+      if (!WebdavTags.acl.nodeMatches(root)) {
+        throw AccessException.badXmlACL("Expected ACL");
+      }
+
+      Element[] aceEls = XmlUtil.getElementsArray(root);
+
+      curAcl = new Acl();
+
+      for (Element curnode: aceEls) {
+        if (!WebdavTags.ace.nodeMatches(curnode)) {
+          throw AccessException.badXmlACL("Expected ACE");
+        }
+
+        if (!processAce(curnode)) {
+          break;
+        }
+      }
+
+      return curAcl;
+    } catch (AccessException ae) {
+      throw ae;
+    } catch (Throwable t) {
+      throw new AccessException(t);
+    }
+  }
+
+  /**
+   * Emit an acl as an xml string using the current xml writer
    *
    * @param acl
    * @param forWebDAV  - true if we should split deny from grant.
@@ -155,11 +262,11 @@ public class AccessXmlUtil implements Serializable {
    */
   public void emitSupportedPrivSet() throws AccessException {
     try {
-      xml.openTag(accessTags.getTag("supported-privilege-set"));
+      xml.openTag(WebdavTags.supportedPrivilegeSet);
 
       emitSupportedPriv(Privileges.getPrivAll());
 
-      xml.closeTag(accessTags.getTag("supported-privilege-set"));
+      xml.closeTag(WebdavTags.supportedPrivilegeSet);
     } catch (Throwable t) {
       throw new AccessException(t);
     }
@@ -168,22 +275,23 @@ public class AccessXmlUtil implements Serializable {
   /** Produce an xml representation of current user privileges from an array
    * of allowed/disallowed/unspecified flags indexed by a privilege index.
    *
+   * <p>Each position i in privileges corrsponds to a privilege defined by
+   * privTags[i].
+   *
    * @param xml
    * @param privTags
-   * @param accessTags
    * @param privileges    char[] of allowed/disallowed
    * @throws AccessException
    */
   public static void emitCurrentPrivSet(XmlEmit xml,
                                         QName[] privTags,
-                                        AccessTags accessTags,
                                         char[] privileges) throws AccessException {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
       throw new AccessException("edu.rpi.cmt.access.BadParameter");
     }
 
     try {
-      xml.openTag(accessTags.getTag("current-user-privilege-set"));
+      xml.openTag(WebdavTags.currentUserPrivilegeSet);
 
       for (int pi = 0; pi < privileges.length; pi++) {
         if ((privileges[pi] == PrivilegeDefs.allowed) ||
@@ -192,12 +300,12 @@ public class AccessXmlUtil implements Serializable {
           QName pr = privTags[pi];
 
           if (pr != null) {
-            xml.propertyTagVal(accessTags.getTag("privilege"), pr);
+            xml.propertyTagVal(WebdavTags.privilege, pr);
           }
         }
       }
 
-      xml.closeTag(accessTags.getTag("current-user-privilege-set"));
+      xml.closeTag(WebdavTags.currentUserPrivilegeSet);
     } catch (Throwable t) {
       throw new AccessException(t);
     }
@@ -208,13 +316,11 @@ public class AccessXmlUtil implements Serializable {
    * returning the representation a a String
    *
    * @param privTags
-   * @param accessTags
    * @param ps    PrivilegeSet allowed/disallowed
    * @return String xml
    * @throws AccessException
    */
   public static String getCurrentPrivSetString(QName[] privTags,
-                                               AccessTags accessTags,
                                                PrivilegeSet ps)
           throws AccessException {
     try {
@@ -223,7 +329,7 @@ public class AccessXmlUtil implements Serializable {
       XmlEmit xml = new XmlEmit(true, false);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
-      AccessXmlUtil.emitCurrentPrivSet(xml, privTags, accessTags, privileges);
+      AccessXmlUtil.emitCurrentPrivSet(xml, privTags, privileges);
 
       su.close();
 
@@ -239,6 +345,157 @@ public class AccessXmlUtil implements Serializable {
    *                   Private methods
    * ==================================================================== */
 
+  /* Process an acl<br/>
+         <!ELEMENT ace ((principal | invert), (grant|deny), protected?,
+                         inherited?)>
+         <!ELEMENT grant (privilege+)>
+         <!ELEMENT deny (privilege+)>
+
+         protected and inherited are for acl display
+   */
+  private boolean processAce(Node nd) throws Throwable {
+    Element[] children = XmlUtil.getElementsArray(nd);
+
+    if (children.length < 2) {
+      throw AccessException.badXmlACL("Bad ACE");
+    }
+
+    Element curnode = children[0];
+    boolean inverted = false;
+
+    /* Require principal or invert */
+
+    if (WebdavTags.principal.nodeMatches(curnode)) {
+    } else if (WebdavTags.invert.nodeMatches(curnode)) {
+      /*  <!ELEMENT invert principal>       */
+
+      inverted = true;
+      curnode = XmlUtil.getOnlyElement(curnode);
+    } else {
+      throw AccessException.badXmlACL("Bad ACE - expect principal | invert");
+    }
+
+    if (!parseAcePrincipal(curnode, inverted)) {
+      return false;
+    }
+
+    /* Recognize grant or deny */
+    for (int i = 1; i < children.length; i++) {
+      curnode = children[i];
+
+      boolean denial = false;
+
+      if (WebdavTags.deny.nodeMatches(curnode)) {
+        denial = true;
+      } else if (!WebdavTags.grant.nodeMatches(curnode)) {
+        cb.setErrorTag(WebdavTags.noAceConflict);
+        return false;
+      }
+
+      Element[] pchildren = XmlUtil.getElementsArray(curnode);
+
+      for (int pi = 0; pi < pchildren.length; pi++) {
+        Element pnode = pchildren[pi];
+
+        if (!WebdavTags.privilege.nodeMatches(pnode)) {
+          throw AccessException.badXmlACL("Bad ACE - expect privilege");
+        }
+
+        parsePrivilege(pnode, denial);
+      }
+    }
+
+    return true;
+  }
+
+  private boolean parseAcePrincipal(Node nd,
+                                   boolean inverted) throws Throwable {
+    Element el = XmlUtil.getOnlyElement(nd);
+
+    int whoType = -1;
+    String who = null;
+
+    if (WebdavTags.href.nodeMatches(el)) {
+      String href = XmlUtil.getElementContent(el);
+
+      if ((href == null) || (href.length() == 0)) {
+        throw AccessException.badXmlACL("Missing href");
+      }
+      PrincipalInfo pi = cb.getPrincipalInfo(href);
+      if (pi == null) {
+        cb.setErrorTag(WebdavTags.recognizedPrincipal);
+        return false;
+      }
+      whoType = pi.whoType;
+      who = pi.who;
+    } else if (WebdavTags.all.nodeMatches(el)) {
+      whoType = Ace.whoTypeAll;
+    } else if (WebdavTags.authenticated.nodeMatches(el)) {
+      whoType = Ace.whoTypeAuthenticated;
+    } else if (WebdavTags.unauthenticated.nodeMatches(el)) {
+      whoType = Ace.whoTypeUnauthenticated;
+    } else if (WebdavTags.property.nodeMatches(el)) {
+      el = XmlUtil.getOnlyElement(el);
+      if (WebdavTags.owner.nodeMatches(el)) {
+        whoType = Ace.whoTypeOwner;
+      } else {
+        throw AccessException.badXmlACL("Bad WHO property");
+      }
+    } else if (WebdavTags.self.nodeMatches(el)) {
+      whoType = Ace.whoTypeUser;
+      who = cb.getAccount();
+    } else {
+      throw AccessException.badXmlACL("Bad WHO");
+    }
+
+    curAce = null;
+    awho = new AceWho(who, whoType, inverted);
+
+    /*
+    if (debug) {
+      debugMsg("Parsed ace/principal =" + awho);
+    }*/
+
+    return true;
+  }
+
+  private void parsePrivilege(Node nd,
+                             boolean denial) throws Throwable {
+    Element el = XmlUtil.getOnlyElement(nd);
+
+    int priv;
+
+    if (curAce == null) {
+      /* Look for this 'who' in the list */
+      for (Ace ace: curAcl.getAces()) {
+        if (ace.getWho().equals(awho)) {
+          curAce = ace;
+          break;
+        }
+      }
+
+      if (curAce == null) {
+        curAce = new Ace();
+        curAce.setWho(awho);
+
+        curAcl.addAce(curAce);
+      }
+    }
+
+    findPriv: {
+      // ENUM
+      for (priv = 0; priv < privTags.length; priv++) {
+        if (privTags[priv].nodeMatches(el)) {
+          break findPriv;
+        }
+      }
+      throw AccessException.badXmlACL("Bad privilege");
+    }
+
+    curAce.addPriv(Privileges.makePriv(priv, denial));
+
+  }
+
   /* Emit the Collection of aces as an xml using the current xml writer
    *
    * @param aces
@@ -247,7 +504,7 @@ public class AccessXmlUtil implements Serializable {
   private void emitAces(Collection<Ace> aces,
                         boolean forWebDAV) throws AccessException {
     try {
-      xml.openTag(accessTags.getTag("acl"));
+      xml.openTag(WebdavTags.acl);
 
       if (aces != null) {
         for (Ace ace: aces) {
@@ -268,7 +525,7 @@ public class AccessXmlUtil implements Serializable {
         }
       }
 
-      xml.closeTag(accessTags.getTag("acl"));
+      xml.closeTag(WebdavTags.acl);
     } catch (AccessException ae) {
       throw ae;
     } catch (Throwable t) {
@@ -278,32 +535,32 @@ public class AccessXmlUtil implements Serializable {
 
   private void closeAce(Ace ace) throws Throwable {
     if (ace.getInherited()) {
-      QName tag = accessTags.getTag("inherited");
+      QName tag = WebdavTags.inherited;
       xml.openTag(tag);
-      xml.property(accessTags.getTag("href"), ace.getInheritedFrom());
+      xml.property(WebdavTags.href, ace.getInheritedFrom());
       xml.closeTag(tag);
     }
-    xml.closeTag(accessTags.getTag("ace"));
+    xml.closeTag(WebdavTags.ace);
   }
 
   private void emitSupportedPriv(Privilege priv) throws Throwable {
-    xml.openTag(accessTags.getTag("supported-privilege"));
+    xml.openTag(WebdavTags.supportedPrivilege);
 
-    xml.openTagNoNewline(accessTags.getTag("privilege"));
+    xml.openTagNoNewline(WebdavTags.privilege);
     xml.emptyTagSameLine(privTags[priv.getIndex()]);
-    xml.closeTagNoblanks(accessTags.getTag("privilege"));
+    xml.closeTagNoblanks(WebdavTags.privilege);
 
     if (priv.getAbstractPriv()) {
-      xml.emptyTag(accessTags.getTag("abstract"));
+      xml.emptyTag(WebdavTags._abstract);
     }
 
-    xml.property(accessTags.getTag("description"), priv.getDescription());
+    xml.property(WebdavTags.description, priv.getDescription());
 
     for (Privilege p: priv.getContainedPrivileges()) {
       emitSupportedPriv(p);
     }
 
-    xml.closeTag(accessTags.getTag("supported-privilege"));
+    xml.closeTag(WebdavTags.supportedPrivilege);
   }
 
   /* This gets called twice, once to do denials, once to do grants
@@ -314,15 +571,15 @@ public class AccessXmlUtil implements Serializable {
 
     QName tag;
     if (denials) {
-      tag = accessTags.getTag("deny");
+      tag = WebdavTags.deny;
     } else {
-      tag = accessTags.getTag("grant");
+      tag = WebdavTags.grant;
     }
 
     for (Privilege p: ace.getPrivs()) {
       if (denials == p.getDenial()) {
         if (!aceOpen) {
-          xml.openTag(accessTags.getTag("ace"));
+          xml.openTag(WebdavTags.ace);
 
           emitAceWho(ace.getWho());
           aceOpen = true;
@@ -351,10 +608,10 @@ public class AccessXmlUtil implements Serializable {
     }
 
     if (invert) {
-      xml.openTag(accessTags.getTag("invert"));
+      xml.openTag(WebdavTags.invert);
     }
 
-    xml.openTag(accessTags.getTag("principal"));
+    xml.openTag(WebdavTags.principal);
 
     int whoType = who.getWhoType();
 
@@ -367,25 +624,25 @@ public class AccessXmlUtil implements Serializable {
     if ((whoType == Ace.whoTypeOwner) ||
         (whoType == Ace.whoTypeOther)) {
       // Other is !owner
-      xml.openTag(accessTags.getTag("property"));
-      xml.emptyTag(accessTags.getTag("owner"));
-      xml.closeTag(accessTags.getTag("property"));
+      xml.openTag(WebdavTags.property);
+      xml.emptyTag(WebdavTags.owner);
+      xml.closeTag(WebdavTags.property);
     } else if (whoType == Ace.whoTypeUnauthenticated) {
-      xml.emptyTag(accessTags.getTag("unauthenticated"));
+      xml.emptyTag(WebdavTags.unauthenticated);
     } else if (whoType == Ace.whoTypeAuthenticated) {
-      xml.emptyTag(accessTags.getTag("authenticated"));
+      xml.emptyTag(WebdavTags.authenticated);
     } else if (whoType == Ace.whoTypeAll) {
-      xml.emptyTag(accessTags.getTag("all"));
+      xml.emptyTag(WebdavTags.all);
     } else  {
       /* Just emit href */
-      String href = escapeChars(hrb.makeHref(who.getWho(), whoType));
-      xml.property(accessTags.getTag("href"), href);
+      String href = escapeChars(cb.makeHref(who.getWho(), whoType));
+      xml.property(WebdavTags.href, href);
     }
 
-    xml.closeTag(accessTags.getTag("principal"));
+    xml.closeTag(WebdavTags.principal);
 
     if (invert) {
-      xml.closeTag(accessTags.getTag("invert"));
+      xml.closeTag(WebdavTags.invert);
     }
   }
 
