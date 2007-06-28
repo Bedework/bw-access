@@ -353,7 +353,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
    * @return String representation
    */
   public String toUserString() {
-    StringBuffer sb = new StringBuffer("(");
+    StringBuilder sb = new StringBuilder("(");
 
     sb.append(getWho().toUserString());
     sb.append(" ");
@@ -405,7 +405,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
 
     sb.append("Ace{");
     sb.append(getWho().toString());
