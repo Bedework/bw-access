@@ -233,7 +233,7 @@ public class AccessXmlUtil implements Serializable {
    */
   public Acl getAcl(Element root) throws AccessException {
     try {
-      /* We expect an acl root element containing 0 or more ace elemnts
+      /* We expect an acl root element containing 0 or more ace elements
        <!ELEMENT acl (ace)* >
        */
       if (!WebdavTags.acl.nodeMatches(root)) {
