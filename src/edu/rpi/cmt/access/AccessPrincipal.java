@@ -33,7 +33,7 @@ import java.util.Collection;
  * @author Mike Douglass
  *
  */
-public interface AccessPrincipal extends Serializable, Comparable {
+public interface AccessPrincipal extends Serializable {
   /** The kind of Principal returned by getKind() */
 
   // XXX change to use whoType? from WhoDefs

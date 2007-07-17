@@ -28,7 +28,7 @@ package edu.rpi.cmt.access;
 import java.util.ArrayList;
 import java.util.Collection;
 
-/** Oject to represent an ace for a calendar entity or service.
+/** Object to represent an ace for a calendar entity or service.
  *
  * <p>The compareTo method orders the Aces according to the notWho, whoType and
  * who components. It does not take the actual privileges into account. There
@@ -37,7 +37,7 @@ import java.util.Collection;
  *
  *  @author Mike Douglass   douglm@rpi.edu
  */
-public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
+public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   boolean debug;
 
   private AceWho who;
@@ -371,16 +371,10 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
    *                   Object methods
    * ==================================================================== */
 
-  public int compareTo(Object o) {
-    if (this == o) {
+  public int compareTo(Ace that) {
+    if (this == that) {
       return 0;
     }
-
-    if (!(o instanceof Ace)) {
-      return 1;
-    }
-
-    Ace that = (Ace)o;
 
     int res = getWho().compareTo(that.getWho());
     if (res == 0) {
@@ -401,7 +395,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable {
   }
 
   public boolean equals(Object o) {
-    return compareTo(o) == 0;
+    return compareTo((Ace)o) == 0;
   }
 
   public String toString() {

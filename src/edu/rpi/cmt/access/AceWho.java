@@ -28,7 +28,7 @@ package edu.rpi.cmt.access;
 /** describe who we are giving access to
  * @author douglm - rpi.edu
  */
-public class AceWho implements WhoDefs, Comparable {
+public class AceWho implements WhoDefs, Comparable<AceWho> {
   private String who;
 
   private int whoType;
@@ -198,16 +198,10 @@ public class AceWho implements WhoDefs, Comparable {
   /* (non-Javadoc)
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
-  public int compareTo(Object o) {
-    if (this == o) {
+  public int compareTo(AceWho that) {
+    if (this == that) {
       return 0;
     }
-
-    if (!(o instanceof AceWho)) {
-      return 1;
-    }
-
-    AceWho that = (AceWho)o;
 
     if (notWho != that.notWho) {
       if (notWho) {
@@ -246,7 +240,7 @@ public class AceWho implements WhoDefs, Comparable {
   }
 
   public boolean equals(Object o) {
-    return compareTo(o) == 0;
+    return compareTo((AceWho)o) == 0;
   }
 
   public String toString() {

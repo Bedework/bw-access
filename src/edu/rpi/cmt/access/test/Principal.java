@@ -29,7 +29,6 @@ import edu.rpi.cmt.access.AccessPrincipal;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.TreeSet;
 
 /** Value object to represent a principal to allow testing of the access suite
@@ -37,7 +36,9 @@ import java.util.TreeSet;
  *   @author Mike Douglass douglm@rpi.edu
  *  @version 1.0
  */
-public abstract class Principal implements Comparator, AccessPrincipal {
+public abstract class Principal implements Comparator<Principal>, 
+                                           Comparable<Principal>,
+                                           AccessPrincipal {
   /** Account for the principal
    */
   private String account;  // null for guest
@@ -142,13 +143,6 @@ public abstract class Principal implements Comparator, AccessPrincipal {
   }
 
   /**
-   * @return  Iterator over Principal
-   */
-  public Iterator iterateGroups() {
-    return getGroups().iterator();
-  }
-
-  /**
    * @return boolean true for a guest principal
    */
   public boolean isUnauthenticated() {
@@ -234,22 +228,11 @@ public abstract class Principal implements Comparator, AccessPrincipal {
    *                   Object methods
    * ==================================================================== */
 
-  public int compareTo(Object o) {
+  public int compareTo(Principal o) {
     return compare(this, o);
   }
 
-  public int compare(Object o1, Object o2) {
-    if (!(o1 instanceof Principal)) {
-      return -1;
-    }
-
-    if (!(o2 instanceof Principal)) {
-      return 1;
-    }
-
-    Principal p1 = (Principal)o1;
-    Principal p2 = (Principal)o2;
-
+  public int compare(Principal p1, Principal p2) {
     if (p1.getKind() < p2.getKind()) {
       return -1;
     }

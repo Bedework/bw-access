@@ -157,7 +157,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who, String owner,
+  public CurrentAccess evaluateAccess(AccessPrincipal who, 
+                                      String owner,
                                       Privilege[] how, char[] acl,
                                       PrivilegeSet filter)
           throws AccessException {
