@@ -110,7 +110,7 @@ public class AccessXmlUtil implements Serializable {
      */
     public String getAccount() throws AccessException;
 
-    /** Return PrincipalInfo for th egiven href
+    /** Return PrincipalInfo for the given href
      *
      * @param href
      * @return PrincipalInfo or null for unknown.
