@@ -236,7 +236,7 @@ public class AccessXmlUtil implements Serializable {
       /* We expect an acl root element containing 0 or more ace elements
        <!ELEMENT acl (ace)* >
        */
-      if (!WebdavTags.acl.nodeMatches(root)) {
+      if (!XmlUtil.nodeMatches(root, WebdavTags.acl)) {
         throw exc("Expected ACL");
       }
 
@@ -245,7 +245,7 @@ public class AccessXmlUtil implements Serializable {
       curAcl = new Acl();
 
       for (Element curnode: aceEls) {
-        if (!WebdavTags.ace.nodeMatches(curnode)) {
+        if (!XmlUtil.nodeMatches(curnode, WebdavTags.ace)) {
           throw exc("Expected ACE");
         }
 
@@ -407,8 +407,8 @@ public class AccessXmlUtil implements Serializable {
 
     /* Require principal or invert */
 
-    if (WebdavTags.principal.nodeMatches(curnode)) {
-    } else if (WebdavTags.invert.nodeMatches(curnode)) {
+    if (XmlUtil.nodeMatches(curnode, WebdavTags.principal)) {
+    } else if (XmlUtil.nodeMatches(curnode, WebdavTags.invert)) {
       /*  <!ELEMENT invert principal>       */
 
       inverted = true;
@@ -427,9 +427,9 @@ public class AccessXmlUtil implements Serializable {
 
       boolean denial = false;
 
-      if (WebdavTags.deny.nodeMatches(curnode)) {
+      if (XmlUtil.nodeMatches(curnode, WebdavTags.deny)) {
         denial = true;
-      } else if (!WebdavTags.grant.nodeMatches(curnode)) {
+      } else if (!XmlUtil.nodeMatches(curnode, WebdavTags.grant)) {
         if (debug) {
           debugMsg("Expected grant | deny");
         }
@@ -442,7 +442,7 @@ public class AccessXmlUtil implements Serializable {
       for (int pi = 0; pi < pchildren.length; pi++) {
         Element pnode = pchildren[pi];
 
-        if (!WebdavTags.privilege.nodeMatches(pnode)) {
+        if (!XmlUtil.nodeMatches(pnode, WebdavTags.privilege)) {
           throw exc("Bad ACE - expect privilege");
         }
 
@@ -460,7 +460,7 @@ public class AccessXmlUtil implements Serializable {
     int whoType = -1;
     String who = null;
 
-    if (WebdavTags.href.nodeMatches(el)) {
+    if (XmlUtil.nodeMatches(el, WebdavTags.href)) {
       String href = XmlUtil.getElementContent(el);
 
       if ((href == null) || (href.length() == 0)) {
@@ -473,20 +473,20 @@ public class AccessXmlUtil implements Serializable {
       }
       whoType = pi.whoType;
       who = pi.who;
-    } else if (WebdavTags.all.nodeMatches(el)) {
+    } else if (XmlUtil.nodeMatches(el, WebdavTags.all)) {
       whoType = Ace.whoTypeAll;
-    } else if (WebdavTags.authenticated.nodeMatches(el)) {
+    } else if (XmlUtil.nodeMatches(el, WebdavTags.authenticated)) {
       whoType = Ace.whoTypeAuthenticated;
-    } else if (WebdavTags.unauthenticated.nodeMatches(el)) {
+    } else if (XmlUtil.nodeMatches(el, WebdavTags.unauthenticated)) {
       whoType = Ace.whoTypeUnauthenticated;
-    } else if (WebdavTags.property.nodeMatches(el)) {
+    } else if (XmlUtil.nodeMatches(el, WebdavTags.property)) {
       el = XmlUtil.getOnlyElement(el);
-      if (WebdavTags.owner.nodeMatches(el)) {
+      if (XmlUtil.nodeMatches(el, WebdavTags.owner)) {
         whoType = Ace.whoTypeOwner;
       } else {
         throw exc("Bad WHO property");
       }
-    } else if (WebdavTags.self.nodeMatches(el)) {
+    } else if (XmlUtil.nodeMatches(el, WebdavTags.self)) {
       whoType = Ace.whoTypeUser;
       who = cb.getAccount();
     } else {
@@ -533,7 +533,7 @@ public class AccessXmlUtil implements Serializable {
     findPriv: {
       // ENUM
       for (priv = 0; priv < privTags.length; priv++) {
-        if (privTags[priv].nodeMatches(el)) {
+        if (XmlUtil.nodeMatches(el, privTags[priv])) {
           break findPriv;
         }
       }
