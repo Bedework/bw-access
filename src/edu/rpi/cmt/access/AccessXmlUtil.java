@@ -25,7 +25,6 @@
 */
 package edu.rpi.cmt.access;
 
-import edu.rpi.sss.util.xml.QName;
 import edu.rpi.sss.util.xml.XmlEmit;
 import edu.rpi.sss.util.xml.XmlUtil;
 import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
@@ -42,6 +41,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
 
+import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
