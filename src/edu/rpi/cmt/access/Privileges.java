@@ -98,6 +98,7 @@ public class Privileges implements PrivilegeDefs {
    * @return Privilege defining all access
    */
   public static Privilege getPrivAll() {
+    // XXX should be cloned
     return privs[privAll];
   }
 
@@ -105,6 +106,7 @@ public class Privileges implements PrivilegeDefs {
    * @return Privilege defining no access
    */
   public static Privilege getPrivNone() {
+    // XXX should be cloned
     return privs[privNone];
   }
 
@@ -114,6 +116,7 @@ public class Privileges implements PrivilegeDefs {
    * @return Privilege defining access
    */
   public static Privilege makePriv(int privType) {
+    // XXX should be cloned
     return /*(Privilege)*/privs[privType]/*.clone()*/;
   }
 
@@ -128,55 +131,6 @@ public class Privileges implements PrivilegeDefs {
       return /*(Privilege)*/privs[privType]/*.clone()*/;
     }
     return /*(Privilege)*/deniedPrivs[privType]/*.clone()*/;
-  }
-
-  /** Returns a set of flags indicating if the indexed privilege (see above
-   * for index) is allowed, denied or unspecified.
-   *
-   * @param acl
-   * @return char[] access flags
-   * @throws AccessException
-   */
-  public static PrivilegeSet fromEncoding(EncodedAcl acl) throws AccessException {
-    char[] privStates = {
-      unspecified,   // privAll
-      unspecified,   // privRead
-      unspecified,   // privReadAcl
-      unspecified,   // privReadCurrentUserPrivilegeSet
-      unspecified,   // privReadFreeBusy
-      unspecified,   // privWrite
-      unspecified,   // privWriteAcl
-      unspecified,   // privWriteProperties
-      unspecified,   // privWriteContent
-      unspecified,   // privBind
-      unspecified,   // privSchedule
-      unspecified,   // privScheduleRequest
-      unspecified,   // privScheduleReply
-      unspecified,   // privScheduleFreeBusy
-      unspecified,   // privUnbind
-      unspecified,   // privUnlock
-      unspecified,   // privNone
-    };
-
-    while (acl.hasMore()) {
-      char c = acl.getChar();
-      if ((c == ' ') || (c == inheritedFlag)) {
-        break;
-      }
-      acl.back();
-
-      Privilege p = Privilege.findPriv(privs[privAll], privs[privNone], acl);
-      if (p == null) {
-        throw AccessException.badACL("unknown priv " + acl.getErrorInfo());
-      }
-
-      //System.out.println("found " + p);\
-
-      // Set the states based on the priv we just found.
-      setState(privStates, p, p.getDenial());
-    }
-
-    return new PrivilegeSet(privStates);
   }
 
   /** Skip all the privileges info.
@@ -219,35 +173,6 @@ public class Privileges implements PrivilegeDefs {
     }
 
     return al;
-  }
-
-  /* As an example, say we are setting read access. From above:
-   *      +-- [DAV: read] 'R'
-   *      |      |
-   *      |      +-- [DAV: read-acl]  'r'
-   *      |      +-- [DAV: read-current-user-privilege-set] 'P'
-   *      |      +-- [CALDAV:view-free-busy] 'F'
-   *
-   *  That is, read includes read-acl, read-current-user-privilege-set and
-   *  view-free-busy.
-   *
-   *  So for this we set allowed or denied in the states array for each of those
-   *  privileges.
-   */
-  private static void setState(char[] states, Privilege p, boolean denial) {
-    // XXX Should we only set either way of the access is unspecified?
-    if (!denial) {
-      states[p.getIndex()] = allowed;
-//    } else {
-    } else if (states[p.getIndex()] == unspecified) {
-      states[p.getIndex()] = denied;
-    }
-
-    /* Iterate over the children */
-
-    for (Privilege pr: p.getContainedPrivileges()) {
-      setState(states, pr, denial);
-    }
   }
 
   private static void makePrivileges(Privilege[] ps,

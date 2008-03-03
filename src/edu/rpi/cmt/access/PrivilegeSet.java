@@ -25,7 +25,11 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.sss.util.ObjectPool;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /** Allowed privileges for a principal
  *
@@ -34,10 +38,14 @@ import java.io.Serializable;
 public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
   private char[] privileges;
 
+  private static ObjectPool<PrivilegeSet> privSets = new ObjectPool<PrivilegeSet>();
+
+  private static boolean usePool = true;
+
   /** Default privs for an owner
    */
   public static PrivilegeSet defaultOwnerPrivileges =
-    new PrivilegeSet(allowed,   // privAll
+    pooled(new PrivilegeSet(allowed,   // privAll
                      allowed,   // privRead
                      allowed,   // privReadAcl
                      allowed,   // privReadCurrentUserPrivilegeSet
@@ -53,14 +61,14 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
                      allowed,   // privScheduleFreeBusy
                      allowed,   // privUnbind
                      allowed,   // privUnlock
-                     allowed);   // privNone
+                     allowed));   // privNone
 
   /** User home max privileges for non-super user
    * This allows us to turn off privileges which would allow delete or rename
    * for example.
    */
   public static PrivilegeSet userHomeMaxPrivileges =
-    new PrivilegeSet(denied,   // privAll
+    pooled(new PrivilegeSet(denied,   // privAll
                      allowed,   // privRead
                      allowed,   // privReadAcl
                      allowed,   // privReadCurrentUserPrivilegeSet
@@ -76,12 +84,12 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
                      denied,   // privScheduleFreeBusy
                      denied,   // privUnbind
                      allowed,   // privUnlock
-                     allowed);   // privNone
+                     allowed));   // privNone
 
   /** Default privs for a non owner
    */
   public static PrivilegeSet defaultNonOwnerPrivileges =
-    new PrivilegeSet(denied,   // privAll
+    pooled(new PrivilegeSet(denied,   // privAll
                      denied,   // privRead
                      denied,   // privReadAcl
                      denied,   // privReadCurrentUserPrivilegeSet
@@ -97,7 +105,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
                      denied,   // privScheduleFreeBusy
                      denied,   // privUnbind
                      denied,   // privUnlock
-                     denied);   // privNone
+                     denied));   // privNone
 
   /**
    * @param privAllState
@@ -166,7 +174,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
   /**
    */
   public PrivilegeSet() {
-    privileges = (char[])defaultNonOwnerPrivileges.getPrivileges().clone();
+    privileges = defaultNonOwnerPrivileges.getPrivileges();
   }
 
   /** Default privs for an owner
@@ -174,7 +182,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
    * @return PrivilegeSet
    */
   public static PrivilegeSet makeDefaultOwnerPrivileges() {
-    return (PrivilegeSet)defaultOwnerPrivileges.clone();
+    return defaultOwnerPrivileges;
+    //return pooled((PrivilegeSet)defaultOwnerPrivileges.clone());
   }
 
   /** User home max privileges for non-super user
@@ -184,7 +193,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
    * @return PrivilegeSet
    */
   public static PrivilegeSet makeUserHomeMaxPrivileges() {
-    return (PrivilegeSet)userHomeMaxPrivileges.clone();
+    return userHomeMaxPrivileges;
+    //return pooled((PrivilegeSet)userHomeMaxPrivileges.clone());
   }
 
   /** Default privs for a non owner
@@ -192,42 +202,112 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
    * @return PrivilegeSet
    */
   public static PrivilegeSet makeDefaultNonOwnerPrivileges() {
-    return (PrivilegeSet)defaultNonOwnerPrivileges.clone();
+    return defaultNonOwnerPrivileges;
+    //return pooled((PrivilegeSet)defaultNonOwnerPrivileges.clone());
   }
 
-  /** Set the given privilege
-   *
-   * @param index
-   * @param val
-   */
-  public void setPrivilege(int index, char val) {
-    if (privileges == null) {
-      privileges = (char[])defaultNonOwnerPrivileges.getPrivileges().clone();
-    }
-
-    privileges[index] = val;
-  }
-
-  /** Set the given privilege
+  /** Make a privilege set from the given privilege
    *
    * @param priv  Privilege object
+   * @return PrivilegeSet
    */
-  public void setPrivilege(Privilege priv) {
-    if (privileges == null) {
-      privileges = (char[])defaultNonOwnerPrivileges.getPrivileges().clone();
-    }
+  public static PrivilegeSet makePrivileges(Privilege priv) {
+    PrivilegeSet pset = new PrivilegeSet();
+
+    pset.privileges = new char[privMaxType + 1];
 
     if (priv.getDenial()) {
-      privileges[priv.getIndex()] = denied;
+      pset.privileges[priv.getIndex()] = denied;
     } else {
-      privileges[priv.getIndex()] = allowed;
+      pset.privileges[priv.getIndex()] = allowed;
     }
 
     /* Iterate over the children */
 
     for (Privilege p: priv.getContainedPrivileges()) {
-      setPrivilege(p);
+      pset.setPrivilege(p);
     }
+
+    return pooled(pset);
+  }
+
+  /** Returns a set of flags indicating if the indexed privilege (see above
+   * for index) is allowed, denied or unspecified.
+   *
+   * @param acl
+   * @return char[] access flags
+   * @throws AccessException
+   */
+  public static PrivilegeSet fromEncoding(EncodedAcl acl) throws AccessException {
+    char[] privStates = {
+      unspecified,   // privAll
+      unspecified,   // privRead
+      unspecified,   // privReadAcl
+      unspecified,   // privReadCurrentUserPrivilegeSet
+      unspecified,   // privReadFreeBusy
+      unspecified,   // privWrite
+      unspecified,   // privWriteAcl
+      unspecified,   // privWriteProperties
+      unspecified,   // privWriteContent
+      unspecified,   // privBind
+      unspecified,   // privSchedule
+      unspecified,   // privScheduleRequest
+      unspecified,   // privScheduleReply
+      unspecified,   // privScheduleFreeBusy
+      unspecified,   // privUnbind
+      unspecified,   // privUnlock
+      unspecified,   // privNone
+    };
+
+    while (acl.hasMore()) {
+      char c = acl.getChar();
+      if ((c == ' ') || (c == inheritedFlag)) {
+        break;
+      }
+      acl.back();
+
+      Privilege p = Privilege.findPriv(Privileges.getPrivAll(),
+                                       Privileges.getPrivNone(), acl);
+      if (p == null) {
+        throw AccessException.badACL("unknown priv " + acl.getErrorInfo());
+      }
+
+      //System.out.println("found " + p);\
+
+      // Set the states based on the priv we just found.
+      setState(privStates, p, p.getDenial());
+    }
+
+    return pooled(new PrivilegeSet(privStates));
+  }
+
+  /** Add the given privilege
+   *
+   * @param pset PrivilegeSet to add priv to
+   * @param priv  Privilege object
+   * @return PrivilegeSet
+   */
+  public static PrivilegeSet addPrivilege(PrivilegeSet pset,
+                                          Privilege priv) {
+    PrivilegeSet newPset = (PrivilegeSet)pset.clone();
+
+    if (newPset.privileges == null) {
+      newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
+    }
+
+    if (priv.getDenial()) {
+      newPset.privileges[priv.getIndex()] = denied;
+    } else {
+      newPset.privileges[priv.getIndex()] = allowed;
+    }
+
+    /* Iterate over the children */
+
+    for (Privilege p: priv.getContainedPrivileges()) {
+      newPset.setPrivilege(p);
+    }
+
+    return pooled(newPset);
   }
 
   /** Get the given privilege
@@ -243,25 +323,32 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
     return privileges[index];
   }
 
-  /** Ensure thsi privilegeset has no privilege greater than those in the filter
+  /** Ensure this privilegeset has no privilege greater than those in the filter
    *
+   * @param pset PrivilegeSet to filter
    * @param filter
+   * @return PrivilegeSet
    */
-  public void filterPrivileges(PrivilegeSet filter) {
-    if (privileges == null) {
-      privileges = (char[])defaultNonOwnerPrivileges.getPrivileges().clone();
+  public static PrivilegeSet filterPrivileges(PrivilegeSet pset,
+                                              PrivilegeSet filter) {
+    PrivilegeSet newPset = (PrivilegeSet)pset.clone();
+
+    if (newPset.privileges == null) {
+      newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
     }
 
-    char[] filterPrivs = filter.getPrivileges();
+    char[] filterPrivs = filter.privileges;
 
-    for (int pi = 0; pi < privileges.length; pi++) {
-      if (privileges[pi] > filterPrivs[pi]) {
-        privileges[pi] = filterPrivs[pi];
+    for (int pi = 0; pi < newPset.privileges.length; pi++) {
+      if (newPset.privileges[pi] > filterPrivs[pi]) {
+        newPset.privileges[pi] = filterPrivs[pi];
       }
     }
+
+    return pooled(newPset);
   }
 
-  /** Retrun true if there is any allowed access
+  /** Return true if there is any allowed access
    *
    * @return boolean
    */
@@ -328,30 +415,160 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
       }
     }
 
-    return current;
+    return pooled(current);
   }
 
   /** Set all unspecified values to allowed for the owner or denied otherwise.
    *
+   * @param pset
    * @param isOwner
+   * @return PrivilegeSet
    */
-  public void setUnspecified(boolean isOwner) {
-    for (int pi = 0; pi < privileges.length; pi++) {
-      if (privileges[pi] == unspecified) {
+  public static PrivilegeSet setUnspecified(PrivilegeSet pset,
+                                            boolean isOwner) {
+    PrivilegeSet newPset = (PrivilegeSet)pset.clone();
+
+    if (newPset.privileges == null) {
+      newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
+    }
+
+    for (int pi = 0; pi < newPset.privileges.length; pi++) {
+      if (newPset.privileges[pi] == unspecified) {
         if (isOwner) {
-          privileges[pi] = allowed;
+          newPset.privileges[pi] = allowed;
         } else {
-          privileges[pi] = denied;
+          newPset.privileges[pi] = denied;
         }
       }
     }
+
+    return pooled(newPset);
   }
 
   /**
    * @return char[]  privileges for this object
    */
   public char[] getPrivileges() {
-    return privileges;
+    if (privileges == null) {
+      return null;
+    }
+    return (char[])privileges.clone();
+  }
+
+  /** Return list of Privilege once we have removed all included Privileges
+   *
+   * @return privs
+   */
+  public Collection<Privilege> getPrivs() {
+    char[] ps = getPrivileges();
+
+    /* First reset all privs that are included by others
+     */
+    for (int pi = 0; pi < ps.length; pi++) {
+      if (ps[pi] != unspecified) {
+        Privilege priv = Privileges.makePriv(pi);
+
+        for (Privilege pr: priv.getContainedPrivileges()) {
+          setUnspec(ps, pr);
+        }
+      }
+    }
+
+    /* Now return the collection */
+    Collection<Privilege> privs = new ArrayList<Privilege>();
+
+    for (int pi = 0; pi < ps.length; pi++) {
+      if (ps[pi] != unspecified) {
+        privs.add(Privileges.makePriv(pi));
+      }
+    }
+
+    return privs;
+  }
+
+  private void setUnspec(char[] ps, Privilege priv) {
+    ps[priv.getIndex()] = unspecified;
+
+    for (Privilege pr: priv.getContainedPrivileges()) {
+      setUnspec(ps, pr);
+    }
+
+  }
+
+  /* ====================================================================
+   *                   Private methods
+   * ==================================================================== */
+
+  private static PrivilegeSet pooled(PrivilegeSet val) {
+    if (!usePool) {
+      return val;
+    }
+
+    return privSets.get(val);
+  }
+
+  /** Set the given privilege
+   *
+   * @param index
+   * @param val
+   */
+  private void setPrivilege(int index, char val) {
+    if (privileges == null) {
+      privileges = defaultNonOwnerPrivileges.getPrivileges();
+    }
+
+    privileges[index] = val;
+  }
+
+  /** Set the given privilege
+   *
+   * @param priv  Privilege object
+   */
+  private void setPrivilege(Privilege priv) {
+    if (privileges == null) {
+      privileges = defaultNonOwnerPrivileges.getPrivileges();
+    }
+
+    if (priv.getDenial()) {
+      privileges[priv.getIndex()] = denied;
+    } else {
+      privileges[priv.getIndex()] = allowed;
+    }
+
+    /* Iterate over the children */
+
+    for (Privilege p: priv.getContainedPrivileges()) {
+      setPrivilege(p);
+    }
+  }
+
+  /* As an example, say we are setting read access. From above:
+   *      +-- [DAV: read] 'R'
+   *      |      |
+   *      |      +-- [DAV: read-acl]  'r'
+   *      |      +-- [DAV: read-current-user-privilege-set] 'P'
+   *      |      +-- [CALDAV:view-free-busy] 'F'
+   *
+   *  That is, read includes read-acl, read-current-user-privilege-set and
+   *  view-free-busy.
+   *
+   *  So for this we set allowed or denied in the states array for each of those
+   *  privileges.
+   */
+  private static void setState(char[] states, Privilege p, boolean denial) {
+    // XXX Should we only set either way of the access is unspecified?
+    if (!denial) {
+      states[p.getIndex()] = allowed;
+//    } else {
+    } else if (states[p.getIndex()] == unspecified) {
+      states[p.getIndex()] = denied;
+    }
+
+    /* Iterate over the children */
+
+    for (Privilege pr: p.getContainedPrivileges()) {
+      setState(states, pr, denial);
+    }
   }
 
   /* ====================================================================
@@ -376,8 +593,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
       return 0;
     }
 
-    if (that.privileges != null) {
-      return -1;
+    if (that.privileges == null) {
+      return 1;
     }
 
     for (int pi = 0; pi < privileges.length; pi++) {
@@ -415,7 +632,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
   }
 
   public Object clone() {
-    return new PrivilegeSet((char[])getPrivileges().clone());
+    return new PrivilegeSet(getPrivileges());
   }
 
   public String toString() {
