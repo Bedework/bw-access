@@ -494,7 +494,7 @@ public class AccessXmlUtil implements Serializable {
     }
 
     curAce = null;
-    awho = new AceWho(who, whoType, inverted);
+    awho = AceWho.getAceWho(who, whoType, inverted);
 
     if (debug) {
       debugMsg("Parsed ace/principal =" + awho);

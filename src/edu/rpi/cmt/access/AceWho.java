@@ -25,7 +25,10 @@
 */
 package edu.rpi.cmt.access;
 
-/** describe who we are giving access to
+import edu.rpi.sss.util.ObjectPool;
+
+/** describe who we are giving access to. This object once created is immutable.
+ *
  * @author douglm - rpi.edu
  */
 public class AceWho implements WhoDefs, Comparable<AceWho> {
@@ -35,9 +38,31 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
 
   private boolean notWho;
 
+  private static ObjectPool<String> whos = new ObjectPool<String>();
+
+  private static ObjectPool<AceWho> aceWhos = new ObjectPool<AceWho>();
+
+  private static boolean poolAceWhos = true;
+
+  /** Gat an AceWho corresponding to the parameters.
+   *
+   * @param who
+   * @param whoType
+   * @param notWho
+   * @return an AceWho value
+   */
+  public static AceWho getAceWho(String who,
+                                 int whoType,
+                                 boolean notWho) {
+    if (poolAceWhos) {
+      return aceWhos.get(new AceWho(who, whoType, notWho));
+    } else {
+      return new AceWho(who, whoType, notWho);
+    }
+  }
   /**
    */
-  public AceWho() {
+  private AceWho() {
   }
 
   /**
@@ -45,10 +70,10 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
    * @param whoType
    * @param notWho
    */
-  public AceWho(String who,
-                int whoType,
-                boolean notWho) {
-    this.who = who;
+  private AceWho(String who,
+                 int whoType,
+                 boolean notWho) {
+    setWho(who);
     this.notWho = notWho;
     this.whoType = whoType;
   }
@@ -57,8 +82,8 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
    *
    * @param val
    */
-  public void setWho(String val) {
-    who = val;
+  private void setWho(String val) {
+    who = whos.get(val);
   }
 
   /** Get who this entry is for
@@ -69,27 +94,11 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
     return who;
   }
 
-  /** Set the who/not who flag
-   *
-   * @param val
-   */
-  public void setNotWho(boolean val) {
-    notWho = val;
-  }
-
   /**
    * @return boolean who/not who flag
    */
   public boolean getNotWho() {
     return notWho;
-  }
-
-  /** Set type of who
-   *
-   * @param val
-   */
-  public void setWhoType(int val) {
-    whoType = val;
   }
 
   /**
@@ -141,12 +150,16 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
     acl.encodeString(who);
   }
 
-  /**
+  /** Create AceWho from an encoded Acl
+   *
    * @param acl
+   * @return new AceWho
    * @throws AccessException
    */
-  public void decode(EncodedAcl acl) throws AccessException {
+  public static AceWho decode(EncodedAcl acl) throws AccessException {
     char c = acl.getChar();
+    boolean notWho;
+    int whoType;
 
     if (c == notWhoFlag) {
       notWho = true;
@@ -168,7 +181,7 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
       throw AccessException.badACE("who type");
     }
 
-    setWho(acl.getString());
+    return getAceWho(acl.getString(), whoType, notWho);
   }
 
   /** Provide a string representation for user display - this should probably

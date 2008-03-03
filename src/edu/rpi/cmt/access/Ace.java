@@ -25,6 +25,8 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.sss.util.ObjectPool;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -54,6 +56,8 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   private String inheritedFrom;
 
+  private static ObjectPool<String> inheritedFroms = new ObjectPool<String>();
+
   /** Constructor
    */
   public Ace() {
@@ -71,43 +75,6 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   /** Constructor
    *
    * @param who
-   * @param how
-   */
-  public Ace(AceWho who,
-             PrivilegeSet how) {
-    this.who = who;
-    this.how = how;
-  }
-
-  /** Constructor
-   *
-   * @param who
-   * @param p
-   */
-  public Ace(AceWho who,
-             Privilege p) {
-    this.who = who;
-    addPriv(p);
-  }
-
-  /** Constructor
-   *
-   * @param who
-   * @param notWho
-   * @param whoType
-   * @param how
-   */
-  public Ace(String who,
-             boolean notWho,
-             int whoType,
-             PrivilegeSet how) {
-    this.who = new AceWho(who, whoType, notWho);
-    this.how = how;
-  }
-
-  /** Constructor
-   *
-   * @param who
    * @param notWho
    * @param whoType
    * @param p
@@ -116,8 +83,10 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
              boolean notWho,
              int whoType,
              Privilege p) {
-    this.who = new AceWho(who, whoType, notWho);
-    addPriv(p);
+    this.who = AceWho.getAceWho(who, whoType, notWho);
+    //addPriv(p);
+    getPrivs().add(p);
+    setHow(PrivilegeSet.makePrivileges(p));
   }
 
   /** Constructor
@@ -129,7 +98,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   public Ace(String who,
              boolean notWho,
              int whoType) {
-    this.who = new AceWho(who, whoType, notWho);
+    this.who = AceWho.getAceWho(who, whoType, notWho);
   }
 
   /** Set who this entry is for
@@ -192,7 +161,8 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    */
   public void addPriv(Privilege val) {
     getPrivs().add(val);
-    getHow().setPrivilege(val);
+    //getHow().setPrivilege(val);
+    setHow(PrivilegeSet.addPrivilege(getHow(), val));
   }
 
   /** An ace is inherited if it is merged in from further up the path.
@@ -215,7 +185,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    * @param val
    */
   public void setInheritedFrom(String val) {
-    inheritedFrom = val;
+    inheritedFrom = inheritedFroms.get(val);
   }
 
   /**
@@ -265,7 +235,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     }
   }
 
-  /** Search through the acl for a who that matches the given name and type..
+  /* * Search through the acl for a who that matches the given name and type..
    *
    * <p>That is, if we have a whoFlag and the String matches or a
    * notWhoFlag and the string does not match then return the length of
@@ -285,7 +255,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    * @param whoType
    * @return boolean true if we find a match
    * @throws AccessException
-   */
+   * /
   public boolean decode(EncodedAcl acl,
                         boolean getPrivileges,
                         String name, int whoType) throws AccessException {
@@ -304,6 +274,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
     return false;
   }
+  */
 
   /** Get the next ace in the acl.
    *
@@ -317,8 +288,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    */
   public void decode(EncodedAcl acl,
                      boolean getPrivileges) throws AccessException {
-    who = new AceWho();
-    getWho().decode(acl);
+    who = AceWho.decode(acl);
     decodeHow(acl, getPrivileges);
   }
 
@@ -427,14 +397,16 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     return sb.toString();
   }
 
+  /*
   private void skipHow(EncodedAcl acl) throws AccessException {
     Privileges.skip(acl);
   }
+  */
 
   private void decodeHow(EncodedAcl acl,
                          boolean getPrivileges) throws AccessException {
     int pos = acl.getPos();
-    setHow(Privileges.fromEncoding(acl));
+    setHow(PrivilegeSet.fromEncoding(acl));
     if (getPrivileges) {
       acl.setPos(pos);
       setPrivs(Privileges.getPrivs(acl));

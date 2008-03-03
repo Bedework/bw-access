@@ -25,6 +25,8 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.sss.util.ObjectPool;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.TreeMap;
@@ -56,6 +58,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
   boolean debug;
 
   private TreeMap<AceWho, Ace> aces;
+
+  private static ObjectPool<PrivilegeSet> privSets = new ObjectPool<PrivilegeSet>();
+
+  private static boolean usePool = false;
 
   /** Used while evaluating access */
 
@@ -157,7 +163,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who, 
+  public CurrentAccess evaluateAccess(AccessPrincipal who,
                                       String owner,
                                       Privilege[] how, char[] acl,
                                       PrivilegeSet filter)
@@ -293,10 +299,14 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       return ca;
     }
 
-    ca.privileges.setUnspecified(isOwner);
+    ca.privileges = PrivilegeSet.setUnspecified(ca.privileges, isOwner);
 
     if (filter != null) {
-      ca.privileges.filterPrivileges(filter);
+      ca.privileges = PrivilegeSet.filterPrivileges(ca.privileges, filter);
+    }
+
+    if (usePool) {
+      ca.privileges = privSets.get(ca.privileges);
     }
 
     if (how.length == 0) {

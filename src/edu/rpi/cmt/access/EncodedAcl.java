@@ -326,6 +326,7 @@ public class EncodedAcl implements Serializable {
    */
   public char[] getEncoding() {
     char[] enc = caw.toCharArray();
+    caw = null;
     if ((enc == null) || (enc.length == 0)) {
       return null;
     }
