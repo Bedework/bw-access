@@ -73,11 +73,6 @@ public interface AccessPrincipal extends Serializable {
   public boolean getUnauthenticated();
 
   /**
-   * @return boolean true for a guest principal
-   */
-  public boolean isUnauthenticated();
-
-  /**
    * @param val
    */
   public void setAccount(String val);
