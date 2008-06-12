@@ -4,8 +4,8 @@
      Define a macro to fetch jars from the bedework repository or from
      the generated library in the named project.
 
-     The project will only be used if the property org.bedework.quickstart.build
-     is defined.
+     IF a project is named and we cannot locate the named file we try the
+     repository.
 
      For jars fetched from the archive we have a two step process, first check
      that a copy in a local cache is up to date, second copy from the local cache
@@ -28,10 +28,16 @@
     <attribute name="lib" default="${lib.dir}"/>
     <attribute name="libcache" default="@{lib}/../libcache"/>
     <attribute name="project" default="" />
+    <attribute name="projectHome" default="" />
     <sequential>
       <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
 
       <mkdir dir="@{libcache}" />
+
+      <!-- Names are of form
+             <name-part>-<version>.jar   or
+             <name-part>.jar
+        -->
 
       <if>
         <equals arg1="@{version}" arg2="" />
@@ -43,16 +49,60 @@
        </else>
       </if>
 
+      <!-- Ensure projectHome is set to something
+        -->
+
+      <if>
+        <equals arg1="@{projectHome}" arg2="" />
+        <then>
+          <var name="org.bedework.getjar.projecthome"
+               value="${project.home}/../@{project}" />
+        </then>
+        <else>
+          <var name="org.bedework.getjar.projecthome" value="@{projectHome}" />
+       </else>
+      </if>
+
       <var name="org.bedework.getjar.dest"
            value="@{lib}/${org.bedework.getjar.jarname}" />
 
+      <var name="org.bedework.getjar.finished" value="false" />
+
+      <!-- If a project was specified try to get it from the locale file system
+        -->
       <if>
-        <or>
+        <not>
           <equals arg1="@{project}" arg2="" />
-          <not>
-            <isset property="org.bedework.quickstart.build" />
-          </not>
-        </or>
+        </not>
+        <then>
+          <var name="org.bedework.getjar.project.jar"
+               value="${org.bedework.getjar.projecthome}/libapi/${org.bedework.getjar.jarname}" />
+          <echo message="check ${org.bedework.getjar.project.jar}" />
+
+          <if>
+            <available file="${org.bedework.getjar.project.jar}" />
+            <then>
+              <!-- Say we found the file -->
+              <var name="org.bedework.getjar.finished" value="true" />
+
+              <if>
+                <not>
+                  <uptodate srcfile="${org.bedework.getjar.project.jar}"
+                            targetfile="${org.bedework.getjar.dest}" />
+                </not>
+                <then>
+                  <echo message="Fetch ${org.bedework.getjar.jarname} from project @{project}" />
+                  <copy file="${org.bedework.getjar.project.jar}"
+                        todir="@{lib}" overwrite="yes" />
+                </then>
+              </if>
+            </then>
+          </if>
+        </then>
+      </if>
+
+      <if>
+        <equals arg1="${org.bedework.getjar.finished}" arg2="false" />
         <then>
           <echo message="Fetch ${org.bedework.getjar.jarname} from archive" />
           <get src="@{src}/${org.bedework.getjar.jarname}"
@@ -64,23 +114,6 @@
           <copy file="@{libcache}/${org.bedework.getjar.jarname}"
                 todir="@{lib}" overwrite="yes" />
         </then>
-        <else>
-          <var name="org.bedework.getjar.project.jar"
-               value="${project.home}/../@{project}/libapi/${org.bedework.getjar.jarname}" />
-          <echo message="check ${org.bedework.getjar.project.jar}" />
-
-          <if>
-            <not>
-              <uptodate srcfile="${org.bedework.getjar.project.jar}"
-                        targetfile="${org.bedework.getjar.dest}" />
-            </not>
-            <then>
-              <echo message="Fetch ${org.bedework.getjar.jarname} from project ${project}" />
-              <copy file="${org.bedework.getjar.project.jar}"
-                    todir="@{lib}" overwrite="yes" />
-            </then>
-          </if>
-       </else>
       </if>
     </sequential>
   </macrodef>
