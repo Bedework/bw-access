@@ -5,7 +5,7 @@
      The target of interest is build which should leave a jar file
      in the dist directory..
 
-     Authors: Mike Douglass   douglm@rpi.edu
+     Authors: Mike Douglass   douglm rpi.edu
 -->
 
 <project name="access" default="build">
