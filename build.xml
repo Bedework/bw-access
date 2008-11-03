@@ -244,7 +244,7 @@
   </target>
 
   <!-- =================================================================
-                            non-junit test - needs fixing or scrapping.
+                   non-junit test - needs fixing or scrapping.
        ================================================================= -->
   <target name="initRun" depends="build" >
     <property name="synchmltest.run.base"
@@ -260,7 +260,6 @@
       <fileset dir="${struts.dir}" includes="*.jar"/>
       <fileset dir="${org.bedework.temp.jars}" includes="*.jar"/>
     </copy>
-    <copy todir="${synchmltest.run.lib}" file="${appserver.jdbcdriver.jar}" />
 
     <path id="lib.class.path">
       <fileset dir="${synchmltest.run.lib}">
