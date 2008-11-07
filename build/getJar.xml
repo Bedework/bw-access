@@ -26,7 +26,7 @@
     <attribute name="version" default="" />
     <attribute name="src" default="http://bedework.org/downloads/lib"/>
     <attribute name="lib" default="${lib.dir}"/>
-    <attribute name="libcache" default="@{lib}/../libcache"/>
+    <attribute name="libcache" default="${org.bedework.libcache.dir}"/>
     <attribute name="project" default="" />
     <attribute name="projectHome" default="" />
     <sequential>
