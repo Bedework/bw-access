@@ -25,6 +25,8 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.sss.util.Util;
+
 /** This class is the result of interpreting a principal url
  *
  * @author douglm
@@ -40,4 +42,59 @@ public class PrincipalInfo {
 
   /** Set false if principal is not valid. */
   public boolean valid;
+
+  /**
+   *
+   */
+  public PrincipalInfo() {
+  }
+
+  /**
+   * @param whoType
+   * @param who
+   * @param prefix
+   */
+  public PrincipalInfo(int whoType, String who, String prefix) {
+    this.whoType = whoType;
+    this.who = who;
+    this.prefix = prefix;
+
+    valid = true;
+  }
+
+  public int hashCode() {
+    int hc = whoType;
+
+    if (who != null) {
+      hc *= who.hashCode();
+    }
+
+    if (prefix != null) {
+      hc *= prefix.hashCode();
+    }
+
+    return hc;
+  }
+
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
+
+    if (!(o instanceof PrincipalInfo)) {
+      return false;
+    }
+
+    PrincipalInfo that = (PrincipalInfo)o;
+
+    if (whoType != that.whoType) {
+      return false;
+    }
+
+    if (Util.cmpObjval(who, that.who) != 0) {
+      return false;
+    }
+
+    return Util.cmpObjval(prefix, that.prefix) == 0;
+  }
 }
