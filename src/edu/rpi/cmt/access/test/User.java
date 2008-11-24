@@ -53,6 +53,8 @@
 */
 package edu.rpi.cmt.access.test;
 
+import edu.rpi.cmt.access.Ace;
+
 /** Value object to represent a calendar user.
  *
  *   @author Mike Douglass douglm@rpi.edu
@@ -79,7 +81,7 @@ public class User extends Principal {
   }
 
   public int getKind() {
-    return principalUser;
+    return Ace.whoTypeUser;
   }
 
   /* ====================================================================

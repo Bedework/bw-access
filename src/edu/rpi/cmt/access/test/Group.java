@@ -25,6 +25,8 @@
 */
 package edu.rpi.cmt.access.test;
 
+import edu.rpi.cmt.access.Ace;
+
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -57,7 +59,7 @@ public class Group extends Principal {
   }
 
   public int getKind() {
-    return principalGroup;
+    return Ace.whoTypeGroup;
   }
 
   /** Set the members of the group.

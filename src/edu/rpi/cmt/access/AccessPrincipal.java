@@ -34,29 +34,9 @@ import java.util.Collection;
  *
  */
 public interface AccessPrincipal extends Serializable {
-  /** The kind of Principal returned by getKind() */
-
-  // XXX change to use whoType? from WhoDefs
-
-  /** user */
-  public static final int principalUser = 0;
-
-  /** group */
-  public static final int principalGroup = 1;
-
-  /** ticket * /
-  public static final int principalTicket = 2;
-
-  / ** projector etc * /
-  public static final int principalResource = 3;
-
-  / ** room, building etc * /
-  public static final int principalVenue = 4;
-
-  /** host */
-  public static final int principalHost = /*5*/2;
-
-  /** Return the kind of Principal, e.g. user/group etc
+  /** Return the kind of Principal, e.g. user/group etc.
+   * Values come from Ace.whoTypeXXX
+   *
    * @return int kind
    */
   public int getKind();
