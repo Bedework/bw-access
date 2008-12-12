@@ -210,6 +210,8 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     for (Ace ace: acl.getAces()) {
       if ((whoType == ace.who.getWhoType()) &&
           ((whoType == AceWho.whoTypeUnauthenticated) ||
+           (whoType == AceWho.whoTypeAuthenticated) ||
+           (whoType == AceWho.whoTypeAll) ||
            (whoType == AceWho.whoTypeOwner) ||
             ace.getWho().whoMatch(name))) {
         privileges = PrivilegeSet.mergePrivileges(privileges, ace.getHow(),
