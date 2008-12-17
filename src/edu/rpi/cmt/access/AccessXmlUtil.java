@@ -640,7 +640,8 @@ public class AccessXmlUtil implements Serializable {
           xml.openTag(tag);
           tagOpen = true;
         }
-        xml.emptyTag(privTags[p.getIndex()]);
+
+        xml.propertyTagVal(WebdavTags.privilege, privTags[p.getIndex()]);
       }
     }
 
