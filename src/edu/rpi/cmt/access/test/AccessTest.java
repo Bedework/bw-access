@@ -46,7 +46,7 @@ public class AccessTest extends TestCase {
    */
   public void testBasics() {
     try {
-      // Make sonme test objects
+      // Make some test objects
       User unauth = new User();
       User owner = new User("anowner");
       User auser = new User("auser");
