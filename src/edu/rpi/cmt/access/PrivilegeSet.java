@@ -86,6 +86,27 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
                      allowed,   // privUnlock
                      allowed));   // privNone
 
+  /** Read-only privileges
+   */
+  public static PrivilegeSet readOnlyPrivileges =
+    pooled(new PrivilegeSet(denied,   // privAll
+                     allowed,   // privRead
+                     denied,   // privReadAcl
+                     allowed,   // privReadCurrentUserPrivilegeSet
+                     allowed,   // privReadFreeBusy
+                     denied,   // privWrite
+                     denied,   // privWriteAcl
+                     denied,   // privWriteProperties
+                     denied,   // privWriteContent
+                     denied,   // privBind
+                     denied,   // privSchedule
+                     denied,   // privScheduleRequest
+                     denied,   // privScheduleReply
+                     denied,   // privScheduleFreeBusy
+                     denied,   // privUnbind
+                     allowed,   // privUnlock
+                     allowed));   // privNone
+
   /** Default privs for a non owner
    */
   public static PrivilegeSet defaultNonOwnerPrivileges =
