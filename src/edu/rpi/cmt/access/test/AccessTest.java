@@ -170,9 +170,9 @@ public class AccessTest extends TestCase {
                                                      encoded, null);
 
     if (debug) {
-      log(title + " got " + ca.accessAllowed + " and expected " + expected);
+      log(title + " got " + ca.getAccessAllowed() + " and expected " + expected);
     }
-    assertEquals(title, expected, ca.accessAllowed);
+    assertEquals(title, expected, ca.getAccessAllowed());
   }
 
   private void tryDecode(char[] encoded, String title) throws Throwable {

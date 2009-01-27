@@ -101,18 +101,58 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     /** The Acl used to evaluate the access. We should not necessarily
      * make this available to the client.
      */
-    public Acl acl;
+    private Acl acl;
+
+    private PrivilegeSet privileges = null;
+
+    /** Was it succesful */
+    private boolean accessAllowed;
+
+    /**
+     *
+     */
+    public CurrentAccess() {
+    }
+
+    /**
+     * @param privs
+     */
+    public CurrentAccess(PrivilegeSet privs) {
+      this.privileges = privs;
+    }
+
+    /**
+     * @param accessAllowed
+     */
+    public CurrentAccess(boolean accessAllowed) {
+      this.accessAllowed = accessAllowed;
+    }
+
+    /** The Acl used to evaluate the access. We should not necessarily
+     * make this available to the client.
+     *
+     * @return acl
+     */
+    public Acl getAcl() {
+      return acl;
+    }
 
     /**  Allowed access for each privilege type
      * @see PrivilegeDefs
+     *
+     * @return privileges
      */
-    public PrivilegeSet privileges = null;
+    public PrivilegeSet getPrivileges() {
+      return privileges;
+    }
 
-    /** Privileges desired */
-    public Privilege[] desiredAccess;
-
-    /** Was it succesful */
-    public boolean accessAllowed;
+    /** Is access allowed to this?
+     *
+     * @return boolean
+     */
+    public boolean getAccessAllowed() {
+      return accessAllowed;
+    }
 
     public String toString() {
       StringBuilder sb = new StringBuilder("CurrentAccess{");
@@ -125,6 +165,26 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
       return sb.toString();
     }
+  }
+
+  /** We use this for things like user home access.
+   *
+   */
+  public static CurrentAccess defaultNonOwnerAccess =
+    new CurrentAccess(PrivilegeSet.makeDefaultNonOwnerPrivileges());
+
+  /** We use this for superuser access.
+   *
+   * @param ca
+   * @return new CurrentAccess with access allowed
+   */
+  public static CurrentAccess forceAccessAllowed(CurrentAccess ca) {
+    CurrentAccess newCa = new CurrentAccess(true);
+
+    newCa.acl = ca.acl;
+    newCa.privileges = ca.privileges;
+
+    return newCa;
   }
 
   /** Evaluating an ACL
@@ -171,7 +231,6 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     boolean authenticated = !who.getUnauthenticated();
     boolean isOwner = false;
     CurrentAccess ca = new CurrentAccess();
-    ca.desiredAccess = how;
     ca.acl = this;
 
     decode(acl);
