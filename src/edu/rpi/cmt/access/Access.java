@@ -201,14 +201,15 @@ public class Access implements Serializable {
    * access</li>
    *
    * @param who      Acl.Principal defining who is trying to get access
-   * @param owner    String owner of object
+   * @param owner    owner of object
    * @param how      Privilege set definign desired access
    * @param aclString String defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who, String owner,
+  public CurrentAccess evaluateAccess(AccessPrincipal who,
+                                      AccessPrincipal owner,
                                       Privilege[] how, String aclString,
                                       PrivilegeSet filter)
           throws AccessException {
@@ -220,14 +221,15 @@ public class Access implements Serializable {
   /** convenience method
    *
    * @param who      Acl.Principal defining who is trying to get access
-   * @param owner    String owner of object
+   * @param owner    owner of object
    * @param how      Privilege set defining desired access
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who, String owner,
+  public CurrentAccess evaluateAccess(AccessPrincipal who,
+                                      AccessPrincipal owner,
                                       Privilege[] how, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
@@ -238,13 +240,14 @@ public class Access implements Serializable {
   /** convenience method - check for read access
    *
    * @param who      Acl.Principal defining who is trying to get access
-   * @param owner    String owner of object
+   * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess checkRead(AccessPrincipal who, String owner,
+  public CurrentAccess checkRead(AccessPrincipal who,
+                                 AccessPrincipal owner,
                                  char[] aclChars,
                                  PrivilegeSet filter)
           throws AccessException {
@@ -255,13 +258,14 @@ public class Access implements Serializable {
   /** convenience method - check for read write access
    *
    * @param who      Acl.Principal defining who is trying to get access
-   * @param owner    String owner of object
+   * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess checkReadWrite(AccessPrincipal who, String owner,
+  public CurrentAccess checkReadWrite(AccessPrincipal who,
+                                      AccessPrincipal owner,
                                       char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
@@ -272,15 +276,16 @@ public class Access implements Serializable {
   /** convenience method - check for any access
    *
    * @param who      Acl.Principal defining who is trying to get access
-   * @param owner    String owner of object
+   * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess checkAny(AccessPrincipal who, String owner,
-                                      char[] aclChars,
-                                      PrivilegeSet filter)
+  public CurrentAccess checkAny(AccessPrincipal who,
+                                AccessPrincipal owner,
+                                char[] aclChars,
+                                PrivilegeSet filter)
           throws AccessException {
     return new Acl(debug).evaluateAccess(who, owner, privSetAny, aclChars,
                                          filter);
@@ -289,14 +294,15 @@ public class Access implements Serializable {
   /** convenience method - check for given access
    *
    * @param who      Acl.Principal defining who is trying to get access
-   * @param owner    String owner of object
+   * @param owner    owner of object
    * @param priv     int desired access as defined above
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who, String owner,
+  public CurrentAccess evaluateAccess(AccessPrincipal who,
+                                      AccessPrincipal owner,
                                       int priv, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {

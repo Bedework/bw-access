@@ -166,7 +166,7 @@ public class AccessTest extends TestCase {
   private void tryEvaluateAccess(Principal who, Principal owner,
                                  Privilege[] how,char[] encoded,
                                  boolean expected, String title) throws Throwable {
-    CurrentAccess ca = new Acl(debug).evaluateAccess(who, owner.getAccount(), how,
+    CurrentAccess ca = new Acl(debug).evaluateAccess(who, owner, how,
                                                      encoded, null);
 
     if (debug) {

@@ -224,7 +224,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public CurrentAccess evaluateAccess(AccessPrincipal who,
-                                      String owner,
+                                      AccessPrincipal owner,
                                       Privilege[] how, char[] acl,
                                       PrivilegeSet filter)
           throws AccessException {
@@ -236,7 +236,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     decode(acl);
 
     if (authenticated) {
-      isOwner = who.getAccount().equals(owner);
+      isOwner = who.equals(owner);
     }
 
     StringBuilder debugsb = null;
