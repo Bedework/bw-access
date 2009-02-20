@@ -52,7 +52,16 @@ public interface AccessPrincipal extends Serializable {
    */
   public boolean getUnauthenticated();
 
-  /**
+  /** This is the external account name - that which we generally show the user.
+   * It may be sufficient to uniquely identify the principal, at least in context.
+   *
+   * <p>That is, at certain points we can assume the string "jim" refers to the
+   * user principal "/principals/users/jim" if that is how we store them.
+   *
+   * <p>The field principalRef is set to a value which uniquely identifies the
+   * principal, using prefixes or paths for example.
+   *
+   * <p>The access routines do
    * @param val
    */
   public void setAccount(String val);
@@ -61,6 +70,20 @@ public interface AccessPrincipal extends Serializable {
    * @return  String account name
    */
   public String getAccount();
+
+  /** This is the value which uniquely identifies the
+   * principal, using prefixes or paths for example.
+   *
+   * <p>The access routines do not use this field for access evaluation.
+   *
+   * @param val principal reference
+   */
+  public void setPrincipalRef(String val);
+
+  /**
+   * @return  String principal reference
+   */
+  public String getPrincipalRef();
 
   /** Set of groupNames of which principal is a member. These are not just those
    * of which the principal is a direct member but also those it is a member of

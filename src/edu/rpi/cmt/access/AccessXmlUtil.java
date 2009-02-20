@@ -103,20 +103,20 @@ public class AccessXmlUtil implements Serializable {
      */
     public String makeHref(String id, int whoType) throws AccessException;
 
-    /** For parsing of acls - return the current account.
+    /** Return AccessPrincipal for the current principal
      *
-     * @return String
+     * @return AccessPrincipal
      * @throws AccessException
      */
-    public String getAccount() throws AccessException;
+    public AccessPrincipal getPrincipal() throws AccessException;
 
-    /** Return PrincipalInfo for the given href
+    /** Return AccessPrincipal for the given href
      *
      * @param href
-     * @return PrincipalInfo or null for unknown.
+     * @return AccessPrincipal or null for unknown.
      * @throws AccessException
      */
-    public PrincipalInfo getPrincipalInfo(String href) throws AccessException;
+    public AccessPrincipal getPrincipal(String href) throws AccessException;
 
     /** Called during processing to indicate an error
      *
@@ -466,13 +466,16 @@ public class AccessXmlUtil implements Serializable {
       if ((href == null) || (href.length() == 0)) {
         throw exc("Missing href");
       }
-      PrincipalInfo pi = cb.getPrincipalInfo(href);
-      if (pi == null) {
+
+      AccessPrincipal ap = cb.getPrincipal(href);
+
+      if (ap == null) {
         cb.setErrorTag(WebdavTags.recognizedPrincipal);
         return false;
       }
-      whoType = pi.whoType;
-      who = pi.who;
+
+      whoType = ap.getKind();
+      who = ap.getAccount();
     } else if (XmlUtil.nodeMatches(el, WebdavTags.all)) {
       whoType = Ace.whoTypeAll;
     } else if (XmlUtil.nodeMatches(el, WebdavTags.authenticated)) {
@@ -487,8 +490,8 @@ public class AccessXmlUtil implements Serializable {
         throw exc("Bad WHO property");
       }
     } else if (XmlUtil.nodeMatches(el, WebdavTags.self)) {
-      whoType = Ace.whoTypeUser;
-      who = cb.getAccount();
+      whoType = cb.getPrincipal().getKind();
+      who = cb.getPrincipal().getAccount();
     } else {
       throw exc("Bad WHO");
     }
