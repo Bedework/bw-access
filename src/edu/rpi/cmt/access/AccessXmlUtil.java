@@ -393,61 +393,90 @@ public class AccessXmlUtil implements Serializable {
          <!ELEMENT grant (privilege+)>
          <!ELEMENT deny (privilege+)>
 
-         protected and inherited are for acl display
+         protected is for acl display
    */
   private boolean processAce(Node nd) throws Throwable {
     Element[] children = XmlUtil.getElementsArray(nd);
+    int pos = 0;
 
     if (children.length < 2) {
       throw exc("Bad ACE");
     }
 
-    Element curnode = children[0];
+    Element curnode = children[pos];
     boolean inverted = false;
 
     /* Require principal or invert */
 
-    if (XmlUtil.nodeMatches(curnode, WebdavTags.principal)) {
-    } else if (XmlUtil.nodeMatches(curnode, WebdavTags.invert)) {
+    if (XmlUtil.nodeMatches(curnode, WebdavTags.invert)) {
       /*  <!ELEMENT invert principal>       */
 
       inverted = true;
       curnode = XmlUtil.getOnlyElement(curnode);
-    } else {
-      throw exc("Bad ACE - expect principal | invert");
     }
 
     if (!parseAcePrincipal(curnode, inverted)) {
       return false;
     }
 
-    /* Recognize grant or deny */
-    for (int i = 1; i < children.length; i++) {
-      curnode = children[i];
+    pos++;
+    curnode = children[pos];
 
-      boolean denial = false;
+    /* grant or deny required here */
+    if (!parseGrantDeny(curnode)) {
+      if (debug) {
+        debugMsg("Expected grant | deny");
+      }
+      cb.setErrorTag(WebdavTags.noAceConflict);
+      return false;
+    }
 
-      if (XmlUtil.nodeMatches(curnode, WebdavTags.deny)) {
-        denial = true;
-      } else if (!XmlUtil.nodeMatches(curnode, WebdavTags.grant)) {
-        if (debug) {
-          debugMsg("Expected grant | deny");
-        }
-        cb.setErrorTag(WebdavTags.noAceConflict);
-        return false;
+    pos++;
+    if (pos == children.length) {
+      return true;
+    }
+    curnode = children[pos];
+
+    /* grant or deny possible here */
+    if (parseGrantDeny(curnode)) {
+      pos++;
+      if (pos == children.length) {
+        return true;
+      }
+      curnode = children[pos];
+    }
+
+    /* possible inherited */
+    if (XmlUtil.nodeMatches(curnode, WebdavTags.inherited)) {
+      curAce.setInherited(true);
+      curnode = XmlUtil.getOnlyElement(curnode);
+
+      if (!XmlUtil.nodeMatches(curnode, WebdavTags.href)) {
+        throw exc("Missing inherited href");
       }
 
-      Element[] pchildren = XmlUtil.getElementsArray(curnode);
+      String href = XmlUtil.getElementContent(curnode);
 
-      for (int pi = 0; pi < pchildren.length; pi++) {
-        Element pnode = pchildren[pi];
-
-        if (!XmlUtil.nodeMatches(pnode, WebdavTags.privilege)) {
-          throw exc("Bad ACE - expect privilege");
-        }
-
-        parsePrivilege(pnode, denial);
+      if ((href == null) || (href.length() == 0)) {
+        throw exc("Missing inherited href");
       }
+
+      curAce.setInheritedFrom(href);
+    }
+
+    /* Need this
+    if (XmlUtil.nodeMatches(curnode, WebdavTags.protected)) {
+      pos++;
+      if (pos == children.length) {
+        return true;
+      }
+      curnode = children[pos];
+    }
+    */
+
+    pos++;
+    if (pos < children.length) {
+      throw exc("Unexpected element " + children[pos]);
     }
 
     return true;
@@ -455,6 +484,10 @@ public class AccessXmlUtil implements Serializable {
 
   private boolean parseAcePrincipal(Node nd,
                                    boolean inverted) throws Throwable {
+    if (!XmlUtil.nodeMatches(nd, WebdavTags.principal)) {
+      throw exc("Bad ACE - expect principal");
+    }
+
     Element el = XmlUtil.getOnlyElement(nd);
 
     int whoType = -1;
@@ -501,6 +534,30 @@ public class AccessXmlUtil implements Serializable {
 
     if (debug) {
       debugMsg("Parsed ace/principal =" + awho);
+    }
+
+    return true;
+  }
+
+  private boolean parseGrantDeny(Node nd) throws Throwable {
+    boolean denial = false;
+
+    if (XmlUtil.nodeMatches(nd, WebdavTags.deny)) {
+      denial = true;
+    } else if (!XmlUtil.nodeMatches(nd, WebdavTags.grant)) {
+      return false;
+    }
+
+    Element[] pchildren = XmlUtil.getElementsArray(nd);
+
+    for (int pi = 0; pi < pchildren.length; pi++) {
+      Element pnode = pchildren[pi];
+
+      if (!XmlUtil.nodeMatches(pnode, WebdavTags.privilege)) {
+        throw exc("Bad ACE - expect privilege");
+      }
+
+      parsePrivilege(pnode, denial);
     }
 
     return true;
