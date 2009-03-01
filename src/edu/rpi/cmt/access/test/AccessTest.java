@@ -26,10 +26,14 @@
 package edu.rpi.cmt.access.test;
 
 import edu.rpi.cmt.access.Ace;
+import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl;
 import edu.rpi.cmt.access.Privilege;
 import edu.rpi.cmt.access.Privileges;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 import junit.framework.TestCase;
 
@@ -78,7 +82,10 @@ public class AccessTest extends TestCase {
       Privilege[] privSetReadWriteContent = {read, writeContent};
       Privilege[] privSetDelete = {delete};
 
-      /* See what we get when we encode a null - that's default - acl. */
+      /* See what we get when we encode a null - acl.
+       *
+       * I think this is no longer true. There is no default acl
+
 
       Acl acl = new Acl(debug);
 
@@ -88,15 +95,19 @@ public class AccessTest extends TestCase {
                         "Owner access for default");
       tryEvaluateAccess(auser, owner, privSetRead, encoded, false,
                         "User access for default");
+                        */
 
       log("---------------------------------------------------------");
 
       /* read others - i.e. not owner */
-      acl = new Acl(debug);
+      Acl acl = new Acl(debug);
 
-      acl.addAce(new Ace(null, false, Ace.whoTypeOther,
-                         Privileges.makePriv(Privileges.privRead)));
-      encoded = logEncoded(acl, "read others");
+      Collection<Privilege> readPrivs = new ArrayList<Privilege>();
+      readPrivs.add(read);
+
+      acl.addAce(new Ace(AceWho.other, readPrivs, null));
+
+      char[] encoded = logEncoded(acl, "read others");
       tryDecode(encoded, "read others");
       tryEvaluateAccess(owner, owner, privSetReadWrite, encoded, true,
                         "Owner access for read others");
@@ -110,14 +121,23 @@ public class AccessTest extends TestCase {
       /* read for group "agroup", rw for user "auser" */
       acl = new Acl(debug);
 
-      Ace ace = new Ace("agroup", false, Ace.whoTypeGroup,
-                        Privileges.makePriv(Privileges.privRead));
-      acl.addAce(ace);
+      Collection<Privilege> privs = new ArrayList<Privilege>();
+      privs.add(read);
 
-      ace = new Ace("auser", false, Ace.whoTypeUser);
-      ace.addPriv(Privileges.makePriv(Privileges.privRead));
-      ace.addPriv(Privileges.makePriv(Privileges.privWriteContent));
-      acl.addAce(ace);
+      Collection<Privilege> noPrivs = new ArrayList<Privilege>();
+      noPrivs.add(Privileges.makePriv(Privileges.privNone));
+
+      AceWho who = AceWho.getAceWho("agroup",
+                                    Ace.whoTypeGroup,
+                                    false);
+      acl.addAce(new Ace(who, privs, null));
+
+      who = AceWho.getAceWho("auser", Ace.whoTypeUser, false);
+      privs.clear();
+      privs.add(Privileges.makePriv(Privileges.privRead));
+      privs.add(Privileges.makePriv(Privileges.privWriteContent));
+      acl.addAce(new Ace(who, privs, null));
+
       encoded = logEncoded(acl, "read g=agroup,rw auser");
       tryDecode(encoded, "read g=agroup,rw auser");
       tryEvaluateAccess(owner, owner, privSetReadWriteContent, encoded, true,
@@ -140,11 +160,10 @@ public class AccessTest extends TestCase {
       /* read for group "agroup", rw for user "auser" */
       acl = new Acl(debug);
 
-      acl.addAce(new Ace(null, false, Ace.whoTypeAll,
-                         Privileges.makePriv(Privileges.privRead)));
+      acl.addAce(new Ace(AceWho.all, readPrivs, null));
 
-      acl.addAce(new Ace(null, false, Ace.whoTypeUnauthenticated,
-                         Privileges.makePriv(Privileges.privNone)));
+      acl.addAce(new Ace(AceWho.unauthenticated, noPrivs, null));
+
       encoded = logEncoded(acl, "read others,none unauthenticated");
       tryDecode(encoded, "read others,none unauthenticated");
       tryEvaluateAccess(owner, owner, privSetReadWrite, encoded, true,
@@ -186,6 +205,11 @@ public class AccessTest extends TestCase {
 
   private char[] logEncoded(Acl acl, String title) throws Throwable {
     char [] encoded = acl.encode();
+
+    if (encoded == null) {
+      log(title + "=NULL");
+      return null;
+    }
 
     String s = new String(encoded);
 

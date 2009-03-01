@@ -26,6 +26,8 @@
 package edu.rpi.cmt.access;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 
@@ -122,16 +124,26 @@ public class Access implements Serializable {
     Acl acl = new Acl();
 
     try {
+
+      Collection<Privilege> allPrivs = new ArrayList<Privilege>();
+      allPrivs.add(all);
+
+      Collection<Privilege> readPrivs = new ArrayList<Privilege>();
+      readPrivs.add(read);
+
+      Collection<Privilege> noPrivs = new ArrayList<Privilege>();
+      noPrivs.add(none);
+
       /** Public - write owner, read others, read unauthenticated */
       acl.clear();
-      acl.addAce(new Ace(null, false, Ace.whoTypeOwner, all));
-      acl.addAce(new Ace(null, false, Ace.whoTypeOther, read));
-      acl.addAce(new Ace(null, false, Ace.whoTypeUnauthenticated, read));
+      acl.addAce(new Ace(AceWho.owner, allPrivs, null));
+      acl.addAce(new Ace(AceWho.other, readPrivs, null));
+      acl.addAce(new Ace(AceWho.unauthenticated, readPrivs, null));
       defaultPublicAccess = new String(acl.encode());
 
       acl.clear();
-      acl.addAce(new Ace(null, false, Ace.whoTypeOwner, all));
-      acl.addAce(new Ace(null, false, Ace.whoTypeOther, none));
+      acl.addAce(new Ace(AceWho.owner, allPrivs, null));
+      acl.addAce(new Ace(AceWho.other, noPrivs, null));
       defaultPersonalAccess = new String(acl.encode());
     } catch (Throwable t) {
       throw new RuntimeException(t);

@@ -39,6 +39,7 @@ import org.xml.sax.InputSource;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.xml.namespace.QName;
@@ -59,13 +60,6 @@ public class AccessXmlUtil implements Serializable {
   private XmlEmit xml;
 
   private QName[] privTags;
-
-  /* Following used when parsing an xml accl spec */
-  private Acl curAcl;
-
-  private Ace curAce;
-
-  private AceWho awho;
 
   /** xml privilege tags */
   public static final QName[] caldavPrivTags = {
@@ -242,16 +236,30 @@ public class AccessXmlUtil implements Serializable {
 
       Element[] aceEls = XmlUtil.getElementsArray(root);
 
-      curAcl = new Acl();
+      Acl curAcl = new Acl();
 
       for (Element curnode: aceEls) {
         if (!XmlUtil.nodeMatches(curnode, WebdavTags.ace)) {
           throw exc("Expected ACE");
         }
 
-        if (!processAce(curnode)) {
+        Ace ace = processAce(curnode);
+        if (ace == null) {
           break;
         }
+
+        /* Look for this 'who' in the list */
+
+        Collection<Ace> aces = curAcl.getAces();
+        if (aces != null) {
+          for (Ace a: curAcl.getAces()) {
+            if (a.getWho().equals(ace.getWho())) {
+              throw exc("Multiple ACEs fro " + a.getWho());
+            }
+          }
+        }
+
+        curAcl.addAce(ace);
       }
 
       return curAcl;
@@ -395,7 +403,7 @@ public class AccessXmlUtil implements Serializable {
 
          protected is for acl display
    */
-  private boolean processAce(Node nd) throws Throwable {
+  private Ace processAce(Node nd) throws Throwable {
     Element[] children = XmlUtil.getElementsArray(nd);
     int pos = 0;
 
@@ -405,6 +413,7 @@ public class AccessXmlUtil implements Serializable {
 
     Element curnode = children[pos];
     boolean inverted = false;
+    String inheritedFrom = null;
 
     /* Require principal or invert */
 
@@ -415,40 +424,49 @@ public class AccessXmlUtil implements Serializable {
       curnode = XmlUtil.getOnlyElement(curnode);
     }
 
-    if (!parseAcePrincipal(curnode, inverted)) {
-      return false;
+    AceWho awho = parseAcePrincipal(curnode, inverted);
+
+    if (awho == null) {
+      return null;
     }
 
     pos++;
     curnode = children[pos];
 
     /* grant or deny required here */
-    if (!parseGrantDeny(curnode)) {
+    Collection<Privilege> privs = parseGrantDeny(curnode);
+
+    if (privs == null) {
       if (debug) {
         debugMsg("Expected grant | deny");
       }
       cb.setErrorTag(WebdavTags.noAceConflict);
-      return false;
+      return null;
     }
 
     pos++;
     if (pos == children.length) {
-      return true;
+      return new Ace(awho, privs, null);
     }
+
     curnode = children[pos];
 
     /* grant or deny possible here */
-    if (parseGrantDeny(curnode)) {
+    Collection<Privilege> morePrivs = parseGrantDeny(curnode);
+
+    if (morePrivs != null) {
+      privs.addAll(morePrivs);
       pos++;
       if (pos == children.length) {
-        return true;
+        return new Ace(awho, privs, null);
       }
+
       curnode = children[pos];
     }
 
     /* possible inherited */
     if (XmlUtil.nodeMatches(curnode, WebdavTags.inherited)) {
-      curAce.setInherited(true);
+
       curnode = XmlUtil.getOnlyElement(curnode);
 
       if (!XmlUtil.nodeMatches(curnode, WebdavTags.href)) {
@@ -461,7 +479,7 @@ public class AccessXmlUtil implements Serializable {
         throw exc("Missing inherited href");
       }
 
-      curAce.setInheritedFrom(href);
+      inheritedFrom = href;
     }
 
     /* Need this
@@ -479,10 +497,10 @@ public class AccessXmlUtil implements Serializable {
       throw exc("Unexpected element " + children[pos]);
     }
 
-    return true;
+    return new Ace(awho, privs, inheritedFrom);
   }
 
-  private boolean parseAcePrincipal(Node nd,
+  private AceWho parseAcePrincipal(Node nd,
                                    boolean inverted) throws Throwable {
     if (!XmlUtil.nodeMatches(nd, WebdavTags.principal)) {
       throw exc("Bad ACE - expect principal");
@@ -504,7 +522,7 @@ public class AccessXmlUtil implements Serializable {
 
       if (ap == null) {
         cb.setErrorTag(WebdavTags.recognizedPrincipal);
-        return false;
+        return null;
       }
 
       whoType = ap.getKind();
@@ -529,25 +547,25 @@ public class AccessXmlUtil implements Serializable {
       throw exc("Bad WHO");
     }
 
-    curAce = null;
-    awho = AceWho.getAceWho(who, whoType, inverted);
+    AceWho awho = AceWho.getAceWho(who, whoType, inverted);
 
     if (debug) {
       debugMsg("Parsed ace/principal =" + awho);
     }
 
-    return true;
+    return awho;
   }
 
-  private boolean parseGrantDeny(Node nd) throws Throwable {
+  private Collection<Privilege> parseGrantDeny(Node nd) throws Throwable {
     boolean denial = false;
 
     if (XmlUtil.nodeMatches(nd, WebdavTags.deny)) {
       denial = true;
     } else if (!XmlUtil.nodeMatches(nd, WebdavTags.grant)) {
-      return false;
+      return null;
     }
 
+    Collection<Privilege> privs = new ArrayList<Privilege>();
     Element[] pchildren = XmlUtil.getElementsArray(nd);
 
     for (int pi = 0; pi < pchildren.length; pi++) {
@@ -557,38 +575,17 @@ public class AccessXmlUtil implements Serializable {
         throw exc("Bad ACE - expect privilege");
       }
 
-      parsePrivilege(pnode, denial);
+      privs.add(parsePrivilege(pnode, denial));
     }
 
-    return true;
+    return privs;
   }
 
-  private void parsePrivilege(Node nd,
-                             boolean denial) throws Throwable {
+  private Privilege parsePrivilege(Node nd,
+                                   boolean denial) throws Throwable {
     Element el = XmlUtil.getOnlyElement(nd);
 
     int priv;
-
-    if (curAce == null) {
-      /* Look for this 'who' in the list */
-
-      Collection<Ace> aces = curAcl.getAces();
-      if (aces != null) {
-        for (Ace ace: curAcl.getAces()) {
-          if (ace.getWho().equals(awho)) {
-            curAce = ace;
-            break;
-          }
-        }
-      }
-
-      if (curAce == null) {
-        curAce = new Ace();
-        curAce.setWho(awho);
-
-        curAcl.addAce(curAce);
-      }
-    }
 
     findPriv: {
       // ENUM
@@ -603,8 +600,8 @@ public class AccessXmlUtil implements Serializable {
     if (debug) {
       debugMsg("Add priv " + priv + " denied=" + denial);
     }
-    curAce.addPriv(Privileges.makePriv(priv, denial));
 
+    return Privileges.makePriv(priv, denial);
   }
 
   /* Emit the Collection of aces as an xml using the current xml writer
@@ -645,7 +642,7 @@ public class AccessXmlUtil implements Serializable {
   }
 
   private void closeAce(Ace ace) throws Throwable {
-    if (ace.getInherited()) {
+    if (ace.getInheritedFrom() != null) {
       QName tag = WebdavTags.inherited;
       xml.openTag(tag);
       xml.property(WebdavTags.href, ace.getInheritedFrom());

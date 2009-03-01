@@ -29,15 +29,16 @@ import edu.rpi.sss.util.ObjectPool;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
-/** Object to represent an ace for a calendar entity or service.
+/** Immutable object to represent an ace for a calendar entity or service.
  *
  * <p>The compareTo method orders the Aces according to the notWho, whoType and
  * who components. It does not take the actual privileges into account. There
  * should only be one entry per the above combination and the latest one on the
  * path should stand.
  *
- *  @author Mike Douglass   douglm@rpi.edu
+ *  @author Mike Douglass   douglm   rpi.edu
  */
 public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   boolean debug;
@@ -52,61 +53,35 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    */
   Collection<Privilege> privs;
 
-  private boolean inherited;
-
   private String inheritedFrom;
 
   private static ObjectPool<String> inheritedFroms = new ObjectPool<String>();
 
-  /** Constructor
-   */
-  public Ace() {
-    this(false);
-  }
-
-  /** Constructor
-   *
-   * @param debug
-   */
-  public Ace(boolean debug) {
-    this.debug = debug;
-  }
-
-  /** Constructor
-   *
+  /**
    * @param who
-   * @param notWho
-   * @param whoType
-   * @param p
+   * @param privs
+   * @param inheritedFrom
    */
-  public Ace(String who,
-             boolean notWho,
-             int whoType,
-             Privilege p) {
-    this.who = AceWho.getAceWho(who, whoType, notWho);
-    //addPriv(p);
-    getPrivs().add(p);
-    setHow(PrivilegeSet.makePrivileges(p));
-  }
+  public Ace(final AceWho who,
+             final Collection<Privilege> privs,
+             final String inheritedFrom) {
+    this.who = who;
 
-  /** Constructor
-   *
-   * @param who
-   * @param notWho
-   * @param whoType
-   */
-  public Ace(String who,
-             boolean notWho,
-             int whoType) {
-    this.who = AceWho.getAceWho(who, whoType, notWho);
-  }
+    how = new PrivilegeSet();
+    this.privs = new ArrayList<Privilege>();
+    if (privs != null) {
+      for (Privilege p: privs) {
+        this.privs.add(p);
+        how = PrivilegeSet.addPrivilege(how, p);
+      }
+    }
 
-  /** Set who this entry is for
-   *
-   * @param val
-   */
-  public void setWho(AceWho val) {
-    who = val;
+    if (inheritedFrom == null) {
+      this.inheritedFrom = null;
+    } else {
+      this.inheritedFrom = inheritedFroms.get(inheritedFrom);
+    }
+
   }
 
   /** Get who this entry is for
@@ -115,13 +90,6 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    */
   public AceWho getWho() {
     return who;
-  }
-
-  /**
-   * @param val PrivilegeSet of allowed/denied/undefined indexed by Privilege index
-   */
-  public void setHow(PrivilegeSet val) {
-    how = val;
   }
 
   /**
@@ -138,54 +106,14 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   /**
    *
-   * @param val Collection of Privilege objects defining the access. Used when manipulating acls
-   */
-  public void setPrivs(Collection<Privilege> val) {
-    privs = val;
-  }
-
-  /**
-   *
    * @return Collection of Privilege objects defining the access. Used when manipulating acls
    */
   public Collection<Privilege> getPrivs() {
     if (privs == null) {
-      privs = new ArrayList<Privilege>();
+      return Collections.emptyList();
     }
-    return privs;
-  }
 
-  /**
-   *
-   * @param val Privilege to add to Collection
-   */
-  public void addPriv(Privilege val) {
-    getPrivs().add(val);
-    //getHow().setPrivilege(val);
-    setHow(PrivilegeSet.addPrivilege(getHow(), val));
-  }
-
-  /** An ace is inherited if it is merged in from further up the path.
-   *
-   * @param val
-   */
-  public void setInherited(boolean val) {
-    inherited = val;
-  }
-
-  /**
-   * @return boolean
-   */
-  public boolean getInherited() {
-    return inherited;
-  }
-
-  /** Path defining from where we inherited access.
-   *
-   * @param val
-   */
-  public void setInheritedFrom(String val) {
-    inheritedFrom = inheritedFroms.get(val);
+    return Collections.unmodifiableCollection(privs);
   }
 
   /**
@@ -215,7 +143,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
            (whoType == AceWho.whoTypeOwner) ||
             ace.getWho().whoMatch(name))) {
         privileges = PrivilegeSet.mergePrivileges(privileges, ace.getHow(),
-                                                  ace.getInherited());
+                                                  ace.getInheritedFrom() != null);
       }
     }
 
@@ -226,72 +154,42 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    *                 Decoding methods
    * ==================================================================== */
 
-  /** Skip over an ace
+  /** Get the next ace in the acl.
    *
    * @param acl
+   * @param path If non-null flags an inherited ace
+   * @return Ace
    * @throws AccessException
    */
-  public void skip(EncodedAcl acl) throws AccessException {
-    acl.skipString();
-    while (acl.getChar() != ' ') {
-    }
-  }
+  public static Ace decode(EncodedAcl acl,
+                           String path) throws AccessException {
+    AceWho who = AceWho.decode(acl);
 
-  /* * Search through the acl for a who that matches the given name and type..
-   *
-   * <p>That is, if we have a whoFlag and the String matches or a
-   * notWhoFlag and the string does not match then return the length of
-   * the entire 'who' section.
-   *
-   * <p>NOTE - I'm not sure of some of the semantics of the NOT thing. It's
-   * pretty clear that matching a user is more specific than matching a
-   * group but what's the inverted meaning?
-   *
-   * <p>If getPrivileges is true the Collection of privilege objects
-   * defining the ace will be returned. This is needed for acl
-   * manipulation rather than evaluation.
-   *
-   * @param acl
-   * @param getPrivileges
-   * @param name
-   * @param whoType
-   * @return boolean true if we find a match
-   * @throws AccessException
-   * /
-  public boolean decode(EncodedAcl acl,
-                        boolean getPrivileges,
-                        String name, int whoType) throws AccessException {
-    acl.rewind();
+    //int pos = acl.getPos();
 
-    while (acl.hasMore()) {
-      getWho().decode(acl);
+    //PrivilegeSet how = PrivilegeSet.fromEncoding(acl);
 
-      if ((whoType != who.getWhoType()) || !who.whoMatch(name)) {
-        skipHow(acl);
-      } else {
-        decodeHow(acl, getPrivileges);
-        return true;
+    //acl.setPos(pos);
+
+    Collection<Privilege> privs = Privileges.getPrivs(acl);
+
+    // See if we got an inherited flag
+    acl.back();
+
+    String  inheritedFrom = null;
+
+    if (acl.getChar() == PrivilegeDefs.inheritedFlag) {
+      inheritedFrom = acl.getString();
+      if (acl.getChar() != ' ') {
+        throw new AccessException("malformedAcl");
       }
     }
 
-    return false;
-  }
-  */
+    if (inheritedFrom == null) {
+      inheritedFrom = path;  // May come from here
+    }
 
-  /** Get the next ace in the acl.
-   *
-   * <p>If .getPrivileges is true the Collection of privilege objects
-   * defining the ace will be returned. This is needed for acl
-   * manipulation rather than evaluation.
-   *
-   * @param acl
-   * @param getPrivileges
-   * @throws AccessException
-   */
-  public void decode(EncodedAcl acl,
-                     boolean getPrivileges) throws AccessException {
-    who = AceWho.decode(acl);
-    decodeHow(acl, getPrivileges);
+    return new Ace(who, privs, inheritedFrom);
   }
 
   /* ====================================================================
@@ -310,7 +208,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
       p.encode(acl);
     }
 
-    if (inherited) {
+    if (inheritedFrom != null) {
       acl.addChar(PrivilegeDefs.inheritedFlag);
       acl.encodeString(inheritedFrom);
     }
@@ -380,7 +278,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
       sb.append(how);
     }
 
-    if (getInherited()) {
+    if (getInheritedFrom() != null) {
       sb.append(", inherited from \"");
       sb.append(getInheritedFrom());
       sb.append("\"");
@@ -397,32 +295,6 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     sb.append("}");
 
     return sb.toString();
-  }
-
-  /*
-  private void skipHow(EncodedAcl acl) throws AccessException {
-    Privileges.skip(acl);
-  }
-  */
-
-  private void decodeHow(EncodedAcl acl,
-                         boolean getPrivileges) throws AccessException {
-    int pos = acl.getPos();
-    setHow(PrivilegeSet.fromEncoding(acl));
-    if (getPrivileges) {
-      acl.setPos(pos);
-      setPrivs(Privileges.getPrivs(acl));
-    }
-
-    // See if we got an inherited flag
-    acl.back();
-    if (acl.getChar() == PrivilegeDefs.inheritedFlag) {
-      inherited = true;
-      inheritedFrom = acl.getString();
-      if (acl.getChar() != ' ') {
-        throw new AccessException("malformedAcl");
-      }
-    }
   }
 }
 

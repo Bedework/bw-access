@@ -28,6 +28,7 @@ package edu.rpi.cmt.access;
 import edu.rpi.sss.util.ObjectPool;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeMap;
 
@@ -218,14 +219,15 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @param who
    * @param owner
    * @param how
-   * @param acl
+   * @param aclChars
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
   public CurrentAccess evaluateAccess(AccessPrincipal who,
                                       AccessPrincipal owner,
-                                      Privilege[] how, char[] acl,
+                                      Privilege[] how,
+                                      char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
     boolean authenticated = !who.getUnauthenticated();
@@ -233,7 +235,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     CurrentAccess ca = new CurrentAccess();
     ca.acl = this;
 
-    decode(acl);
+    decode(aclChars);
 
     if (authenticated) {
       isOwner = who.equals(owner);
@@ -243,11 +245,20 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
     if (debug) {
       debugsb = new StringBuilder("Check access for '");
-      debugsb.append(new String(acl));
+      if (aclChars == null) {
+        debugsb.append("NULL");
+      } else {
+        debugsb.append(new String(aclChars));
+      }
+
       debugsb.append("' with authenticated = ");
       debugsb.append(authenticated);
       debugsb.append(" isOwner = ");
       debugsb.append(isOwner);
+    }
+
+    if (aclChars == null) {
+      return ca;
     }
 
     getPrivileges: {
@@ -430,11 +441,15 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
   public void defaultAccess() {
     aces = null; // reset
 
-    addAce(new Ace(null, false, Ace.whoTypeOwner,
-                   Privileges.makePriv(Privileges.privAll)));
+    Collection<Privilege> privs = new ArrayList<Privilege>();
+    privs.add(Privileges.makePriv(Privileges.privAll));
 
-    addAce(new Ace(null, false, Ace.whoTypeOther,
-                   Privileges.makePriv(Privileges.privNone)));
+    addAce(new Ace(AceWho.owner, privs, null));
+
+    privs.clear();
+    privs.add(Privileges.makePriv(Privileges.privNone));
+
+    addAce(new Ace(AceWho.other, privs, null));
   }
 
   /** Remove access for a given 'who' entry
@@ -481,9 +496,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       aces = new TreeMap<AceWho, Ace>();
 
       while (hasMore()) {
-        Ace ace = new Ace();
-
-        ace.decode(this, true);
+        Ace ace = Ace.decode(this, null);
 
         aces.put(ace.getWho(), ace);
       }
@@ -518,7 +531,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * an entity from the merged result.
    *
    * @param val char[] val to decode and merge
-   * @param path   path of current entity
+   * @param path   path of current entity to flag the inheritance
    * @throws AccessException
    */
   public void merge(char[] val, String path) throws AccessException {
@@ -530,13 +543,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     }
 
     while (ea.hasMore()) {
-      Ace ace = new Ace();
-
-      ace.decode(ea, true);
-      if (!ace.getInherited()) {
-        ace.setInherited(true);
-        ace.setInheritedFrom(path);
-      }
+      Ace ace = Ace.decode(ea, path);
 
       if (aces == null) {
         aces = new TreeMap<AceWho, Ace>();
@@ -600,7 +607,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     }
 
     for (Ace ace: aces.values()) {
-      if (!ace.getInherited()) {
+      if (ace.getInheritedFrom() == null) {
         ace.encode(this);
       }
     }

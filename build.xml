@@ -196,7 +196,7 @@
   <target name="unittest" depends="init,build-source,build-test,run-unittest,cleanup"
           description="Test the access control classes"/>
 
-  <target name="run-unittest" >
+  <target name="run-unittest" depends="init" >
     <!-- ................................................................
                             unpackthe tests jar
          ............................................................... -->

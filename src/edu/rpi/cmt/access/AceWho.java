@@ -44,6 +44,20 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
 
   private static boolean poolAceWhos = true;
 
+  /** Represents all */
+  public static final AceWho all = getAceWho(null, Ace.whoTypeAll, false);
+
+  /** Represents an owner */
+  public static final AceWho owner = getAceWho(null, Ace.whoTypeOwner, false);
+
+  /** Represents other than owner */
+  public static final AceWho other = getAceWho(null, Ace.whoTypeOther, false);
+
+  /** Represents unauthenticated users */
+  public static final AceWho unauthenticated = getAceWho(null,
+                                                         Ace.whoTypeUnauthenticated,
+                                                         false);
+
   /** Gat an AceWho corresponding to the parameters.
    *
    * @param who
@@ -73,17 +87,9 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
   private AceWho(String who,
                  int whoType,
                  boolean notWho) {
-    setWho(who);
+    this.who = whos.get(who);
     this.notWho = notWho;
     this.whoType = whoType;
-  }
-
-  /** Set who this entry is for
-   *
-   * @param val
-   */
-  private void setWho(String val) {
-    who = whos.get(val);
   }
 
   /** Get who this entry is for
