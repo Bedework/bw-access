@@ -25,11 +25,16 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.cmt.access.Access.AccessStatsEntry;
 import edu.rpi.sss.util.ObjectPool;
+
+import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Immutable object to represent an ace for a calendar entity or service.
  *
@@ -40,8 +45,10 @@ import java.util.Collections;
  *
  *  @author Mike Douglass   douglm   rpi.edu
  */
-public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
-  boolean debug;
+public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
+  private static boolean debug;
+
+  private static transient Logger log;
 
   private AceWho who;
 
@@ -51,20 +58,63 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   /** Privilege objects defining the access. Used when manipulating acls
    */
-  Collection<Privilege> privs;
+  private Collection<Privilege> privs;
 
   private String inheritedFrom;
 
+  /* If non-null the encoding for this ace. */
+  private String encoding;
+
+  /* If non-null the encoding as characters. */
+  private char[] encodingChars;
+
   private static ObjectPool<String> inheritedFroms = new ObjectPool<String>();
+
+  private static Map<String, Ace> aceCache = new HashMap<String, Ace>();
+
+  private static AccessStatsEntry aceCacheSize =
+    new AccessStatsEntry("ACE cache size");
+
+  private static AccessStatsEntry aceCacheHits =
+    new AccessStatsEntry("ACE cache hits");
+
+  private static AccessStatsEntry aceCacheMisses =
+    new AccessStatsEntry("ACE cache misses");
 
   /**
    * @param who
    * @param privs
    * @param inheritedFrom
+   * @return Ace
+   * @throws AccessException
    */
-  public Ace(final AceWho who,
-             final Collection<Privilege> privs,
-             final String inheritedFrom) {
+  public static Ace makeAce(final AceWho who,
+                            final Collection<Privilege> privs,
+                            final String inheritedFrom) throws AccessException {
+    Ace ace = new Ace(who, privs, inheritedFrom);
+
+    Ace cace = aceCache.get(ace.encoding);
+
+    if (cace == null) {
+      aceCache.put(ace.encoding, ace);
+      aceCacheSize.count = aceCache.size();
+      cace = ace;
+    }
+
+    return cace;
+  }
+
+  /**
+   * @param who
+   * @param privs
+   * @param inheritedFrom
+   * @throws AccessException
+   */
+  private Ace(final AceWho who,
+              final Collection<Privilege> privs,
+              final String inheritedFrom) throws AccessException {
+    debug = getLog().isDebugEnabled();
+
     this.who = who;
 
     how = new PrivilegeSet();
@@ -82,6 +132,21 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
       this.inheritedFrom = inheritedFroms.get(inheritedFrom);
     }
 
+    encode();
+  }
+
+  /** Get the access statistics
+   *
+   * @return Collection of stats
+   */
+  public static Collection<AccessStatsEntry> getStatistics() {
+    Collection<AccessStatsEntry> stats = new ArrayList<AccessStatsEntry>();
+
+    stats.add(aceCacheSize);
+    stats.add(aceCacheHits);
+    stats.add(aceCacheMisses);
+
+    return stats;
   }
 
   /** Get who this entry is for
@@ -163,33 +228,84 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    */
   public static Ace decode(EncodedAcl acl,
                            String path) throws AccessException {
+    /* Find the end of the ace and see if we have a cached version */
+
+    int pos = acl.getPos();
+
+    AceWho.skip(acl);
+    Privileges.skip(acl);
+    acl.back();
+
+    boolean hasInherited = false;
+
+    if (acl.getChar() == PrivilegeDefs.inheritedFlag) {
+      hasInherited = true;
+      acl.skipString();
+      if (acl.getChar() != ' ') {
+        throw new AccessException("malformedAcl");
+      }
+    }
+
+    String enc;
+
+    if (hasInherited || (path == null)) {
+      enc = acl.getString(pos);
+    } else {
+      acl.back(); // Don't catch the terminating space
+
+      StringBuilder sb = new StringBuilder(acl.getString(pos));
+
+      acl.getChar();  // discard terminator
+
+      sb.append(PrivilegeDefs.inheritedFlag);
+      sb.append(EncodedAcl.encodedString(path));
+      sb.append(' ');
+
+      enc = sb.toString();
+    }
+
+    if (debug) {
+      debugMsg("decode: string is :'" + enc + "'");
+    }
+
+    Ace ace = aceCache.get(enc);
+
+    if (ace != null) {
+      aceCacheHits.count++;
+      return ace;
+    }
+
+    aceCacheMisses.count++;
+
+    /* Do it the hard way */
+    acl.setPos(pos);
+
     AceWho who = AceWho.decode(acl);
-
-    //int pos = acl.getPos();
-
-    //PrivilegeSet how = PrivilegeSet.fromEncoding(acl);
-
-    //acl.setPos(pos);
 
     Collection<Privilege> privs = Privileges.getPrivs(acl);
 
     // See if we got an inherited flag
     acl.back();
 
-    String  inheritedFrom = null;
+    String inheritedFrom = null;
 
     if (acl.getChar() == PrivilegeDefs.inheritedFlag) {
       inheritedFrom = acl.getString();
-      if (acl.getChar() != ' ') {
-        throw new AccessException("malformedAcl");
-      }
+    } else {
+      acl.back();
+    }
+
+    if (acl.getChar() != ' ') {
+      throw new AccessException("malformedAcl");
     }
 
     if (inheritedFrom == null) {
       inheritedFrom = path;  // May come from here
     }
 
-    return new Ace(who, privs, inheritedFrom);
+    ace = makeAce(who, privs, inheritedFrom);
+
+    return ace;
   }
 
   /* ====================================================================
@@ -202,18 +318,37 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    * @throws AccessException
    */
   public void encode(EncodedAcl acl) throws AccessException {
-    getWho().encode(acl);
+    if (encoding == null) {
+      encode();
+    }
+
+    acl.addChar(encodingChars);
+  }
+
+  /** Encode this object for caching
+   *
+   * @throws AccessException
+   */
+  private void encode() throws AccessException {
+    EncodedAcl eacl = new EncodedAcl();
+    eacl.startEncoding();
+
+    getWho().encode(eacl);
 
     for (Privilege p: privs) {
-      p.encode(acl);
+      p.encode(eacl);
     }
 
     if (inheritedFrom != null) {
-      acl.addChar(PrivilegeDefs.inheritedFlag);
-      acl.encodeString(inheritedFrom);
+      eacl.addChar(PrivilegeDefs.inheritedFlag);
+      eacl.encodeString(inheritedFrom);
     }
 
-    acl.addChar(' ');  // terminate privs.
+    eacl.addChar(' ');  // terminate privs.
+
+    encodingChars = eacl.getEncoding();
+
+    encoding = new String(encodingChars);
   }
 
   /** Provide a string representation for user display - this should probably
@@ -235,6 +370,22 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     sb.append(")");
 
     return sb.toString();
+  }
+
+  /* ====================================================================
+   *                   private methods
+   * ==================================================================== */
+
+  protected static Logger getLog() {
+    if (log == null) {
+      log = Logger.getLogger(Ace.class);
+    }
+
+    return log;
+  }
+
+  protected static void debugMsg(String msg) {
+    getLog().debug(msg);
   }
 
   /* ====================================================================
@@ -279,7 +430,7 @@ public class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     }
 
     if (getInheritedFrom() != null) {
-      sb.append(", inherited from \"");
+      sb.append(", \ninherited from \"");
       sb.append(getInheritedFrom());
       sb.append("\"");
     }

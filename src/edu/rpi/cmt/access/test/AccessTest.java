@@ -100,14 +100,15 @@ public class AccessTest extends TestCase {
       log("---------------------------------------------------------");
 
       /* read others - i.e. not owner */
-      Acl acl = new Acl(debug);
 
       Collection<Privilege> readPrivs = new ArrayList<Privilege>();
       readPrivs.add(read);
 
-      acl.addAce(new Ace(AceWho.other, readPrivs, null));
+      Collection<Ace> aces = new ArrayList<Ace>();
 
-      char[] encoded = logEncoded(acl, "read others");
+      aces.add(Ace.makeAce(AceWho.other, readPrivs, null));
+
+      char[] encoded = logEncoded(new Acl(aces), "read others");
       tryDecode(encoded, "read others");
       tryEvaluateAccess(owner, owner, privSetReadWrite, encoded, true,
                         "Owner access for read others");
@@ -119,7 +120,7 @@ public class AccessTest extends TestCase {
       log("---------------------------------------------------------");
 
       /* read for group "agroup", rw for user "auser" */
-      acl = new Acl(debug);
+      aces.clear();
 
       Collection<Privilege> privs = new ArrayList<Privilege>();
       privs.add(read);
@@ -130,15 +131,15 @@ public class AccessTest extends TestCase {
       AceWho who = AceWho.getAceWho("agroup",
                                     Ace.whoTypeGroup,
                                     false);
-      acl.addAce(new Ace(who, privs, null));
+      aces.add(Ace.makeAce(who, privs, null));
 
       who = AceWho.getAceWho("auser", Ace.whoTypeUser, false);
       privs.clear();
       privs.add(Privileges.makePriv(Privileges.privRead));
       privs.add(Privileges.makePriv(Privileges.privWriteContent));
-      acl.addAce(new Ace(who, privs, null));
+      aces.add(Ace.makeAce(who, privs, null));
 
-      encoded = logEncoded(acl, "read g=agroup,rw auser");
+      encoded = logEncoded(new Acl(aces), "read g=agroup,rw auser");
       tryDecode(encoded, "read g=agroup,rw auser");
       tryEvaluateAccess(owner, owner, privSetReadWriteContent, encoded, true,
                         "Owner access for read g=agroup,rw auser");
@@ -158,13 +159,13 @@ public class AccessTest extends TestCase {
       log("---------------------------------------------------------");
 
       /* read for group "agroup", rw for user "auser" */
-      acl = new Acl(debug);
+      aces.clear();
 
-      acl.addAce(new Ace(AceWho.all, readPrivs, null));
+      aces.add(Ace.makeAce(AceWho.all, readPrivs, null));
 
-      acl.addAce(new Ace(AceWho.unauthenticated, noPrivs, null));
+      aces.add(Ace.makeAce(AceWho.unauthenticated, noPrivs, null));
 
-      encoded = logEncoded(acl, "read others,none unauthenticated");
+      encoded = logEncoded(new Acl(aces), "read others,none unauthenticated");
       tryDecode(encoded, "read others,none unauthenticated");
       tryEvaluateAccess(owner, owner, privSetReadWrite, encoded, true,
                         "Owner access for read others,none unauthenticated");
@@ -185,8 +186,8 @@ public class AccessTest extends TestCase {
   private void tryEvaluateAccess(Principal who, Principal owner,
                                  Privilege[] how,char[] encoded,
                                  boolean expected, String title) throws Throwable {
-    CurrentAccess ca = new Acl(debug).evaluateAccess(who, owner, how,
-                                                     encoded, null);
+    CurrentAccess ca = Acl.evaluateAccess(who, owner, how,
+                                          encoded, null);
 
     if (debug) {
       log(title + " got " + ca.getAccessAllowed() + " and expected " + expected);
@@ -195,9 +196,7 @@ public class AccessTest extends TestCase {
   }
 
   private void tryDecode(char[] encoded, String title) throws Throwable {
-    Acl acl = new Acl();
-
-    acl.decode(encoded);
+    Acl acl = Acl.decode(encoded);
     log("Result of decoding " + title);
     log(acl.toString());
     log(acl.toUserString());

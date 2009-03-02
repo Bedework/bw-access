@@ -236,7 +236,7 @@ public class AccessXmlUtil implements Serializable {
 
       Element[] aceEls = XmlUtil.getElementsArray(root);
 
-      Acl curAcl = new Acl();
+      Collection<Ace> aces = new ArrayList<Ace>();
 
       for (Element curnode: aceEls) {
         if (!XmlUtil.nodeMatches(curnode, WebdavTags.ace)) {
@@ -250,19 +250,16 @@ public class AccessXmlUtil implements Serializable {
 
         /* Look for this 'who' in the list */
 
-        Collection<Ace> aces = curAcl.getAces();
-        if (aces != null) {
-          for (Ace a: curAcl.getAces()) {
-            if (a.getWho().equals(ace.getWho())) {
-              throw exc("Multiple ACEs fro " + a.getWho());
-            }
+        for (Ace a: aces) {
+          if (a.getWho().equals(ace.getWho())) {
+            throw exc("Multiple ACEs for " + a.getWho());
           }
         }
 
-        curAcl.addAce(ace);
+        aces.add(ace);
       }
 
-      return curAcl;
+      return new Acl(aces);
     } catch (AccessException ae) {
       throw ae;
     } catch (Throwable t) {
@@ -446,7 +443,7 @@ public class AccessXmlUtil implements Serializable {
 
     pos++;
     if (pos == children.length) {
-      return new Ace(awho, privs, null);
+      return Ace.makeAce(awho, privs, null);
     }
 
     curnode = children[pos];
@@ -458,7 +455,7 @@ public class AccessXmlUtil implements Serializable {
       privs.addAll(morePrivs);
       pos++;
       if (pos == children.length) {
-        return new Ace(awho, privs, null);
+        return Ace.makeAce(awho, privs, null);
       }
 
       curnode = children[pos];
@@ -497,7 +494,7 @@ public class AccessXmlUtil implements Serializable {
       throw exc("Unexpected element " + children[pos]);
     }
 
-    return new Ace(awho, privs, inheritedFrom);
+    return Ace.makeAce(awho, privs, inheritedFrom);
   }
 
   private AceWho parseAcePrincipal(Node nd,

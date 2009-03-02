@@ -31,7 +31,7 @@ import edu.rpi.sss.util.ObjectPool;
  *
  * @author douglm - rpi.edu
  */
-public class AceWho implements WhoDefs, Comparable<AceWho> {
+public final class AceWho implements WhoDefs, Comparable<AceWho> {
   private String who;
 
   private int whoType;
@@ -154,6 +154,17 @@ public class AceWho implements WhoDefs, Comparable<AceWho> {
     acl.addChar(whoTypeFlags[whoType]);
 
     acl.encodeString(who);
+  }
+
+  /** Skip the who part in an encoded Acl
+   *
+   * @param acl
+   * @throws AccessException
+   */
+  public static void skip(EncodedAcl acl) throws AccessException {
+    acl.getChar();
+    acl.getChar();
+    acl.skipString();
   }
 
   /** Create AceWho from an encoded Acl

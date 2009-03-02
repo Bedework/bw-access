@@ -47,9 +47,19 @@ public class EncodedAcl implements Serializable {
    */
   private transient CharArrayWriter caw;
 
-  private transient Logger log;
+  protected static transient Logger log;
 
-  private boolean debug = false;
+  private static boolean debug = false;
+
+  private static final String[] encodedLengths;
+
+  static {
+    encodedLengths = new String[200];
+
+    for (int i = 0; i < encodedLengths.length; i++) {
+      encodedLengths[i] = intEncodedLength(i);
+    }
+  }
 
   /** Set an encoded value
    *
@@ -256,6 +266,16 @@ public class EncodedAcl implements Serializable {
     pos += len;
   }
 
+  /** Get a String from the encoded acl at the given position and length.
+   *
+   * @param begin
+   * @return String value
+   * @throws AccessException
+   */
+  public String getString(int begin) throws AccessException {
+    return new String(encoded, begin, pos - begin);
+  }
+
   /* ====================================================================
    *                 Encoding methods
    * ==================================================================== */
@@ -274,6 +294,11 @@ public class EncodedAcl implements Serializable {
    */
   public void encodeLength(int len) throws AccessException {
     try {
+      if (len < encodedLengths.length) {
+        caw.write(encodedLengths[len]);
+        return;
+      }
+
       String slen = String.valueOf(len);
       caw.write('0');
       caw.write(slen, 0, slen.length());
@@ -281,6 +306,29 @@ public class EncodedAcl implements Serializable {
     } catch (Throwable t) {
       throw new AccessException(t);
     }
+  }
+
+  /** Produce string encoding of length
+   *
+   * @param len
+   * @return String
+   */
+  public static String encodedLength(int len) {
+    if (len < encodedLengths.length) {
+      return encodedLengths[len];
+    }
+
+    return intEncodedLength(len);
+  }
+
+  private static String intEncodedLength(int len) {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append('0');
+    sb.append(len);
+    sb.append(' ');
+
+    return sb.toString();
   }
 
   /** Encode a String with length prefix. String is encoded as <ul>
@@ -307,12 +355,40 @@ public class EncodedAcl implements Serializable {
     }
   }
 
+  /**
+   * @param val
+   * @return String encoding.
+   */
+  public static String encodedString(String val) {
+    if (val == null) {
+      return "N";
+    }
+
+    StringBuilder sb = new StringBuilder(encodedLength(val.length()));
+    sb.append(val);
+
+    return sb.toString();
+  }
+
   /** Add a character
    *
    * @param c char
    * @throws AccessException
    */
   public void addChar(char c) throws AccessException {
+    try {
+      caw.write(c);
+    } catch (Throwable t) {
+      throw new AccessException(t);
+    }
+  }
+
+  /** Add an array of character
+   *
+   * @param c char[]
+   * @throws AccessException
+   */
+  public void addChar(char[] c) throws AccessException {
     try {
       caw.write(c);
     } catch (Throwable t) {
@@ -334,15 +410,15 @@ public class EncodedAcl implements Serializable {
     return enc;
   }
 
-  protected Logger getLog() {
+  protected static Logger getLog() {
     if (log == null) {
-      log = Logger.getLogger(this.getClass());
+      log = Logger.getLogger(EncodedAcl.class);
     }
 
     return log;
   }
 
-  protected void debugMsg(String msg) {
+  protected static void debugMsg(String msg) {
     getLog().debug(msg);
   }
 

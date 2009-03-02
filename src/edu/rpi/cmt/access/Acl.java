@@ -25,16 +25,18 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.cmt.access.Access.AccessStatsEntry;
 import edu.rpi.sss.util.ObjectPool;
+
+import org.apache.log4j.Logger;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.TreeMap;
 
-/** Object to represent an acl for a calendar entity or service. We should
- * have one of these per session - or perhaps thread - and lock it during
- * processing.
+/** Immutable object to represent an acl for a calendar entity or service.
  *
  * <p>The objects represented by Privileges will assume transient states
  * during processing.
@@ -56,7 +58,7 @@ import java.util.TreeMap;
  *  @author Mike Douglass   douglm - rpi.edu
  */
 public class Acl extends EncodedAcl implements PrivilegeDefs {
-  boolean debug;
+  static boolean debug;
 
   private TreeMap<AceWho, Ace> aces;
 
@@ -64,36 +66,34 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   private static boolean usePool = false;
 
-  /** Used while evaluating access */
+  private static AccessStatsEntry evaluations =
+    new AccessStatsEntry("evaluations");
 
-  /** Constructor
+  /** Create a new Acl
    *
+   * @param aces
    */
-  public Acl() {
-    this(false);
+  public Acl(Collection<Ace> aces) {
+    debug = getLog().isDebugEnabled();
+
+    this.aces = new TreeMap<AceWho, Ace>();
+
+    for (Ace ace: aces) {
+      this.aces.put(ace.getWho(), ace);
+    }
   }
 
-  /** Constructor
+  /** Get the access statistics
    *
-   * @param debug
+   * @return Collection of stats
    */
-  public Acl(boolean debug) {
-    this.debug = debug;
-  }
+  public static Collection<AccessStatsEntry> getStatistics() {
+    Collection<AccessStatsEntry> stats = new ArrayList<AccessStatsEntry>();
 
-  /** Turn debugging on/off
-   *
-   * @param val
-   */
-  public void setDebug(boolean val) {
-    debug = val;
-  }
+    stats.add(evaluations);
+    stats.addAll(Ace.getStatistics());
 
-  /** Remove all ace entries
-   *
-   */
-  public void clear() {
-    aces = null;
+    return stats;
   }
 
   /** Result of evaluating access to an object for a principal
@@ -224,18 +224,20 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who,
-                                      AccessPrincipal owner,
-                                      Privilege[] how,
-                                      char[] aclChars,
-                                      PrivilegeSet filter)
+  public static CurrentAccess evaluateAccess(AccessPrincipal who,
+                                             AccessPrincipal owner,
+                                             Privilege[] how,
+                                             char[] aclChars,
+                                             PrivilegeSet filter)
           throws AccessException {
+    evaluations.count++;
+
     boolean authenticated = !who.getUnauthenticated();
     boolean isOwner = false;
     CurrentAccess ca = new CurrentAccess();
-    ca.acl = this;
 
-    decode(aclChars);
+    Acl acl = decode(aclChars);
+    ca.acl = acl;
 
     if (authenticated) {
       isOwner = who.equals(owner);
@@ -263,18 +265,18 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
     getPrivileges: {
       if (!authenticated) {
-        ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeUnauthenticated);
+        ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeUnauthenticated);
 
         if (ca.privileges == null) {
           // All might be available
-          ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeAll);
+          ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeAll);
         }
 
         break getPrivileges;
       }
 
       if (isOwner) {
-        ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeOwner);
+        ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeOwner);
         if (ca.privileges == null) {
           ca.privileges = PrivilegeSet.makeDefaultOwnerPrivileges();
         }
@@ -286,20 +288,30 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       }
 
       // Not owner - look for user
-      ca.privileges = Ace.findMergedPrivilege(this, who.getAccount(), Ace.whoTypeUser);
+      ca.privileges = Ace.findMergedPrivilege(acl,
+                                              who.getAccount(),
+                                              Ace.whoTypeUser);
 
       // Treat resources, tickets, hosts and venues like user
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(this, who.getAccount(), Ace.whoTypeResource);
+        ca.privileges = Ace.findMergedPrivilege(acl,
+                                                who.getAccount(),
+                                                Ace.whoTypeResource);
       }
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(this, who.getAccount(), Ace.whoTypeTicket);
+        ca.privileges = Ace.findMergedPrivilege(acl,
+                                                who.getAccount(),
+                                                Ace.whoTypeTicket);
       }
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(this, who.getAccount(), Ace.whoTypeVenue);
+        ca.privileges = Ace.findMergedPrivilege(acl,
+                                                who.getAccount(),
+                                                Ace.whoTypeVenue);
       }
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(this, who.getAccount(), Ace.whoTypeHost);
+        ca.privileges = Ace.findMergedPrivilege(acl,
+                                                who.getAccount(),
+                                                Ace.whoTypeHost);
       }
 
       if (ca.privileges != null) {
@@ -317,9 +329,11 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
           if (debug) {
             debugsb.append("...Try access for group " + group);
           }
-          PrivilegeSet privs = Ace.findMergedPrivilege(this, group, Ace.whoTypeGroup);
+          PrivilegeSet privs = Ace.findMergedPrivilege(acl, group,
+                                                       Ace.whoTypeGroup);
           if (privs != null) {
-            ca.privileges = PrivilegeSet.mergePrivileges(ca.privileges, privs, false);
+            ca.privileges = PrivilegeSet.mergePrivileges(ca.privileges, privs,
+                                                         false);
           }
         }
       }
@@ -334,7 +348,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
       // "authenticated" access set?
       if (authenticated) {
-        ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeAuthenticated);
+        ca.privileges = Ace.findMergedPrivilege(acl, null,
+                                                Ace.whoTypeAuthenticated);
       }
 
       if (ca.privileges != null) {
@@ -346,11 +361,11 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       }
 
       // "other" access set?
-      ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeOther);
+      ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeOther);
 
       if (ca.privileges == null) {
         // All might be available
-        ca.privileges = Ace.findMergedPrivilege(this, null, Ace.whoTypeAll);
+        ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeAll);
       }
 
       if (ca.privileges != null) {
@@ -420,49 +435,29 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       return null;
     }
 
-    return aces.values();
-  }
-
-  /** Add an entry to the Acl
-   *
-   * @param val Ace to add
-   */
-  public void addAce(Ace val) {
-    if (aces == null) {
-      aces = new TreeMap<AceWho, Ace>();
-    }
-
-    aces.put(val.getWho(), val);
-  }
-
-  /** Set to default access
-   *
-   */
-  public void defaultAccess() {
-    aces = null; // reset
-
-    Collection<Privilege> privs = new ArrayList<Privilege>();
-    privs.add(Privileges.makePriv(Privileges.privAll));
-
-    addAce(new Ace(AceWho.owner, privs, null));
-
-    privs.clear();
-    privs.add(Privileges.makePriv(Privileges.privNone));
-
-    addAce(new Ace(AceWho.other, privs, null));
+    return Collections.unmodifiableCollection(aces.values());
   }
 
   /** Remove access for a given 'who' entry
    *
    * @param who
-   * @return boolean true if removed
+   * @return null if unchanged otehrwise new Acl
+   * @throws AccessException
    */
-  public boolean removeWho(AceWho who) {
-    if (aces == null) {
-      return false;
+  public Acl removeWho(AceWho who) throws AccessException {
+    if ((aces == null) || !getAces().contains(who)) {
+      return null;
     }
 
-    return aces.remove(who) != null;
+    Collection<Ace> aces = new ArrayList<Ace>();
+
+    for (Ace a: getAces()) {
+      if (!who.equals(a.getWho())) {
+        aces.add(a);
+      }
+    }
+
+    return new Acl(aces);
   }
 
   /* ====================================================================
@@ -474,36 +469,49 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * ace objects.
    *
    * @param val String val to decode
+   * @return decoded Acl
    * @throws AccessException
    */
-  public void decode(String val) throws AccessException {
-    decode(val.toCharArray());
+  public static Acl decode(String val) throws AccessException {
+    return decode(val.toCharArray());
   }
 
   /** Given an encoded acl convert to an ordered sequence of fully expanded
    * ace objects.
    *
    * @param val char[] val to decode
+   * @return decoded Acl
    * @throws AccessException
    */
-  public void decode(char[] val) throws AccessException {
-    setEncoded(val);
-
-    if (empty()) {
-      // XXX This may be wrong. The default is set at the root and we inherit.
-      defaultAccess();
-    } else {
-      aces = new TreeMap<AceWho, Ace>();
-
-      while (hasMore()) {
-        Ace ace = Ace.decode(this, null);
-
-        aces.put(ace.getWho(), ace);
-      }
-    }
+  public static Acl decode(char[] val) throws AccessException {
+    return decode(val, null);
   }
 
-  /** Given an encoded acl merge it into this objects ace list. This process
+
+  /** Given an encoded acl convert to an ordered sequence of fully expanded
+   * ace objects.
+   *
+   * @param val char[] val to decode
+   * @param path
+   * @return decoded Acl
+   * @throws AccessException
+   */
+  public static Acl decode(char[] val, String path) throws AccessException {
+    EncodedAcl eacl = new EncodedAcl();
+    eacl.setEncoded(val);
+
+    Collection<Ace> aces = new ArrayList<Ace>();
+
+    while (eacl.hasMore()) {
+      Ace ace = Ace.decode(eacl, path);
+
+      aces.add(ace);
+    }
+
+    return new Acl(aces);
+  }
+
+  /** Given an encoded acl create a new merged version. This process
    * should be carried out moving up from the end of the path to the root as
    * entries will only be added to the merged list if the notWho + whoType + who
    * do not match.
@@ -532,30 +540,17 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * @param val char[] val to decode and merge
    * @param path   path of current entity to flag the inheritance
+   * @return merged Acl
    * @throws AccessException
    */
-  public void merge(char[] val, String path) throws AccessException {
-    EncodedAcl ea = new EncodedAcl();
-    ea.setEncoded(val);
+  public Acl merge(char[] val, String path) throws AccessException {
+    Collection<Ace> aces = new ArrayList<Ace>();
+    aces.addAll(getAces());
 
-    if (ea.empty()) {
-      return;
-    }
+    Acl encAcl = decode(val, path);
+    aces.addAll(encAcl.getAces());
 
-    while (ea.hasMore()) {
-      Ace ace = Ace.decode(ea, path);
-
-      if (aces == null) {
-        aces = new TreeMap<AceWho, Ace>();
-      }
-
-      /* If we don't have this who yet then add it to the result. Otherwise the
-       * who from lower down takes precedence.
-       */
-      if (aces.get(ace.getWho()) == null) {
-        aces.put(ace.getWho(), ace);
-      }
-    }
+    return new Acl(aces);
   }
 
   /* * Given a decoded acl merge it into this objects ace list. This process
@@ -711,14 +706,21 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return sb.toString();
   }
 
+  protected static Logger getLog(Class cl) {
+    if (log == null) {
+      log = Logger.getLogger(EncodedAcl.class);
+    }
+
+    return log;
+  }
+
   /** For testing
    *
    * @param args
    */
   public static void main(String[] args) {
     try {
-      Acl acl = new Acl();
-      acl.decode(args[0]);
+      Acl acl = decode(args[0]);
 
       System.out.println(acl.toString());
     } catch (Throwable t) {

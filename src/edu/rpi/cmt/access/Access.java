@@ -86,7 +86,7 @@ import edu.rpi.cmt.access.Acl.CurrentAccess;
  *  @author Mike Douglass
  */
 public class Access implements Serializable {
-  private boolean debug;
+  //private boolean debug;
 
   /** Defines no access */
   public final static Privilege none = Privileges.makePriv(Privileges.privNone);
@@ -121,10 +121,7 @@ public class Access implements Serializable {
   private static volatile String defaultPersonalAccess;
 
   static {
-    Acl acl = new Acl();
-
     try {
-
       Collection<Privilege> allPrivs = new ArrayList<Privilege>();
       allPrivs.add(all);
 
@@ -135,28 +132,44 @@ public class Access implements Serializable {
       noPrivs.add(none);
 
       /** Public - write owner, read others, read unauthenticated */
-      acl.clear();
-      acl.addAce(new Ace(AceWho.owner, allPrivs, null));
-      acl.addAce(new Ace(AceWho.other, readPrivs, null));
-      acl.addAce(new Ace(AceWho.unauthenticated, readPrivs, null));
-      defaultPublicAccess = new String(acl.encode());
+      Collection<Ace> aces = new ArrayList<Ace>();
 
-      acl.clear();
-      acl.addAce(new Ace(AceWho.owner, allPrivs, null));
-      acl.addAce(new Ace(AceWho.other, noPrivs, null));
-      defaultPersonalAccess = new String(acl.encode());
+      aces.add(Ace.makeAce(AceWho.owner, allPrivs, null));
+      aces.add(Ace.makeAce(AceWho.other, readPrivs, null));
+      aces.add(Ace.makeAce(AceWho.unauthenticated, readPrivs, null));
+      defaultPublicAccess = new String(new Acl(aces).encode());
+
+      aces.clear();
+      aces.add(Ace.makeAce(AceWho.owner, allPrivs, null));
+      aces.add(Ace.makeAce(AceWho.other, noPrivs, null));
+      defaultPersonalAccess = new String(new Acl(aces).encode());
     } catch (Throwable t) {
       throw new RuntimeException(t);
     }
   }
 
-  /** Constructor
-   *
-   * @param debug    boolean true fro debug on
-   * @throws AccessException
+  /**
    */
-  public Access(boolean debug) throws AccessException {
-    this.debug = debug;
+  public static class AccessStatsEntry {
+    /** */
+    public String name;
+    /** */
+    public long count;
+
+    /**
+     * @param name
+     */
+    public AccessStatsEntry(final String name) {
+      this.name = name;
+    }
+  }
+
+  /** Get the access statistics
+   *
+   * @return String value for default access
+   */
+  public static Collection<AccessStatsEntry> getStatistics() {
+    return Acl.getStatistics();
   }
 
   /** Get the default public access
@@ -225,9 +238,9 @@ public class Access implements Serializable {
                                       Privilege[] how, String aclString,
                                       PrivilegeSet filter)
           throws AccessException {
-    return new Acl(debug).evaluateAccess(who, owner, how,
-                                         aclString.toCharArray(),
-                                         filter);
+    return Acl.evaluateAccess(who, owner, how,
+                              aclString.toCharArray(),
+                              filter);
   }
 
   /** convenience method
@@ -245,8 +258,8 @@ public class Access implements Serializable {
                                       Privilege[] how, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return new Acl(debug).evaluateAccess(who, owner, how, aclChars,
-                                         filter);
+    return Acl.evaluateAccess(who, owner, how, aclChars,
+                              filter);
   }
 
   /** convenience method - check for read access
@@ -263,8 +276,8 @@ public class Access implements Serializable {
                                  char[] aclChars,
                                  PrivilegeSet filter)
           throws AccessException {
-    return new Acl(debug).evaluateAccess(who, owner, privSetRead, aclChars,
-                                         filter);
+    return Acl.evaluateAccess(who, owner, privSetRead, aclChars,
+                              filter);
   }
 
   /** convenience method - check for read write access
@@ -281,8 +294,8 @@ public class Access implements Serializable {
                                       char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return new Acl(debug).evaluateAccess(who, owner, privSetReadWrite, aclChars,
-                                         filter);
+    return Acl.evaluateAccess(who, owner, privSetReadWrite, aclChars,
+                              filter);
   }
 
   /** convenience method - check for any access
@@ -299,8 +312,8 @@ public class Access implements Serializable {
                                 char[] aclChars,
                                 PrivilegeSet filter)
           throws AccessException {
-    return new Acl(debug).evaluateAccess(who, owner, privSetAny, aclChars,
-                                         filter);
+    return Acl.evaluateAccess(who, owner, privSetAny, aclChars,
+                              filter);
   }
 
   /** convenience method - check for given access
@@ -318,9 +331,9 @@ public class Access implements Serializable {
                                       int priv, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return new Acl(debug).evaluateAccess(who, owner,
-                                         new Privilege[]{Privileges.makePriv(priv)},
-                                         aclChars, filter);
+    return Acl.evaluateAccess(who, owner,
+                              new Privilege[]{Privileges.makePriv(priv)},
+                              aclChars, filter);
   }
 }
 

@@ -204,6 +204,9 @@
     <mkdir dir="${dist.home}/tests" />
     <unjar src="${test.jar.file}" dest="${dist.home}/tests"/>
 
+    <mkdir dir="${dist.home}/classes" />
+    <copy file="${build.dir}/log4j.xml" todir="${dist.home}/classes"/>
+
     <path id="test.class.path">
       <fileset dir="${dist.home}">
         <include name="*.jar"/>
@@ -212,6 +215,8 @@
       <fileset dir="${lib.dir}">
         <include name="*.jar"/>
       </fileset>
+
+      <pathelement path="${dist.home}/classes"/>
     </path>
 
     <pathconvert property="test.classpath.string"
@@ -220,6 +225,8 @@
     </pathconvert>
 
     <mkdir dir="${test.data.dir}" />
+
+    <mkdir dir="logs" />
 
     <echo message="CP=${test.classpath.string}" />
     <junit printsummary="no"
