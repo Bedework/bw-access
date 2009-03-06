@@ -25,6 +25,7 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.cmt.access.Access.AccessCb;
 import edu.rpi.cmt.access.Access.AccessStatsEntry;
 import edu.rpi.sss.util.ObjectPool;
 
@@ -191,12 +192,14 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   /** Return the merged privileges for all aces which match the name and whoType.
    *
    * @param acl
+   * @param cb
    * @param name
    * @param whoType
    * @return PrivilegeSet    merged privileges if we find a match else null
    * @throws AccessException
    */
   public static PrivilegeSet findMergedPrivilege(Acl acl,
+                                                 AccessCb cb,
                                                  String name,
                                                  int whoType) throws AccessException {
     PrivilegeSet privileges = null;
@@ -206,7 +209,7 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
            (whoType == AceWho.whoTypeAuthenticated) ||
            (whoType == AceWho.whoTypeAll) ||
            (whoType == AceWho.whoTypeOwner) ||
-            ace.getWho().whoMatch(name))) {
+            ace.getWho().whoMatch(cb, name))) {
         privileges = PrivilegeSet.mergePrivileges(privileges, ace.getHow(),
                                                   ace.getInheritedFrom() != null);
       }

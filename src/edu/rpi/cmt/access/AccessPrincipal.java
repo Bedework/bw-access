@@ -95,7 +95,7 @@ public interface AccessPrincipal extends Serializable {
    */
   public void setGroupNames(Collection<String> val);
 
-  /** Get the group names of which principal is a member.
+  /** Get the group principal names of which principal is a member.
    *
    * @return Set    of String
    */

@@ -164,6 +164,20 @@ public class Access implements Serializable {
     }
   }
 
+  /** Callback for principal roots
+   *
+   * @author douglm - rpi.edu
+   */
+  public interface AccessCb {
+    /**
+     * @param id
+     * @param whoType - from WhoDefs
+     * @return String href
+     * @throws AccessException
+     */
+    public String makeHref(String id, int whoType) throws AccessException;
+  }
+
   /** Get the access statistics
    *
    * @return String value for default access
@@ -225,6 +239,7 @@ public class Access implements Serializable {
    * <li>Otherwise apply defaults - for the owner full acccess, for any others no
    * access</li>
    *
+   * @param cb
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param how      Privilege set definign desired access
@@ -233,18 +248,20 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who,
+  public CurrentAccess evaluateAccess(AccessCb cb,
+                                      AccessPrincipal who,
                                       AccessPrincipal owner,
                                       Privilege[] how, String aclString,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(who, owner, how,
+    return Acl.evaluateAccess(cb, who, owner, how,
                               aclString.toCharArray(),
                               filter);
   }
 
   /** convenience method
    *
+   * @param cb
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param how      Privilege set defining desired access
@@ -253,17 +270,19 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who,
+  public CurrentAccess evaluateAccess(AccessCb cb,
+                                      AccessPrincipal who,
                                       AccessPrincipal owner,
                                       Privilege[] how, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(who, owner, how, aclChars,
+    return Acl.evaluateAccess(cb, who, owner, how, aclChars,
                               filter);
   }
 
   /** convenience method - check for read access
    *
+   * @param cb
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
@@ -271,17 +290,19 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess checkRead(AccessPrincipal who,
+  public CurrentAccess checkRead(AccessCb cb,
+                                 AccessPrincipal who,
                                  AccessPrincipal owner,
                                  char[] aclChars,
                                  PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(who, owner, privSetRead, aclChars,
+    return Acl.evaluateAccess(cb, who, owner, privSetRead, aclChars,
                               filter);
   }
 
   /** convenience method - check for read write access
    *
+   * @param cb
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
@@ -289,17 +310,19 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess checkReadWrite(AccessPrincipal who,
+  public CurrentAccess checkReadWrite(AccessCb cb,
+                                      AccessPrincipal who,
                                       AccessPrincipal owner,
                                       char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(who, owner, privSetReadWrite, aclChars,
+    return Acl.evaluateAccess(cb, who, owner, privSetReadWrite, aclChars,
                               filter);
   }
 
   /** convenience method - check for any access
    *
+   * @param cb
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
@@ -307,17 +330,19 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess checkAny(AccessPrincipal who,
+  public CurrentAccess checkAny(AccessCb cb,
+                                AccessPrincipal who,
                                 AccessPrincipal owner,
                                 char[] aclChars,
                                 PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(who, owner, privSetAny, aclChars,
+    return Acl.evaluateAccess(cb, who, owner, privSetAny, aclChars,
                               filter);
   }
 
   /** convenience method - check for given access
    *
+   * @param cb
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param priv     int desired access as defined above
@@ -326,12 +351,13 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public CurrentAccess evaluateAccess(AccessPrincipal who,
+  public CurrentAccess evaluateAccess(AccessCb cb,
+                                      AccessPrincipal who,
                                       AccessPrincipal owner,
                                       int priv, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(who, owner,
+    return Acl.evaluateAccess(cb, who, owner,
                               new Privilege[]{Privileges.makePriv(priv)},
                               aclChars, filter);
   }

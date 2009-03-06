@@ -25,6 +25,7 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.cmt.access.Access.AccessCb;
 import edu.rpi.sss.util.ObjectPool;
 
 /** describe who we are giving access to. This object once created is immutable.
@@ -115,19 +116,21 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
   }
 
   /**
-   * @param name
+   * @param cb
+   * @param pref  full principal name
    * @return boolean true if the name matches
+     * @throws AccessException
    */
-  public boolean whoMatch(String name) {
-    if ((name == null) && (getWho() == null)) {
+  public boolean whoMatch(AccessCb cb, String pref) throws AccessException {
+    if ((pref == null) && (getWho() == null)) {
       return !getNotWho();
     }
 
-    if ((name == null) || (getWho() == null)) {
+    if ((pref == null) || (getWho() == null)) {
       return getNotWho();
     }
 
-    boolean match = name.equals(getWho());
+    boolean match = pref.equals(cb.makeHref(getWho(), whoType));
     if (getNotWho()) {
       match = !match;
     }

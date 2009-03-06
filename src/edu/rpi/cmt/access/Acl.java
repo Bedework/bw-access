@@ -25,6 +25,7 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.cmt.access.Access.AccessCb;
 import edu.rpi.cmt.access.Access.AccessStatsEntry;
 import edu.rpi.sss.util.ObjectPool;
 
@@ -216,6 +217,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * <li>Otherwise apply defaults - for the owner full acccess, for any others no
    * access</li>
    *
+   * @param cb
    * @param who
    * @param owner
    * @param how
@@ -224,7 +226,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public static CurrentAccess evaluateAccess(AccessPrincipal who,
+  public static CurrentAccess evaluateAccess(AccessCb cb,
+                                             AccessPrincipal who,
                                              AccessPrincipal owner,
                                              Privilege[] how,
                                              char[] aclChars,
@@ -265,18 +268,19 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
     getPrivileges: {
       if (!authenticated) {
-        ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeUnauthenticated);
+        ca.privileges = Ace.findMergedPrivilege(acl, cb, null,
+                                                Ace.whoTypeUnauthenticated);
 
         if (ca.privileges == null) {
           // All might be available
-          ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeAll);
+          ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeAll);
         }
 
         break getPrivileges;
       }
 
       if (isOwner) {
-        ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeOwner);
+        ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeOwner);
         if (ca.privileges == null) {
           ca.privileges = PrivilegeSet.makeDefaultOwnerPrivileges();
         }
@@ -288,28 +292,28 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       }
 
       // Not owner - look for user
-      ca.privileges = Ace.findMergedPrivilege(acl,
+      ca.privileges = Ace.findMergedPrivilege(acl, cb,
                                               who.getAccount(),
                                               Ace.whoTypeUser);
 
       // Treat resources, tickets, hosts and venues like user
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl,
+        ca.privileges = Ace.findMergedPrivilege(acl, cb,
                                                 who.getAccount(),
                                                 Ace.whoTypeResource);
       }
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl,
+        ca.privileges = Ace.findMergedPrivilege(acl, cb,
                                                 who.getAccount(),
                                                 Ace.whoTypeTicket);
       }
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl,
+        ca.privileges = Ace.findMergedPrivilege(acl, cb,
                                                 who.getAccount(),
                                                 Ace.whoTypeVenue);
       }
       if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl,
+        ca.privileges = Ace.findMergedPrivilege(acl, cb,
                                                 who.getAccount(),
                                                 Ace.whoTypeHost);
       }
@@ -329,7 +333,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
           if (debug) {
             debugsb.append("...Try access for group " + group);
           }
-          PrivilegeSet privs = Ace.findMergedPrivilege(acl, group,
+          PrivilegeSet privs = Ace.findMergedPrivilege(acl, cb, group,
                                                        Ace.whoTypeGroup);
           if (privs != null) {
             ca.privileges = PrivilegeSet.mergePrivileges(ca.privileges, privs,
@@ -348,7 +352,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
       // "authenticated" access set?
       if (authenticated) {
-        ca.privileges = Ace.findMergedPrivilege(acl, null,
+        ca.privileges = Ace.findMergedPrivilege(acl, cb, null,
                                                 Ace.whoTypeAuthenticated);
       }
 
@@ -361,11 +365,11 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       }
 
       // "other" access set?
-      ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeOther);
+      ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeOther);
 
       if (ca.privileges == null) {
         // All might be available
-        ca.privileges = Ace.findMergedPrivilege(acl, null, Ace.whoTypeAll);
+        ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeAll);
       }
 
       if (ca.privileges != null) {
@@ -544,13 +548,26 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public Acl merge(char[] val, String path) throws AccessException {
-    Collection<Ace> aces = new ArrayList<Ace>();
-    aces.addAll(getAces());
+    Collection<Ace> newAces = new ArrayList<Ace>();
+
+    newAces.addAll(getAces());
 
     Acl encAcl = decode(val, path);
-    aces.addAll(encAcl.getAces());
 
-    return new Acl(aces);
+    domerge:
+    for (Ace a: encAcl.getAces()) {
+      for (Ace ace: newAces) {
+        if (a.getWho().equals(ace.getWho())) {
+          // Take the child entry
+          continue domerge;
+        }
+      }
+
+      // Not in child - add from the parent
+      newAces.add(a);
+    }
+
+    return new Acl(newAces);
   }
 
   /* * Given a decoded acl merge it into this objects ace list. This process
