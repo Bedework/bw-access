@@ -31,11 +31,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-/** Allowed privileges for a principal
+/** Immutable object to define allowed privileges for a principal
  *
- *  @author Mike Douglass   douglm@rpi.edu
+ *  @author Mike Douglass   douglm  rpi.edu
  */
-public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
+public class PrivilegeSet implements Serializable, PrivilegeDefs,
+                                     Comparable<PrivilegeSet> {
   private char[] privileges;
 
   private static ObjectPool<PrivilegeSet> privSets = new ObjectPool<PrivilegeSet>();
@@ -596,16 +597,11 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
    *                   Object methods
    * ==================================================================== */
 
-  public int compareTo(Object o) {
-    if (this == o) {
+  public int compareTo(PrivilegeSet that) {
+    if (this == that) {
       return 0;
     }
 
-    if (!(o instanceof PrivilegeSet)) {
-      return 1;
-    }
-
-    PrivilegeSet that = (PrivilegeSet)o;
     if (privileges == null) {
       if (that.privileges != null) {
         return -1;
@@ -649,7 +645,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs, Comparable {
   }
 
   public boolean equals(Object o) {
-    return compareTo(o) == 0;
+    return compareTo((PrivilegeSet)o) == 0;
   }
 
   public Object clone() {

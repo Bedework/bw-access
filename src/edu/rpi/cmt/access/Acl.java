@@ -97,7 +97,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return stats;
   }
 
-  /** Result of evaluating access to an object for a principal
+  /** Immutable object created as a result of evaluating access to an entity for
+   * a principal
    */
   public static class CurrentAccess implements Serializable {
     /** The Acl used to evaluate the access. We should not necessarily
