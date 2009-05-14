@@ -332,6 +332,33 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     return pooled(newPset);
   }
 
+  /** Make a PrivilegeSet from the given privileges
+   *
+   * @param privs
+   * @return PrivilegeSet
+   */
+  public static PrivilegeSet makePrivilegeSet(Privilege[] privs) {
+    PrivilegeSet newPset = new PrivilegeSet();
+
+    newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
+
+    for (Privilege priv: privs) {
+      if (priv.getDenial()) {
+        newPset.privileges[priv.getIndex()] = denied;
+      } else {
+        newPset.privileges[priv.getIndex()] = allowed;
+      }
+
+      /* Iterate over the children */
+
+      for (Privilege p: priv.getContainedPrivileges()) {
+        newPset.setPrivilege(p);
+      }
+    }
+
+    return pooled(newPset);
+  }
+
   /** Get the given privilege
    *
    * @param index

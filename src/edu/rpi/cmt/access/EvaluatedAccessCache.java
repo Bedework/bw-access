@@ -25,11 +25,14 @@
 */
 package edu.rpi.cmt.access;
 
+import edu.rpi.cmt.access.Access.AccessStatsEntry;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 
 import org.apache.log4j.Logger;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -48,12 +51,37 @@ import java.util.Map;
  *
  */
 public class EvaluatedAccessCache implements Serializable {
-  private transient Logger log;
+  private transient static Logger log;
 
-  private Map<String, Map> ownerHrefs = new HashMap<String, Map>();
+  private static Map<String, Map> ownerHrefs = new HashMap<String, Map>();
 
   /* Back end of the queue is the most recently referenced. */
-  private LinkedList<String> accessorQueue = new LinkedList<String>();
+  private static LinkedList<String> accessorQueue = new LinkedList<String>();
+
+  private static AccessStatsEntry accessorQueueLen =
+    new AccessStatsEntry("Access cache accessor queue len");
+
+  private static AccessStatsEntry numGets =
+    new AccessStatsEntry("Access cache gets");
+
+  private static AccessStatsEntry numHits =
+    new AccessStatsEntry("Access cache hits");
+
+  private static AccessStatsEntry numAclTables =
+    new AccessStatsEntry("Access cache ACL tables");
+
+  private static AccessStatsEntry numEntries =
+    new AccessStatsEntry("Access cache entries");
+
+  private static Collection<AccessStatsEntry> stats = new ArrayList<AccessStatsEntry>();
+
+  static {
+    stats.add(accessorQueueLen);
+    stats.add(numGets);
+    stats.add(numHits);
+    stats.add(numAclTables);
+    stats.add(numEntries);
+  }
 
   /**
    * @param ownerHref
@@ -63,11 +91,12 @@ public class EvaluatedAccessCache implements Serializable {
    * @param acl
    * @return CurrentAccess or null
    */
-  public CurrentAccess get(String ownerHref,
-                           String accessorHref,
-                           int desiredPriv,   // XXX should be a privilege set
-                           PrivilegeSet maxAccess,
-                           String acl) {
+  public static CurrentAccess get(String ownerHref,
+                                  String accessorHref,
+                                  PrivilegeSet desiredPriv,
+                                  PrivilegeSet maxAccess,
+                                  String acl) {
+    numGets.count++;
     Map<String, Map> accessors = ownerHrefs.get(ownerHref);
 
     if (accessors == null) {
@@ -76,7 +105,7 @@ public class EvaluatedAccessCache implements Serializable {
 
     /* ===================== desired priv ================== */
 
-    Map<Integer, Map> desiredPrivs = accessors.get(accessorHref);
+    Map<PrivilegeSet, Map> desiredPrivs = accessors.get(accessorHref);
 
     if (desiredPrivs == null) {
       return null;
@@ -103,7 +132,13 @@ public class EvaluatedAccessCache implements Serializable {
 
     /* ==================== finally access =============== */
 
-    return acls.get(acl);
+    CurrentAccess ca = acls.get(acl);
+
+    if (ca != null) {
+      numHits.count++;
+    }
+
+    return ca;
   }
 
   /**
@@ -114,12 +149,12 @@ public class EvaluatedAccessCache implements Serializable {
    * @param acl
    * @param ca
    */
-  public void put(String ownerHref,
-                  String accessorHref,
-                  int desiredPriv,   // XXX should be a privilege set
-                  PrivilegeSet maxAccess,
-                  String acl,
-                  CurrentAccess ca) {
+  public static void put(String ownerHref,
+                         String accessorHref,
+                         PrivilegeSet desiredPriv,
+                         PrivilegeSet maxAccess,
+                         String acl,
+                         CurrentAccess ca) {
     boolean found = true;
 
     Map<String, Map> accessors = ownerHrefs.get(ownerHref);
@@ -135,14 +170,14 @@ public class EvaluatedAccessCache implements Serializable {
 
     /* ===================== desired priv ================== */
 
-    Map<Integer, Map> desiredPrivs = null;
+    Map<PrivilegeSet, Map> desiredPrivs = null;
     if (found) {
       // Try a search
       desiredPrivs = accessors.get(accessorHref);
     }
 
     if (desiredPrivs == null) {
-      desiredPrivs = new HashMap<Integer, Map>();
+      desiredPrivs = new HashMap<PrivilegeSet, Map>();
       accessors.put(accessorHref, desiredPrivs);
       found = false;
     }
@@ -172,6 +207,7 @@ public class EvaluatedAccessCache implements Serializable {
     if (acls == null) {
       acls = new HashMap<String, CurrentAccess>();
       maxPrivs.put(maxAccess, acls);
+      numAclTables.count++;
       found = false;
     }
 
@@ -190,18 +226,29 @@ public class EvaluatedAccessCache implements Serializable {
       }
     }
 
+    numEntries.count++;
     acls.put(acl, ca);
   }
 
-  private Logger getLog() {
+  /** Get the cache statistics
+   *
+   * @return Collection of stats
+   */
+  public static Collection<AccessStatsEntry> getStatistics() {
+    accessorQueueLen.count = accessorQueue.size();
+
+    return stats;
+  }
+
+  private static Logger getLog() {
     if (log == null) {
-      log = Logger.getLogger(getClass());
+      log = Logger.getLogger(EvaluatedAccessCache.class.getName());
     }
 
     return log;
   }
 
-  private void error(String msg) {
+  private static void error(String msg) {
     getLog().error(msg);
   }
-  }
+}

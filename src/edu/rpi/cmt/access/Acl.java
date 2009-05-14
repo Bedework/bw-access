@@ -28,6 +28,7 @@ package edu.rpi.cmt.access;
 import edu.rpi.cmt.access.Access.AccessCb;
 import edu.rpi.cmt.access.Access.AccessStatsEntry;
 import edu.rpi.sss.util.ObjectPool;
+import edu.rpi.sss.util.Util;
 
 import org.apache.log4j.Logger;
 
@@ -93,6 +94,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
     stats.add(evaluations);
     stats.addAll(Ace.getStatistics());
+    stats.addAll(EvaluatedAccessCache.getStatistics());
 
     return stats;
   }
@@ -100,11 +102,14 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
   /** Immutable object created as a result of evaluating access to an entity for
    * a principal
    */
-  public static class CurrentAccess implements Serializable {
+  public static class CurrentAccess implements Serializable,
+                                               Comparable<CurrentAccess> {
     /** The Acl used to evaluate the access. We should not necessarily
      * make this available to the client.
      */
     private Acl acl;
+
+    private char[] aclChars;
 
     private PrivilegeSet privileges = null;
 
@@ -157,6 +162,44 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       return accessAllowed;
     }
 
+    public int compareTo(CurrentAccess that) {
+      if (this == that) {
+        return 0;
+      }
+
+      int res = Util.compare(this.aclChars, that.aclChars);
+
+      if (res != 0) {
+        return res;
+      }
+
+      res = Util.cmpObjval(this.privileges, that.privileges);
+
+      if (res != 0) {
+        return res;
+      }
+
+      return Util.cmpBoolval(this.accessAllowed, that.accessAllowed);
+    }
+
+    public int hashCode() {
+      int hc = 7;
+
+      if (aclChars != null) {
+        hc *= aclChars.hashCode();
+      }
+
+      if (privileges != null) {
+        hc *= privileges.hashCode();
+      }
+
+      return hc;
+    }
+
+    public boolean equals(Object o) {
+      return compareTo((CurrentAccess)o) == 0;
+    }
+
     public String toString() {
       StringBuilder sb = new StringBuilder("CurrentAccess{");
       sb.append("acl=");
@@ -185,6 +228,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     CurrentAccess newCa = new CurrentAccess(true);
 
     newCa.acl = ca.acl;
+    newCa.aclChars = ca.aclChars;
     newCa.privileges = ca.privileges;
 
     return newCa;
@@ -234,6 +278,40 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
                                              char[] aclChars,
                                              PrivilegeSet filter)
           throws AccessException {
+    String aclString = new String(aclChars);
+    PrivilegeSet howPriv = PrivilegeSet.makePrivilegeSet(how);
+
+    CurrentAccess ca = EvaluatedAccessCache.get(owner.getPrincipalRef(),
+                                                who.getPrincipalRef(),
+                                                howPriv, filter,
+                                                aclString);
+
+    if (ca != null) {
+      return ca;
+    }
+
+    ca = evaluateAccessInt(cb, who, owner, how, aclChars, filter);
+
+    if (ca == null) {
+      return null;
+    }
+
+    EvaluatedAccessCache.put(owner.getPrincipalRef(),
+                             who.getPrincipalRef(),
+                             howPriv, filter,
+                             aclString,
+                             ca);
+
+    return ca;
+  }
+
+  private static CurrentAccess evaluateAccessInt(AccessCb cb,
+                                                 AccessPrincipal who,
+                                                 AccessPrincipal owner,
+                                                 Privilege[] how,
+                                                 char[] aclChars,
+                                                 PrivilegeSet filter)
+            throws AccessException {
     evaluations.count++;
 
     boolean authenticated = !who.getUnauthenticated();
@@ -242,6 +320,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
     Acl acl = decode(aclChars);
     ca.acl = acl;
+    ca.aclChars = aclChars;
 
     if (authenticated) {
       isOwner = who.equals(owner);
