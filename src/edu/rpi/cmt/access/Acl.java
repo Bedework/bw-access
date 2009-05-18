@@ -373,28 +373,29 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
       // Not owner - look for user
       ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                              who.getAccount(),
+                                              who.getPrincipalRef(),
                                               Ace.whoTypeUser);
 
       // Treat resources, tickets, hosts and venues like user
+      // XXX This assumes the account name is distinguishable.
       if (ca.privileges == null) {
         ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getAccount(),
+                                                who.getPrincipalRef(),
                                                 Ace.whoTypeResource);
       }
       if (ca.privileges == null) {
         ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getAccount(),
+                                                who.getPrincipalRef(),
                                                 Ace.whoTypeTicket);
       }
       if (ca.privileges == null) {
         ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getAccount(),
+                                                who.getPrincipalRef(),
                                                 Ace.whoTypeVenue);
       }
       if (ca.privileges == null) {
         ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getAccount(),
+                                                who.getPrincipalRef(),
                                                 Ace.whoTypeHost);
       }
 
