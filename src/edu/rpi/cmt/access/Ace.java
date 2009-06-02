@@ -267,9 +267,9 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
       enc = sb.toString();
     }
 
-    if (debug) {
-      debugMsg("decode: string is :'" + enc + "'");
-    }
+    //if (debug) {
+    //  debugMsg("decode: string is :'" + enc + "'");
+    //}
 
     Ace ace = aceCache.get(enc);
 
