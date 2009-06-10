@@ -27,6 +27,7 @@ package edu.rpi.cmt.access;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 /** Define the properties of a privilege for the calendar.
  *
@@ -102,6 +103,25 @@ public class Privilege implements PrivilegeDefs {
     this(name, description, false, denial, index);
   }
 
+  /** Constructor for non-abstract privilege container
+   *
+   * @param name
+   * @param description
+   * @param denial
+   * @param index
+   * @param contained
+   */
+  public Privilege(String name,
+                   String description,
+                   boolean denial,
+                   int index,
+                   Privilege[] contained) {
+    this(name, description, false, denial, index);
+    for (Privilege p: contained) {
+      containedPrivileges.add(p);
+    }
+  }
+
   /**
    * @return String
    */
@@ -141,13 +161,7 @@ public class Privilege implements PrivilegeDefs {
    * @return containedPrivileges
    */
   public Collection<Privilege> getContainedPrivileges() {
-    return containedPrivileges;
-  }
-  /**
-   * @param val
-   */
-  void addContainedPrivilege(Privilege val) {
-    containedPrivileges.add(val);
+    return Collections.unmodifiableCollection(containedPrivileges);
   }
 
   /* ====================================================================
@@ -272,9 +286,7 @@ public class Privilege implements PrivilegeDefs {
                                      true,
                                      val.getIndex());
 
-    for (Privilege p: val.getContainedPrivileges()) {
-      newval.addContainedPrivilege(cloneDenied(p));
-    }
+    newval.containedPrivileges.addAll(val.getContainedPrivileges());
 
     return newval;
   }
@@ -326,7 +338,7 @@ public class Privilege implements PrivilegeDefs {
    * @return String
    */
   public String toUserString() {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
 
     if (getDenial()) {
       sb.append("NOT ");
@@ -338,7 +350,7 @@ public class Privilege implements PrivilegeDefs {
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
 
     sb.append("Privilege{name=");
     sb.append(name);
@@ -350,6 +362,18 @@ public class Privilege implements PrivilegeDefs {
     sb.append(denial);
     sb.append(", index=");
     sb.append(index);
+
+    if (!containedPrivileges.isEmpty()) {
+      sb.append(",\n   contains ");
+      boolean first = true;
+      for (Privilege p: containedPrivileges) {
+        if (!first) {
+          sb.append(", ");
+        }
+        first = false;
+        sb.append(p.getName());
+      }
+    }
     sb.append("}");
 
     return sb.toString();

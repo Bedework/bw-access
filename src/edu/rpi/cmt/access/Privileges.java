@@ -86,6 +86,15 @@ public class Privileges implements PrivilegeDefs {
   static {
     makePrivileges(privs, false);
     makePrivileges(deniedPrivs, true);
+
+    /*
+    for (Privilege p: privs) {
+      System.out.println(p);
+    }
+    for (Privilege p: deniedPrivs) {
+      System.out.println(p);
+    }
+    */
   }
 
   /** Constructor
@@ -177,10 +186,7 @@ public class Privileges implements PrivilegeDefs {
 
   private static void makePrivileges(Privilege[] ps,
                                      boolean denial) {
-    ps[privAll] = new Privilege("all", "All privileges", denial, privAll);
-
-    ps[privRead] = new Privilege("read", "Read any calendar object", denial,
-                                 privRead);
+    /* ---------------- read privileges ----------------------- */
 
     ps[privReadAcl] = new Privilege("read-acl", "Read calendar accls",
                                     denial, privReadAcl);
@@ -194,25 +200,13 @@ public class Privileges implements PrivilegeDefs {
                                          "View a users free busy information",
                                          denial, privReadFreeBusy);
 
-    ps[privWrite] = new Privilege("write", "Write any calendar object",
-                                  denial, privWrite);
+    Privilege[] containedRead = {ps[privReadAcl],
+                                 ps[privReadCurrentUserPrivilegeSet],
+                                 ps[privReadFreeBusy]};
+    ps[privRead] = new Privilege("read", "Read any calendar object", denial,
+                                 privRead, containedRead);
 
-    ps[privWriteAcl] = new Privilege("write-acl", "Write ACL", denial,
-                                     privWriteAcl);
-
-    ps[privWriteProperties] = new Privilege("write-properties",
-                                            "Write calendar properties",
-                                            denial, privWriteProperties);
-
-    ps[privWriteContent] = new Privilege("write-content",
-                                         "Write calendar content",
-                                         denial, privWriteContent);
-
-    ps[privBind] = new Privilege("create", "Create a calendar object",
-                                 denial, privBind);
-
-    ps[privSchedule] = new Privilege("schedule", "Scheduling operations",
-                                     denial, privSchedule);
+    /* -------------- schedule (draft 6) privileges -------------- */
 
     ps[privScheduleRequest] = new Privilege("schedule-request",
                                             "Submit schedule request",
@@ -226,31 +220,52 @@ public class Privileges implements PrivilegeDefs {
                                              "Freebusy for scheduling",
                                              denial, privScheduleFreeBusy);
 
+    Privilege[] containedSchedule = {ps[privScheduleRequest],
+                                     ps[privScheduleReply],
+                                     ps[privScheduleFreeBusy]};
+    ps[privSchedule] = new Privilege("schedule", "Scheduling operations",
+                                     denial, privSchedule,
+                                     containedSchedule);
+
+    /* ---------------- bind privileges ----------------------- */
+
+    Privilege[] containedBind = {ps[privSchedule]};
+    ps[privBind] = new Privilege("create", "Create a calendar object",
+                                 denial, privBind, containedBind);
+
+    /* ---------------- write privileges ----------------------- */
+
+    ps[privWriteAcl] = new Privilege("write-acl", "Write ACL", denial,
+                                     privWriteAcl);
+
+    ps[privWriteProperties] = new Privilege("write-properties",
+                                            "Write calendar properties",
+                                            denial, privWriteProperties);
+
+    ps[privWriteContent] = new Privilege("write-content",
+                                         "Write calendar content",
+                                         denial, privWriteContent);
+
     ps[privUnbind] = new Privilege("delete", "Delete a calendar object",
                                    denial, privUnbind);
+
+    Privilege[] containedWrite = {ps[privWriteAcl],
+                                  ps[privWriteProperties],
+                                  ps[privWriteContent],
+                                  ps[privBind],
+                                  ps[privUnbind]};
+    ps[privWrite] = new Privilege("write", "Write any calendar object",
+                                  denial, privWrite,
+                                  containedWrite);
+
+    /* ---------------- all privileges ----------------------- */
 
     ps[privUnlock] = new Privilege("unlock", "Remove a lock",
                                    denial, privUnlock);
 
-    ps[privAll].addContainedPrivilege(ps[privRead]);
-    ps[privAll].addContainedPrivilege(ps[privWrite]);
-    ps[privAll].addContainedPrivilege(ps[privUnlock]);
-
-    ps[privRead].addContainedPrivilege(ps[privReadAcl]);
-    ps[privRead].addContainedPrivilege(ps[privReadCurrentUserPrivilegeSet]);
-    ps[privRead].addContainedPrivilege(ps[privReadFreeBusy]);
-
-    ps[privWrite].addContainedPrivilege(ps[privWriteAcl]);
-    ps[privWrite].addContainedPrivilege(ps[privWriteProperties]);
-    ps[privWrite].addContainedPrivilege(ps[privWriteContent]);
-    ps[privWrite].addContainedPrivilege(ps[privBind]);
-    ps[privWrite].addContainedPrivilege(ps[privUnbind]);
-
-    ps[privBind].addContainedPrivilege(ps[privSchedule]);
-
-    ps[privSchedule].addContainedPrivilege(ps[privScheduleRequest]);
-    ps[privSchedule].addContainedPrivilege(ps[privScheduleReply]);
-    ps[privSchedule].addContainedPrivilege(ps[privScheduleFreeBusy]);
+    Privilege[] containedAll = {ps[privRead], ps[privWrite], ps[privUnlock]};
+    ps[privAll] = new Privilege("all", "All privileges", denial, privAll,
+                                containedAll);
 
     ps[privNone] = Privilege.cloneDenied(ps[privAll]);
   }
