@@ -680,7 +680,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer("PrivilegeSet[");
+    StringBuilder sb = new StringBuilder("PrivilegeSet[");
 
     sb.append(privileges);
     sb.append("]");

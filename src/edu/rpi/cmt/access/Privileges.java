@@ -54,6 +54,7 @@ import java.util.Collection;
  *      |      +-- [DAV: write-content] 'c'
  *      |      +-- [DAV: bind] 'b'
  *      |      |      |
+ *      |      |      |  Below is old draft 6 CalDAV scheduling
  *      |      |      +-- [CALDAV:schedule} 'S'
  *      |      |             |
  *      |      |             +-- [CALDAV:schedule-request] 't'
@@ -63,6 +64,19 @@ import java.util.Collection;
  *      |      +-- [DAV: unbind] 'u'
  *      |
  *      +-- [DAV: unlock] 'U'
+ *      |
+ *      |  Below is after Draft 6
+ *      +-- [CALDAV:schedule-deliver] (aggregate)
+ *      |      |
+ *      |      +-- [CALDAV:schedule-deliver-invite]
+ *      |      +-- [CALDAV:schedule-deliver-reply]
+ *      |      +-- [CALDAV:schedule-query-freebusy]
+ *      |
+ *      +-- [CALDAV:schedule-send] (aggregate)
+ *             |
+ *             +-- [CALDAV:schedule-send-invite]
+ *             +-- [CALDAV:schedule-send-reply]
+ *             +-- [CALDAV:schedule-send-freebusy]
  *      </pre>
  *   <p>encode the acl as a character sequence. Privileges within that sequence
  *   are flagged by the characters above. The sequence of privileges is terminated
@@ -107,7 +121,6 @@ public class Privileges implements PrivilegeDefs {
    * @return Privilege defining all access
    */
   public static Privilege getPrivAll() {
-    // XXX should be cloned
     return privs[privAll];
   }
 
@@ -115,7 +128,6 @@ public class Privileges implements PrivilegeDefs {
    * @return Privilege defining no access
    */
   public static Privilege getPrivNone() {
-    // XXX should be cloned
     return privs[privNone];
   }
 
@@ -125,8 +137,7 @@ public class Privileges implements PrivilegeDefs {
    * @return Privilege defining access
    */
   public static Privilege makePriv(int privType) {
-    // XXX should be cloned
-    return /*(Privilege)*/privs[privType]/*.clone()*/;
+    return privs[privType];
   }
 
   /** make a privilege defining the given priv type
@@ -137,9 +148,9 @@ public class Privileges implements PrivilegeDefs {
    */
   public static Privilege makePriv(int privType, boolean denial) {
     if (!denial) {
-      return /*(Privilege)*/privs[privType]/*.clone()*/;
+      return privs[privType];
     }
-    return /*(Privilege)*/deniedPrivs[privType]/*.clone()*/;
+    return deniedPrivs[privType];
   }
 
   /** Skip all the privileges info.
