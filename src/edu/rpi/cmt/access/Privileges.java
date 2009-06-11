@@ -269,12 +269,68 @@ public class Privileges implements PrivilegeDefs {
                                   denial, privWrite,
                                   containedWrite);
 
+    /* ---------------- schedule deliver privileges ----------------------- */
+
+    ps[privScheduleDeliverInvite] = new Privilege("schedule-deliver-invite",
+                                                  "Schedule: deliver invitations",
+                                                  denial,
+                                                  privScheduleDeliverInvite);
+
+    ps[privScheduleDeliverReply] = new Privilege("schedule-deliver-reply",
+                                                  "Schedule: deliver replies",
+                                                  denial,
+                                                  privScheduleDeliverReply);
+
+    ps[privScheduleQueryFreebusy] = new Privilege("schedule-query-freebusy",
+                                                  "Schedule: query freebusy",
+                                                  denial,
+                                                  privScheduleQueryFreebusy);
+
+    Privilege[] containedScheduleDeliver = {ps[privScheduleDeliverInvite],
+                                            ps[privScheduleDeliverReply],
+                                            ps[privScheduleQueryFreebusy]};
+    ps[privScheduleDeliver] = new Privilege("schedule-deliver",
+                                            "Scheduling delivery",
+                                            denial,
+                                            privScheduleDeliver,
+                                            containedScheduleDeliver);
+
+    /* ---------------- schedule send privileges ----------------------- */
+
+    ps[privScheduleSendInvite] = new Privilege("schedule-send-invite",
+                                               "Schedule: send invitations",
+                                               denial,
+                                               privScheduleSendInvite);
+
+    ps[privScheduleSendReply] = new Privilege("schedule-send-reply",
+                                              "Schedule: send replies",
+                                              denial,
+                                              privScheduleSendReply);
+
+    ps[privScheduleSendFreebusy] = new Privilege("schedule-send-freebusy",
+                                                 "Schedule: send freebusy",
+                                                 denial,
+                                                 privScheduleSendFreebusy);
+
+    Privilege[] containedScheduleSend = {ps[privScheduleSendInvite],
+                                         ps[privScheduleSendReply],
+                                         ps[privScheduleSendFreebusy]};
+    ps[privScheduleSend] = new Privilege("schedule-send",
+                                         "Scheduling send",
+                                         denial,
+                                         privScheduleSend,
+                                         containedScheduleSend);
+
     /* ---------------- all privileges ----------------------- */
 
     ps[privUnlock] = new Privilege("unlock", "Remove a lock",
                                    denial, privUnlock);
 
-    Privilege[] containedAll = {ps[privRead], ps[privWrite], ps[privUnlock]};
+    Privilege[] containedAll = {ps[privRead],
+                                ps[privWrite],
+                                ps[privUnlock],
+                                ps[privScheduleDeliver],
+                                ps[privScheduleSend]};
     ps[privAll] = new Privilege("all", "All privileges", denial, privAll,
                                 containedAll);
 

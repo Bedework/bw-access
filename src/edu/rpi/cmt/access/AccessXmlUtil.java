@@ -81,7 +81,20 @@ public class AccessXmlUtil implements Serializable {
 
     WebdavTags.unbind,           // privUnbind = 14;
     WebdavTags.unlock,           // privUnlock = 15;
-    null                         // privNone = 16;
+
+    /* ----------------- CalDAV Scheduling ------------------------ */
+
+    CaldavTags.scheduleDeliver,           //  16;
+    CaldavTags.scheduleDeliverInvite,     //  17;
+    CaldavTags.scheduleDeliverReply,      //  18;
+    CaldavTags.scheduleQueryFreebusy,     //  19;
+
+    CaldavTags.scheduleSend,              //  20;
+    CaldavTags.scheduleSendInvite,        //  21;
+    CaldavTags.scheduleSendReply,         //  22;
+    CaldavTags.scheduleSendFreebusy,      //  23;
+
+    null                         // privNone = 24;
   };
 
   /** Callback for xml utility

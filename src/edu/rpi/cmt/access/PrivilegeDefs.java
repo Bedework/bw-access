@@ -140,12 +140,46 @@ public interface PrivilegeDefs extends Serializable {
    */
   public static final int privUnlock = 15;
 
+  /* ----------------- CalDAV Scheduling ------------------------ */
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleDeliver = 16;
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleDeliverInvite = 17;
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleDeliverReply = 18;
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleQueryFreebusy = 19;
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleSend = 20;
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleSendInvite = 21;
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleSendReply = 22;
+
+  /** CalDAV schedule access
+   */
+  public static final int privScheduleSendFreebusy = 23;
+
   /** Deny all access */
-  public static final int privNone = 16;
+  public static final int privNone = 24;
 
   /** Max access index
    */
-  public static final int privMaxType = 16;
+  public static final int privMaxType = 24;
 
   /** Indicate any allowed access will do
    */
@@ -156,6 +190,8 @@ public interface PrivilegeDefs extends Serializable {
    */
 
   /** Single char encoding
+   * BCGHJKLMOVXYZ
+   * dfghjklmnovwxz
    */
   public final static char[] privEncoding = {
     'A',     // privAll
@@ -181,6 +217,16 @@ public interface PrivilegeDefs extends Serializable {
 
     'U',     // privUnlock
              // not implemented
+
+    'D',     // privScheduleDeliver
+    'i',     // privScheduleDeliverInvite
+    'e',     // privScheduleDeliverReply
+    'q',     // privScheduleQueryFreebusy
+
+    'T',     // privScheduleSend
+    'I',     // privScheduleSendInvite
+    'E',     // privScheduleSendReply
+    'Q',     // privScheduleSendFreebusy
 
     'N',     // privNone
   };

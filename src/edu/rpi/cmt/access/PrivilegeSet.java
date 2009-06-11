@@ -62,6 +62,17 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                      allowed,   // privScheduleFreeBusy
                      allowed,   // privUnbind
                      allowed,   // privUnlock
+
+                     allowed,   // privScheduleDeliver
+                     allowed,   // privScheduleDeliverInvite
+                     allowed,   // privScheduleDeliverReply
+                     allowed,  // privScheduleQueryFreebusy
+
+                     allowed,   // privScheduleSend
+                     allowed,   // privScheduleSendInvite
+                     allowed,   // privScheduleSendReply
+                     allowed,   // privScheduleSendFreebusy
+
                      allowed));   // privNone
 
   /** User home max privileges for non-super user
@@ -85,6 +96,17 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                      denied,   // privScheduleFreeBusy
                      denied,   // privUnbind
                      allowed,   // privUnlock
+
+                     denied,   // privScheduleDeliver
+                     denied,   // privScheduleDeliverInvite
+                     denied,   // privScheduleDeliverReply
+                     denied,  // privScheduleQueryFreebusy
+
+                     denied,   // privScheduleSend
+                     denied,   // privScheduleSendInvite
+                     denied,   // privScheduleSendReply
+                     denied,   // privScheduleSendFreebusy
+
                      allowed));   // privNone
 
   /** Read-only privileges
@@ -106,6 +128,16 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                      denied,   // privScheduleFreeBusy
                      denied,   // privUnbind
                      allowed,   // privUnlock
+
+                     denied,   // privScheduleDeliver
+                     denied,   // privScheduleDeliverInvite
+                     denied,   // privScheduleDeliverReply
+                     denied,  // privScheduleQueryFreebusy
+
+                     denied,   // privScheduleSend
+                     denied,   // privScheduleSendInvite
+                     denied,   // privScheduleSendReply
+                     denied,   // privScheduleSendFreebusy
                      allowed));   // privNone
 
   /** Default privs for a non owner
@@ -127,6 +159,16 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                      denied,   // privScheduleFreeBusy
                      denied,   // privUnbind
                      denied,   // privUnlock
+
+                     denied,   // privScheduleDeliver
+                     denied,   // privScheduleDeliverInvite
+                     denied,   // privScheduleDeliverReply
+                     denied,  // privScheduleQueryFreebusy
+
+                     denied,   // privScheduleSend
+                     denied,   // privScheduleSendInvite
+                     denied,   // privScheduleSendReply
+                     denied,   // privScheduleSendFreebusy
                      denied));   // privNone
 
   /**
@@ -146,6 +188,14 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param privScheduleFreeBusyState
    * @param privUnbindState
    * @param privUnlockState
+   * @param privScheduleDeliverState
+   * @param privScheduleDeliverInviteState
+   * @param privScheduleDeliverReplyState
+   * @param privScheduleQueryFreebusyState
+   * @param privScheduleSendState
+   * @param privScheduleSendInviteState
+   * @param privScheduleSendReplyState
+   * @param privScheduleSendFreebusyState
    * @param privNoneState
    */
   public PrivilegeSet(char privAllState,
@@ -164,6 +214,17 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                       char privScheduleFreeBusyState,
                       char privUnbindState,
                       char privUnlockState,
+
+                      char privScheduleDeliverState,
+                      char privScheduleDeliverInviteState,
+                      char privScheduleDeliverReplyState,
+                      char privScheduleQueryFreebusyState,
+
+                      char privScheduleSendState,
+                      char privScheduleSendInviteState,
+                      char privScheduleSendReplyState,
+                      char privScheduleSendFreebusyState,
+
                       char privNoneState) {
     privileges = new char[privMaxType + 1];
 
@@ -183,6 +244,17 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     privileges[privScheduleFreeBusy] = privScheduleFreeBusyState;
     privileges[privUnbind] = privUnbindState;
     privileges[privUnlock] = privUnlockState;
+
+    privileges[privScheduleDeliver] = privScheduleDeliverState;
+    privileges[privScheduleDeliverInvite] = privScheduleDeliverInviteState;
+    privileges[privScheduleDeliverReply] = privScheduleDeliverReplyState;
+    privileges[privScheduleQueryFreebusy] = privScheduleQueryFreebusyState;
+
+    privileges[privScheduleSend] = privScheduleSendState;
+    privileges[privScheduleSendInvite] = privScheduleSendInviteState;
+    privileges[privScheduleSendReply] = privScheduleSendReplyState;
+    privileges[privScheduleSendFreebusy] = privScheduleSendFreebusyState;
+
     privileges[privNone] = privNoneState;
   }
 
