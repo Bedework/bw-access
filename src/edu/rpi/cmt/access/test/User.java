@@ -78,6 +78,7 @@ public class User extends Principal {
    */
   public User(String name) {
     super(name);
+    setPrincipalRef("/principals/users/" + name);
   }
 
   public int getKind() {

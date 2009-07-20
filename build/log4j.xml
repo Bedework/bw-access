@@ -153,18 +153,18 @@
 
    <!-- Set rpi categories -->
 <!--
+ -->
    <category name="edu.rpi">
      <priority value="DEBUG"/>
    </category>
 
    <category name="edu.rpi.cmt.access.Acl">
-     <priority value="INFO"/>
+     <priority value="DEBUG"/>
    </category>
 
    <category name="org.bedework.calcore.AccessUtil">
      <priority value="INFO"/>
    </category>
- -->
 
    <category name="org.bedework.sysevents">
      <priority value="DEBUG"/>

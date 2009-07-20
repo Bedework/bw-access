@@ -286,7 +286,9 @@ public class Privilege implements PrivilegeDefs {
                                      true,
                                      val.getIndex());
 
-    newval.containedPrivileges.addAll(val.getContainedPrivileges());
+    for (Privilege p: val.getContainedPrivileges()) {
+      newval.containedPrivileges.add(cloneDenied(p));
+    }
 
     return newval;
   }
