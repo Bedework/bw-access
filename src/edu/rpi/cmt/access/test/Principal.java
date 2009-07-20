@@ -178,7 +178,7 @@ public abstract class Principal implements Comparator<Principal>,
     if (groupNames == null) {
       groupNames = new TreeSet<String>();
       for (Principal group: getGroups()) {
-        groupNames.add(group.getAccount());
+        groupNames.add(group.getPrincipalRef());
       }
     }
     return groupNames;

@@ -25,11 +25,13 @@
 */
 package edu.rpi.cmt.access.test;
 
+import edu.rpi.cmt.access.AccessException;
 import edu.rpi.cmt.access.Ace;
 import edu.rpi.cmt.access.AceWho;
 import edu.rpi.cmt.access.Acl;
 import edu.rpi.cmt.access.Privilege;
 import edu.rpi.cmt.access.Privileges;
+import edu.rpi.cmt.access.Access.AccessCb;
 import edu.rpi.cmt.access.Acl.CurrentAccess;
 
 import java.util.ArrayList;
@@ -44,6 +46,24 @@ import junit.framework.TestCase;
  */
 public class AccessTest extends TestCase {
   boolean debug = true;
+
+  static class TestAccessCb implements AccessCb {
+    public String makeHref(String id, int whoType) throws AccessException {
+      if (id.startsWith("/principals")) {
+        return id;
+      }
+
+      if (whoType == Ace.whoTypeUser) {
+        return "/principals/users/" + id;
+      }
+
+      if (whoType == Ace.whoTypeGroup) {
+        return "/principals/groups/" + id;
+      }
+
+      return id;
+    }
+  }
 
   /**
    *
@@ -114,7 +134,7 @@ public class AccessTest extends TestCase {
                         "Owner access for read others");
       tryEvaluateAccess(auser, owner, privSetRead, encoded, true,
                         "User access for read others");
-      tryEvaluateAccess(unauth, owner, privSetRead, encoded, false,
+      tryEvaluateAccess(unauth, owner, privSetRead, encoded, true,
                         "Unauthenticated access for read others");
 
       log("---------------------------------------------------------");
@@ -184,9 +204,9 @@ public class AccessTest extends TestCase {
    * ==================================================================== */
 
   private void tryEvaluateAccess(Principal who, Principal owner,
-                                 Privilege[] how,char[] encoded,
+                                 Privilege[] how, char[] encoded,
                                  boolean expected, String title) throws Throwable {
-    CurrentAccess ca = Acl.evaluateAccess(null, who, owner, how,
+    CurrentAccess ca = Acl.evaluateAccess(new TestAccessCb(), who, owner, how,
                                           encoded, null);
 
     if (debug) {

@@ -356,7 +356,13 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
           ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeAll);
         }
 
-        break getPrivileges;
+        if (ca.privileges != null) {
+          if (debug) {
+            debugsb.append("... For unauthenticated got: " + ca.privileges);
+          }
+
+          break getPrivileges;
+        }
       }
 
       if (isOwner) {
@@ -364,11 +370,14 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         if (ca.privileges == null) {
           ca.privileges = PrivilegeSet.makeDefaultOwnerPrivileges();
         }
-        if (debug) {
-          debugsb.append("... For owner got: " + ca.privileges);
-        }
 
-        break getPrivileges;
+        if (ca.privileges != null) {
+          if (debug) {
+            debugsb.append("... For owner got: " + ca.privileges);
+          }
+
+          break getPrivileges;
+        }
       }
 
       // Not owner - look for user
@@ -482,12 +491,21 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     if (how.length == 0) {
       // Means any access will do
 
-      if (debug) {
-        debugMsg(debugsb.toString() + "...Check access allowed (any requested)");
-      }
       ca.accessAllowed = ca.privileges.getAnyAllowed();
+      if (debug) {
+        if (ca.accessAllowed) {
+          debugMsg(debugsb.toString() + "...Check access allowed (any requested)");
+        } else {
+          debugMsg(debugsb.toString() + "...Check access denied (any requested)");
+        }
+      }
+
       return ca;
     }
+
+    /* Check each requested access right. If denied, fail immediately, otherwise
+     * continue to the next request right.
+     */
 
     for (int i = 0; i < how.length; i++) {
       char priv = ca.privileges.getPrivilege(how[i].getIndex());
@@ -501,6 +519,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         return ca;
       }
     }
+
+    /* Caller specified some access rights they wanted and all of them are
+     * granted.
+     */
 
     if (debug) {
       debugMsg(debugsb.toString() + "...Check access allowed");

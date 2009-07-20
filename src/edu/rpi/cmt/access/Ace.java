@@ -47,7 +47,7 @@ import java.util.Map;
  *  @author Mike Douglass   douglm   rpi.edu
  */
 public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
-  private static boolean debug;
+  //private static boolean debug;
 
   private static transient Logger log;
 
@@ -114,7 +114,7 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   private Ace(final AceWho who,
               final Collection<Privilege> privs,
               final String inheritedFrom) throws AccessException {
-    debug = getLog().isDebugEnabled();
+    //debug = getLog().isDebugEnabled();
 
     this.who = who;
 

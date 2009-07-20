@@ -56,6 +56,7 @@ public class Group extends Principal {
    */
   public Group(String account) {
     super(account);
+    setPrincipalRef("/principals/groups/" + account);
   }
 
   public int getKind() {
