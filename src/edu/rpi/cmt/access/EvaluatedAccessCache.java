@@ -53,6 +53,8 @@ import java.util.Map;
 public class EvaluatedAccessCache implements Serializable {
   private transient static Logger log;
 
+  private static Object synch = new Object();
+
   private static Map<String, Map> ownerHrefs = new HashMap<String, Map>();
 
   /* Back end of the queue is the most recently referenced. */
@@ -97,48 +99,51 @@ public class EvaluatedAccessCache implements Serializable {
                                   PrivilegeSet maxAccess,
                                   String acl) {
     numGets.count++;
-    Map<String, Map> accessors = ownerHrefs.get(ownerHref);
 
-    if (accessors == null) {
-      return null;
-    }
+    synchronized (synch) {
+      Map<String, Map> accessors = ownerHrefs.get(ownerHref);
 
-    /* ===================== desired priv ================== */
+      if (accessors == null) {
+        return null;
+      }
 
-    Map<PrivilegeSet, Map> desiredPrivs = accessors.get(accessorHref);
+      /* ===================== desired priv ================== */
 
-    if (desiredPrivs == null) {
-      return null;
-    }
+      Map<PrivilegeSet, Map> desiredPrivs = accessors.get(accessorHref);
 
-    accessorQueue.remove(accessorHref);
-    accessorQueue.add(accessorHref);
+      if (desiredPrivs == null) {
+        return null;
+      }
 
-    /* ===================== max priv ================== */
+      accessorQueue.remove(accessorHref);
+      accessorQueue.add(accessorHref);
 
-    Map<PrivilegeSet, Map> maxPrivs = desiredPrivs.get(desiredPriv);
+      /* ===================== max priv ================== */
 
-    if (maxPrivs == null) {
-      return null;
-    }
+      Map<PrivilegeSet, Map> maxPrivs = desiredPrivs.get(desiredPriv);
 
-    /* ===================== acl ================== */
+      if (maxPrivs == null) {
+        return null;
+      }
 
-    Map<String, CurrentAccess> acls = maxPrivs.get(maxAccess);
+      /* ===================== acl ================== */
 
-    if (acls == null) {
-      return null;
-    }
+      Map<String, CurrentAccess> acls = maxPrivs.get(maxAccess);
 
-    /* ==================== finally access =============== */
+      if (acls == null) {
+        return null;
+      }
 
-    CurrentAccess ca = acls.get(acl);
+      /* ==================== finally access =============== */
 
-    if (ca != null) {
-      numHits.count++;
-    }
+      CurrentAccess ca = acls.get(acl);
 
-    return ca;
+      if (ca != null) {
+        numHits.count++;
+      }
+
+      return ca;
+    } // synch
   }
 
   /**
@@ -157,77 +162,80 @@ public class EvaluatedAccessCache implements Serializable {
                          CurrentAccess ca) {
     boolean found = true;
 
-    Map<String, Map> accessors = ownerHrefs.get(ownerHref);
 
-    if (accessors == null) {
-      accessors = new HashMap<String, Map>();
-      ownerHrefs.put(ownerHref, accessors);
-      found = false;
-    }
+    synchronized (synch) {
+      Map<String, Map> accessors = ownerHrefs.get(ownerHref);
 
-    accessorQueue.remove(accessorHref);
-    accessorQueue.add(accessorHref);
+      if (accessors == null) {
+        accessors = new HashMap<String, Map>();
+        ownerHrefs.put(ownerHref, accessors);
+        found = false;
+      }
 
-    /* ===================== desired priv ================== */
+      accessorQueue.remove(accessorHref);
+      accessorQueue.add(accessorHref);
 
-    Map<PrivilegeSet, Map> desiredPrivs = null;
-    if (found) {
-      // Try a search
-      desiredPrivs = accessors.get(accessorHref);
-    }
+      /* ===================== desired priv ================== */
 
-    if (desiredPrivs == null) {
-      desiredPrivs = new HashMap<PrivilegeSet, Map>();
-      accessors.put(accessorHref, desiredPrivs);
-      found = false;
-    }
+      Map<PrivilegeSet, Map> desiredPrivs = null;
+      if (found) {
+        // Try a search
+        desiredPrivs = accessors.get(accessorHref);
+      }
 
-    /* ===================== max priv ================== */
+      if (desiredPrivs == null) {
+        desiredPrivs = new HashMap<PrivilegeSet, Map>();
+        accessors.put(accessorHref, desiredPrivs);
+        found = false;
+      }
 
-    Map<PrivilegeSet, Map> maxPrivs = null;
-    if (found) {
-      // Try a search
-      maxPrivs = desiredPrivs.get(desiredPriv);
-    }
+      /* ===================== max priv ================== */
 
-    if (maxPrivs == null) {
-      maxPrivs = new HashMap<PrivilegeSet, Map>();
-      desiredPrivs.put(desiredPriv, maxPrivs);
-      found = false;
-    }
+      Map<PrivilegeSet, Map> maxPrivs = null;
+      if (found) {
+        // Try a search
+        maxPrivs = desiredPrivs.get(desiredPriv);
+      }
 
-    /* ===================== acl ================== */
+      if (maxPrivs == null) {
+        maxPrivs = new HashMap<PrivilegeSet, Map>();
+        desiredPrivs.put(desiredPriv, maxPrivs);
+        found = false;
+      }
 
-    Map<String, CurrentAccess> acls = null;
-    if (found) {
-      // Try a search
-      acls = maxPrivs.get(maxAccess);
-    }
+      /* ===================== acl ================== */
 
-    if (acls == null) {
-      acls = new HashMap<String, CurrentAccess>();
-      maxPrivs.put(maxAccess, acls);
-      numAclTables.count++;
-      found = false;
-    }
+      Map<String, CurrentAccess> acls = null;
+      if (found) {
+        // Try a search
+        acls = maxPrivs.get(maxAccess);
+      }
 
-    /* ==================== finally store =============== */
+      if (acls == null) {
+        acls = new HashMap<String, CurrentAccess>();
+        maxPrivs.put(maxAccess, acls);
+        numAclTables.count++;
+        found = false;
+      }
 
-    if (found) {
-      // Let's see if it's the same - it ought to be
+      /* ==================== finally store =============== */
 
-      CurrentAccess tca = acls.get(acl);
-      if (tca != null) {
-        if (!tca.equals(ca)) {
-          // That's bad.
-          error("Current access in table does not match, table:" + tca +
-                " new version " + ca);
+      if (found) {
+        // Let's see if it's the same - it ought to be
+
+        CurrentAccess tca = acls.get(acl);
+        if (tca != null) {
+          if (!tca.equals(ca)) {
+            // That's bad.
+            error("Current access in table does not match, table:" + tca +
+                  " new version " + ca);
+          }
         }
       }
-    }
 
-    numEntries.count++;
-    acls.put(acl, ca);
+      numEntries.count++;
+      acls.put(acl, ca);
+    } // synch
   }
 
   /** Get the cache statistics
