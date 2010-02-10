@@ -171,6 +171,37 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                      denied,   // privScheduleSendFreebusy
                      denied));   // privNone
 
+  /** ACL privileges for owner
+   */
+  public static PrivilegeSet ownerAclPrivileges =
+    pooled(new PrivilegeSet(denied,   // privAll
+                     denied,   // privRead
+                     allowed,   // privReadAcl
+                     denied,   // privReadCurrentUserPrivilegeSet
+                     denied,   // privReadFreeBusy
+                     denied,   // privWrite
+                     allowed,   // privWriteAcl
+                     denied,   // privWriteProperties
+                     denied,   // privWriteContent
+                     denied,   // privBind
+                     denied,   // privSchedule
+                     denied,   // privScheduleRequest
+                     denied,   // privScheduleReply
+                     denied,   // privScheduleFreeBusy
+                     denied,   // privUnbind
+                     denied,   // privUnlock
+
+                     denied,   // privScheduleDeliver
+                     denied,   // privScheduleDeliverInvite
+                     denied,   // privScheduleDeliverReply
+                     denied,  // privScheduleQueryFreebusy
+
+                     denied,   // privScheduleSend
+                     denied,   // privScheduleSendInvite
+                     denied,   // privScheduleSendReply
+                     denied,   // privScheduleSendFreebusy
+                     denied));   // privNone
+
   /**
    * @param privAllState
    * @param privReadState
@@ -198,34 +229,34 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param privScheduleSendFreebusyState
    * @param privNoneState
    */
-  public PrivilegeSet(char privAllState,
-                      char privReadState,
-                      char privReadAclState,
-                      char privReadCurrentUserPrivilegeSetState,
-                      char privReadFreeBusyState,
-                      char privWriteState,
-                      char privWriteAclState,
-                      char privWritePropertiesState,
-                      char privWriteContentState,
-                      char privBindState,
-                      char privScheduleState,
-                      char privScheduleRequestState,
-                      char privScheduleReplyState,
-                      char privScheduleFreeBusyState,
-                      char privUnbindState,
-                      char privUnlockState,
+  public PrivilegeSet(final char privAllState,
+                      final char privReadState,
+                      final char privReadAclState,
+                      final char privReadCurrentUserPrivilegeSetState,
+                      final char privReadFreeBusyState,
+                      final char privWriteState,
+                      final char privWriteAclState,
+                      final char privWritePropertiesState,
+                      final char privWriteContentState,
+                      final char privBindState,
+                      final char privScheduleState,
+                      final char privScheduleRequestState,
+                      final char privScheduleReplyState,
+                      final char privScheduleFreeBusyState,
+                      final char privUnbindState,
+                      final char privUnlockState,
 
-                      char privScheduleDeliverState,
-                      char privScheduleDeliverInviteState,
-                      char privScheduleDeliverReplyState,
-                      char privScheduleQueryFreebusyState,
+                      final char privScheduleDeliverState,
+                      final char privScheduleDeliverInviteState,
+                      final char privScheduleDeliverReplyState,
+                      final char privScheduleQueryFreebusyState,
 
-                      char privScheduleSendState,
-                      char privScheduleSendInviteState,
-                      char privScheduleSendReplyState,
-                      char privScheduleSendFreebusyState,
+                      final char privScheduleSendState,
+                      final char privScheduleSendInviteState,
+                      final char privScheduleSendReplyState,
+                      final char privScheduleSendFreebusyState,
 
-                      char privNoneState) {
+                      final char privNoneState) {
     privileges = new char[privMaxType + 1];
 
     privileges[privAll] = privAllState;
@@ -261,7 +292,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
   /**
    * @param privileges
    */
-  public PrivilegeSet(char[] privileges) {
+  public PrivilegeSet(final char[] privileges) {
     this.privileges = privileges;
   }
 
@@ -305,7 +336,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param priv  Privilege object
    * @return PrivilegeSet
    */
-  public static PrivilegeSet makePrivileges(Privilege priv) {
+  public static PrivilegeSet makePrivileges(final Privilege priv) {
     PrivilegeSet pset = new PrivilegeSet();
 
     pset.privileges = new char[privMaxType + 1];
@@ -332,7 +363,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @return char[] access flags
    * @throws AccessException
    */
-  public static PrivilegeSet fromEncoding(EncodedAcl acl) throws AccessException {
+  public static PrivilegeSet fromEncoding(final EncodedAcl acl) throws AccessException {
     char[] privStates = {
       unspecified,   // privAll
       unspecified,   // privRead
@@ -381,8 +412,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param priv  Privilege object
    * @return PrivilegeSet
    */
-  public static PrivilegeSet addPrivilege(PrivilegeSet pset,
-                                          Privilege priv) {
+  public static PrivilegeSet addPrivilege(final PrivilegeSet pset,
+                                          final Privilege priv) {
     PrivilegeSet newPset = (PrivilegeSet)pset.clone();
 
     if (newPset.privileges == null) {
@@ -409,7 +440,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param privs
    * @return PrivilegeSet
    */
-  public static PrivilegeSet makePrivilegeSet(Privilege[] privs) {
+  public static PrivilegeSet makePrivilegeSet(final Privilege[] privs) {
     PrivilegeSet newPset = new PrivilegeSet();
 
     newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
@@ -436,7 +467,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param index
    * @return char
    */
-  public char getPrivilege(int index) {
+  public char getPrivilege(final int index) {
     if (privileges == null) {
       return unspecified;
     }
@@ -450,8 +481,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param filter
    * @return PrivilegeSet
    */
-  public static PrivilegeSet filterPrivileges(PrivilegeSet pset,
-                                              PrivilegeSet filter) {
+  public static PrivilegeSet filterPrivileges(final PrivilegeSet pset,
+                                              final PrivilegeSet filter) {
     PrivilegeSet newPset = (PrivilegeSet)pset.clone();
 
     if (newPset.privileges == null) {
@@ -509,9 +540,9 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param inherited   true if the ace was an inherited ace
    * @return PrivilegeSet  mergedPrivileges
    */
-  public static PrivilegeSet mergePrivileges(PrivilegeSet current,
-                                             PrivilegeSet morePriv,
-                                             boolean inherited) {
+  public static PrivilegeSet mergePrivileges(final PrivilegeSet current,
+                                             final PrivilegeSet morePriv,
+                                             final boolean inherited) {
     PrivilegeSet mp = (PrivilegeSet)morePriv.clone();
 
     if (inherited) {
@@ -545,8 +576,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param isOwner
    * @return PrivilegeSet
    */
-  public static PrivilegeSet setUnspecified(PrivilegeSet pset,
-                                            boolean isOwner) {
+  public static PrivilegeSet setUnspecified(final PrivilegeSet pset,
+                                            final boolean isOwner) {
     PrivilegeSet newPset = (PrivilegeSet)pset.clone();
 
     if (newPset.privileges == null) {
@@ -573,7 +604,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     if (privileges == null) {
       return null;
     }
-    return (char[])privileges.clone();
+    return privileges.clone();
   }
 
   /** Return list of Privilege once we have removed all included Privileges
@@ -607,7 +638,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     return privs;
   }
 
-  private void setUnspec(char[] ps, Privilege priv) {
+  private void setUnspec(final char[] ps, final Privilege priv) {
     ps[priv.getIndex()] = unspecified;
 
     for (Privilege pr: priv.getContainedPrivileges()) {
@@ -620,7 +651,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    *                   Private methods
    * ==================================================================== */
 
-  private static PrivilegeSet pooled(PrivilegeSet val) {
+  private static PrivilegeSet pooled(final PrivilegeSet val) {
     if (!usePool) {
       return val;
     }
@@ -633,7 +664,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @param index
    * @param val
    */
-  private void setPrivilege(int index, char val) {
+  private void setPrivilege(final int index, final char val) {
     if (privileges == null) {
       privileges = defaultNonOwnerPrivileges.getPrivileges();
     }
@@ -645,7 +676,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    *
    * @param priv  Privilege object
    */
-  private void setPrivilege(Privilege priv) {
+  private void setPrivilege(final Privilege priv) {
     if (privileges == null) {
       privileges = defaultNonOwnerPrivileges.getPrivileges();
     }
@@ -676,7 +707,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    *  So for this we set allowed or denied in the states array for each of those
    *  privileges.
    */
-  private static void setState(char[] states, Privilege p, boolean denial) {
+  private static void setState(final char[] states, final Privilege p, final boolean denial) {
     // XXX Should we only set either way of the access is unspecified?
     if (!denial) {
       states[p.getIndex()] = allowed;
@@ -696,7 +727,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    *                   Object methods
    * ==================================================================== */
 
-  public int compareTo(PrivilegeSet that) {
+  public int compareTo(final PrivilegeSet that) {
     if (this == that) {
       return 0;
     }
@@ -729,6 +760,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     return 0;
   }
 
+  @Override
   public int hashCode() {
     int hc = 7;
 
@@ -743,14 +775,17 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     return hc;
   }
 
-  public boolean equals(Object o) {
+  @Override
+  public boolean equals(final Object o) {
     return compareTo((PrivilegeSet)o) == 0;
   }
 
+  @Override
   public Object clone() {
     return new PrivilegeSet(getPrivileges());
   }
 
+  @Override
   public String toString() {
     StringBuilder sb = new StringBuilder("PrivilegeSet[");
 

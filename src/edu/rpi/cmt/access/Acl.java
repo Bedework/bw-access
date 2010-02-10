@@ -75,7 +75,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * @param aces
    */
-  public Acl(Collection<Ace> aces) {
+  public Acl(final Collection<Ace> aces) {
     debug = getLog().isDebugEnabled();
 
     this.aces = new TreeMap<AceWho, Ace>();
@@ -125,14 +125,14 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     /**
      * @param privs
      */
-    public CurrentAccess(PrivilegeSet privs) {
-      this.privileges = privs;
+    public CurrentAccess(final PrivilegeSet privs) {
+      privileges = privs;
     }
 
     /**
      * @param accessAllowed
      */
-    public CurrentAccess(boolean accessAllowed) {
+    public CurrentAccess(final boolean accessAllowed) {
       this.accessAllowed = accessAllowed;
     }
 
@@ -162,26 +162,27 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       return accessAllowed;
     }
 
-    public int compareTo(CurrentAccess that) {
+    public int compareTo(final CurrentAccess that) {
       if (this == that) {
         return 0;
       }
 
-      int res = Util.compare(this.aclChars, that.aclChars);
+      int res = Util.compare(aclChars, that.aclChars);
 
       if (res != 0) {
         return res;
       }
 
-      res = Util.cmpObjval(this.privileges, that.privileges);
+      res = Util.cmpObjval(privileges, that.privileges);
 
       if (res != 0) {
         return res;
       }
 
-      return Util.cmpBoolval(this.accessAllowed, that.accessAllowed);
+      return Util.cmpBoolval(accessAllowed, that.accessAllowed);
     }
 
+    @Override
     public int hashCode() {
       int hc = 7;
 
@@ -196,10 +197,12 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       return hc;
     }
 
-    public boolean equals(Object o) {
+    @Override
+    public boolean equals(final Object o) {
       return compareTo((CurrentAccess)o) == 0;
     }
 
+    @Override
     public String toString() {
       StringBuilder sb = new StringBuilder("CurrentAccess{");
       sb.append("acl=");
@@ -224,7 +227,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @param ca
    * @return new CurrentAccess with access allowed
    */
-  public static CurrentAccess forceAccessAllowed(CurrentAccess ca) {
+  public static CurrentAccess forceAccessAllowed(final CurrentAccess ca) {
     CurrentAccess newCa = new CurrentAccess(true);
 
     newCa.acl = ca.acl;
@@ -271,12 +274,12 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public static CurrentAccess evaluateAccess(AccessCb cb,
-                                             AccessPrincipal who,
-                                             AccessPrincipal owner,
-                                             Privilege[] how,
-                                             char[] aclChars,
-                                             PrivilegeSet filter)
+  public static CurrentAccess evaluateAccess(final AccessCb cb,
+                                             final AccessPrincipal who,
+                                             final AccessPrincipal owner,
+                                             final Privilege[] how,
+                                             final char[] aclChars,
+                                             final PrivilegeSet filter)
           throws AccessException {
     String aclString = new String(aclChars);
     PrivilegeSet howPriv = PrivilegeSet.makePrivilegeSet(how);
@@ -305,12 +308,12 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return ca;
   }
 
-  private static CurrentAccess evaluateAccessInt(AccessCb cb,
-                                                 AccessPrincipal who,
-                                                 AccessPrincipal owner,
-                                                 Privilege[] how,
-                                                 char[] aclChars,
-                                                 PrivilegeSet filter)
+  private static CurrentAccess evaluateAccessInt(final AccessCb cb,
+                                                 final AccessPrincipal who,
+                                                 final AccessPrincipal owner,
+                                                 final Privilege[] how,
+                                                 final char[] aclChars,
+                                                 final PrivilegeSet filter)
             throws AccessException {
     evaluations.count++;
 
@@ -371,13 +374,11 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
           ca.privileges = PrivilegeSet.makeDefaultOwnerPrivileges();
         }
 
-        if (ca.privileges != null) {
-          if (debug) {
-            debugsb.append("... For owner got: " + ca.privileges);
-          }
-
-          break getPrivileges;
+        if (debug) {
+          debugsb.append("... For owner got: " + ca.privileges);
         }
+
+        break getPrivileges;
       }
 
       // Not owner - look for user
@@ -471,6 +472,20 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       }
     } // getPrivileges
 
+    if (isOwner) {
+      // Owner always has read/write acl privilege
+
+      char racl = ca.privileges.getPrivilege(privReadAcl);
+      char wacl = ca.privileges.getPrivilege(privWriteAcl);
+
+      if (((racl != allowed) && (racl != allowedInherited)) ||
+          ((wacl != allowed) && (wacl != allowedInherited))) {
+        ca.privileges = PrivilegeSet.mergePrivileges(ca.privileges,
+                                                     PrivilegeSet.ownerAclPrivileges,
+                                                     false);
+      }
+    }
+
     if (ca.privileges == null) {
       if (debug) {
         debugMsg(debugsb.toString() + "...Check access denied (noprivs)");
@@ -551,7 +566,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return null if unchanged otehrwise new Acl
    * @throws AccessException
    */
-  public Acl removeWho(AceWho who) throws AccessException {
+  public Acl removeWho(final AceWho who) throws AccessException {
     if ((aces == null) || !getAces().contains(who)) {
       return null;
     }
@@ -579,7 +594,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return decoded Acl
    * @throws AccessException
    */
-  public static Acl decode(String val) throws AccessException {
+  public static Acl decode(final String val) throws AccessException {
     return decode(val.toCharArray());
   }
 
@@ -590,7 +605,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return decoded Acl
    * @throws AccessException
    */
-  public static Acl decode(char[] val) throws AccessException {
+  public static Acl decode(final char[] val) throws AccessException {
     return decode(val, null);
   }
 
@@ -603,7 +618,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return decoded Acl
    * @throws AccessException
    */
-  public static Acl decode(char[] val, String path) throws AccessException {
+  public static Acl decode(final char[] val, final String path) throws AccessException {
     EncodedAcl eacl = new EncodedAcl();
     eacl.setEncoded(val);
 
@@ -650,7 +665,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return merged Acl
    * @throws AccessException
    */
-  public Acl merge(char[] val, String path) throws AccessException {
+  public Acl merge(final char[] val, final String path) throws AccessException {
     Collection<Ace> newAces = new ArrayList<Ace>();
 
     newAces.addAll(getAces());
@@ -792,6 +807,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return sb.toString();
   }
 
+  @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
 
@@ -826,7 +842,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return sb.toString();
   }
 
-  protected static Logger getLog(Class cl) {
+  protected static Logger getLog(final Class cl) {
     if (log == null) {
       log = Logger.getLogger(EncodedAcl.class);
     }
@@ -838,7 +854,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * @param args
    */
-  public static void main(String[] args) {
+  public static void main(final String[] args) {
     try {
       Acl acl = decode(args[0]);
 
