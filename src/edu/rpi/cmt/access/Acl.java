@@ -338,11 +338,17 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       } else {
         debugsb.append(new String(aclChars));
       }
+      debugsb.append("'\n");
 
-      debugsb.append("' with authenticated = ");
-      debugsb.append(authenticated);
+      if (authenticated) {
+        debugsb.append("   with authenticated principal ");
+        debugsb.append(who.getPrincipalRef());
+      } else {
+        debugsb.append("   unauthenticated ");
+      }
       debugsb.append(" isOwner = ");
       debugsb.append(isOwner);
+      debugsb.append("'\n");
     }
 
     if (aclChars == null) {
@@ -362,6 +368,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         if (ca.privileges != null) {
           if (debug) {
             debugsb.append("... For unauthenticated got: " + ca.privileges);
+            debugsb.append("'\n");
           }
 
           break getPrivileges;
@@ -376,6 +383,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
         if (debug) {
           debugsb.append("... For owner got: " + ca.privileges);
+          debugsb.append("'\n");
         }
 
         break getPrivileges;
@@ -412,6 +420,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       if (ca.privileges != null) {
         if (debug) {
           debugsb.append("... For user got: " + ca.privileges);
+          debugsb.append("'\n");
         }
 
         break getPrivileges;
@@ -423,6 +432,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         for (String group: who.getGroupNames()) {
           if (debug) {
             debugsb.append("...Try access for group " + group);
+            debugsb.append("'\n");
           }
           PrivilegeSet privs = Ace.findMergedPrivilege(acl, cb, group,
                                                        Ace.whoTypeGroup);
@@ -436,6 +446,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       if (ca.privileges != null) {
         if (debug) {
           debugsb.append("...For groups got: " + ca.privileges);
+          debugsb.append("'\n");
         }
 
         break getPrivileges;
@@ -450,6 +461,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       if (ca.privileges != null) {
         if (debug) {
           debugsb.append("...For authenticated got: " + ca.privileges);
+          debugsb.append("'\n");
         }
 
         break getPrivileges;
@@ -466,6 +478,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       if (ca.privileges != null) {
         if (debug) {
           debugsb.append("...For other got: " + ca.privileges);
+          debugsb.append("'\n");
         }
 
         break getPrivileges;
