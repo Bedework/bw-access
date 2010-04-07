@@ -249,27 +249,42 @@ public class AccessXmlUtil implements Serializable {
 
       Element[] aceEls = XmlUtil.getElementsArray(root);
 
-      Collection<Ace> aces = new ArrayList<Ace>();
+      Collection<ParsedAce> paces = new ArrayList<ParsedAce>();
 
       for (Element curnode: aceEls) {
         if (!XmlUtil.nodeMatches(curnode, WebdavTags.ace)) {
           throw exc("Expected ACE");
         }
 
-        Ace ace = processAce(curnode);
-        if (ace == null) {
+        ParsedAce pace = processAce(curnode);
+        if (pace == null) {
           break;
         }
 
         /* Look for this 'who' in the list */
 
-        for (Ace a: aces) {
-          if (a.getWho().equals(ace.getWho())) {
-            throw exc("Multiple ACEs for " + a.getWho());
+        for (ParsedAce pa: paces) {
+          if (pa.ace.getWho().equals(pace.ace.getWho()) &&
+              (pa.deny == pace.deny)) {
+            throw exc("Multiple ACEs for " + pa.ace.getWho());
           }
         }
 
-        aces.add(ace);
+        paces.add(pace);
+      }
+
+      Collection<Ace> aces = new ArrayList<Ace>();
+
+      for (ParsedAce pa: paces) {
+        if (pa.deny) {
+          aces.add(pa.ace);
+        }
+      }
+
+      for (ParsedAce pa: paces) {
+        if (!pa.deny) {
+          aces.add(pa.ace);
+        }
       }
 
       return new Acl(aces);
@@ -405,6 +420,17 @@ public class AccessXmlUtil implements Serializable {
    *                   Private methods
    * ==================================================================== */
 
+  private static class ParsedAce {
+    Ace ace;
+    boolean deny;
+
+    ParsedAce(final Ace ace,
+              final boolean deny) {
+      this.ace = ace;
+      this.deny = deny;
+    }
+  }
+
   /* Process an acl<br/>
          <!ELEMENT ace ((principal | invert), (grant|deny), protected?,
                          inherited?)>
@@ -413,7 +439,7 @@ public class AccessXmlUtil implements Serializable {
 
          protected is for acl display
    */
-  private Ace processAce(final Node nd) throws Throwable {
+  private ParsedAce processAce(final Node nd) throws Throwable {
     Element[] children = XmlUtil.getElementsArray(nd);
     int pos = 0;
 
@@ -444,7 +470,7 @@ public class AccessXmlUtil implements Serializable {
     curnode = children[pos];
 
     /* grant or deny required here */
-    Collection<Privilege> privs = parseGrantDeny(curnode);
+    Privs privs = parseGrantDeny(curnode);
 
     if (privs == null) {
       if (debug) {
@@ -456,12 +482,13 @@ public class AccessXmlUtil implements Serializable {
 
     pos++;
     if (pos == children.length) {
-      return Ace.makeAce(awho, privs, null);
+      return new ParsedAce(Ace.makeAce(awho, privs.privs, null),
+                           privs.deny);
     }
 
     curnode = children[pos];
 
-    /* grant or deny possible here */
+    /* grant or deny possible here
     Collection<Privilege> morePrivs = parseGrantDeny(curnode);
 
     if (morePrivs != null) {
@@ -473,6 +500,7 @@ public class AccessXmlUtil implements Serializable {
 
       curnode = children[pos];
     }
+    */
 
     /* possible inherited */
     if (XmlUtil.nodeMatches(curnode, WebdavTags.inherited)) {
@@ -507,7 +535,8 @@ public class AccessXmlUtil implements Serializable {
       throw exc("Unexpected element " + children[pos]);
     }
 
-    return Ace.makeAce(awho, privs, inheritedFrom);
+    return new ParsedAce(Ace.makeAce(awho, privs.privs, inheritedFrom),
+                         privs.deny);
   }
 
   private AceWho parseAcePrincipal(final Node nd,
@@ -566,7 +595,18 @@ public class AccessXmlUtil implements Serializable {
     return awho;
   }
 
-  private Collection<Privilege> parseGrantDeny(final Node nd) throws Throwable {
+  private static class Privs {
+    Collection<Privilege> privs;
+    boolean deny;
+
+    Privs(final Collection<Privilege> privs,
+          final boolean deny) {
+      this.privs = privs;
+      this.deny = deny;
+    }
+  }
+
+  private Privs parseGrantDeny(final Node nd) throws Throwable {
     boolean denial = false;
 
     if (XmlUtil.nodeMatches(nd, WebdavTags.deny)) {
@@ -588,7 +628,7 @@ public class AccessXmlUtil implements Serializable {
       privs.add(parsePrivilege(pnode, denial));
     }
 
-    return privs;
+    return new Privs(privs, denial);
   }
 
   private Privilege parsePrivilege(final Node nd,
