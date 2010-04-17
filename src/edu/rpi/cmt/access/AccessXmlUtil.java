@@ -138,6 +138,20 @@ public class AccessXmlUtil implements Serializable {
      * @throws AccessException
      */
     public QName getErrorTag() throws AccessException;
+
+    /** Called during processing to indicate an error
+     *
+     * @param val
+     * @throws AccessException
+     */
+    public void setErrorMsg(String val) throws AccessException;
+
+    /** Return any error message
+     *
+     * @return String or null
+     * @throws AccessException
+     */
+    public String getErrorMsg() throws AccessException;
   }
 
   private AccessXmlCb cb;
@@ -208,6 +222,15 @@ public class AccessXmlUtil implements Serializable {
    */
   public QName getErrorTag() throws AccessException {
     return cb.getErrorTag();
+  }
+
+  /** Return any error message
+   *
+   * @return String or null
+   * @throws AccessException
+   */
+  public String getErrorMsg() throws AccessException {
+    return cb.getErrorMsg();
   }
 
   /** Given a webdav like xml acl return the internalized form as an Acl.
@@ -561,6 +584,7 @@ public class AccessXmlUtil implements Serializable {
 
       if (ap == null) {
         cb.setErrorTag(WebdavTags.recognizedPrincipal);
+        cb.setErrorMsg(href);
         return null;
       }
 
