@@ -89,7 +89,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                      allowed,   // privWriteAcl
                      allowed,   // privWriteProperties
                      allowed,   // privWriteContent
-                     denied,   // privBind
+                     allowed,   // privBind
                      denied,   // privSchedule
                      denied,   // privScheduleRequest
                      denied,   // privScheduleReply
@@ -492,7 +492,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     char[] filterPrivs = filter.privileges;
 
     for (int pi = 0; pi < newPset.privileges.length; pi++) {
-      if (newPset.privileges[pi] > filterPrivs[pi]) {
+      if (privAgtB(newPset.privileges[pi], filterPrivs[pi])) {
         newPset.privileges[pi] = filterPrivs[pi];
       }
     }
@@ -638,6 +638,10 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     return privs;
   }
 
+  /* ====================================================================
+   *                   Private methods
+   * ==================================================================== */
+
   private void setUnspec(final char[] ps, final Privilege priv) {
     ps[priv.getIndex()] = unspecified;
 
@@ -647,9 +651,17 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   }
 
-  /* ====================================================================
-   *                   Private methods
-   * ==================================================================== */
+  private static boolean privAgtB(final char priva, final char privb) {
+    if (privb == unspecified) {
+      return true;
+    }
+
+    if ((privb == denied) || (privb == deniedInherited)) {
+      return (priva == allowed) || (priva == allowedInherited);
+    }
+
+    return false;
+  }
 
   private static PrivilegeSet pooled(final PrivilegeSet val) {
     if (!usePool) {

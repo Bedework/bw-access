@@ -236,10 +236,12 @@ public class AccessXmlUtil implements Serializable {
   /** Given a webdav like xml acl return the internalized form as an Acl.
    *
    * @param xmlStr
+   * @param setting - true if we are being called to set a value
    * @return Acl
    * @throws AccessException
    */
-  public Acl getAcl(final String xmlStr) throws AccessException {
+  public Acl getAcl(final String xmlStr,
+                    final boolean setting) throws AccessException {
     try {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
@@ -248,7 +250,7 @@ public class AccessXmlUtil implements Serializable {
 
       Document doc = builder.parse(new InputSource(new StringReader(xmlStr)));
 
-      return getAcl(doc.getDocumentElement());
+      return getAcl(doc.getDocumentElement(), setting);
     } catch (AccessException ae) {
       throw ae;
     } catch (Throwable t) {
@@ -258,10 +260,12 @@ public class AccessXmlUtil implements Serializable {
 
   /**
    * @param root
+   * @param setting - true if we are being called to set a value
    * @return Acl
    * @throws AccessException
    */
-  public Acl getAcl(final Element root) throws AccessException {
+  public Acl getAcl(final Element root,
+                    final boolean setting) throws AccessException {
     try {
       /* We expect an acl root element containing 0 or more ace elements
        <!ELEMENT acl (ace)* >
@@ -279,9 +283,15 @@ public class AccessXmlUtil implements Serializable {
           throw exc("Expected ACE");
         }
 
-        ParsedAce pace = processAce(curnode);
+        ParsedAce pace = processAce(curnode, setting);
         if (pace == null) {
           break;
+        }
+
+        if (debug && (pace._protected)) {
+        }
+
+        if (debug && (pace.inheritedFrom != null)) {
         }
 
         /* Look for this 'who' in the list */
@@ -446,23 +456,35 @@ public class AccessXmlUtil implements Serializable {
   private static class ParsedAce {
     Ace ace;
     boolean deny;
+    boolean _protected;
+    String inheritedFrom;
 
     ParsedAce(final Ace ace,
-              final boolean deny) {
+              final boolean deny,
+              final boolean _protected,
+              final String inheritedFrom) {
       this.ace = ace;
       this.deny = deny;
+      this._protected = _protected;
+      this.inheritedFrom = inheritedFrom;
     }
   }
 
-  /* Process an acl<br/>
+  /** Process an acl<br/>
          <!ELEMENT ace ((principal | invert), (grant|deny), protected?,
                          inherited?)>
          <!ELEMENT grant (privilege+)>
          <!ELEMENT deny (privilege+)>
 
-         protected is for acl display
+         protected is for acl display only
+   *
+   * @param nd
+   * @param setting - true if we are being called to set a value
+   * @return ParsedAce object
+   * @throws Throwable
    */
-  private ParsedAce processAce(final Node nd) throws Throwable {
+  private ParsedAce processAce(final Node nd,
+                               final boolean setting) throws Throwable {
     Element[] children = XmlUtil.getElementsArray(nd);
     int pos = 0;
 
@@ -472,6 +494,7 @@ public class AccessXmlUtil implements Serializable {
 
     Element curnode = children[pos];
     boolean inverted = false;
+    boolean _protected = false;
     String inheritedFrom = null;
 
     /* Require principal or invert */
@@ -504,62 +527,60 @@ public class AccessXmlUtil implements Serializable {
     }
 
     pos++;
-    if (pos == children.length) {
-      return new ParsedAce(Ace.makeAce(awho, privs.privs, null),
-                           privs.deny);
-    }
 
-    curnode = children[pos];
-
-    /* grant or deny possible here
-    Collection<Privilege> morePrivs = parseGrantDeny(curnode);
-
-    if (morePrivs != null) {
-      privs.addAll(morePrivs);
-      pos++;
-      if (pos == children.length) {
-        return Ace.makeAce(awho, privs, null);
-      }
-
+    /* possible protected */
+    if (pos < children.length) {
       curnode = children[pos];
+
+      if (XmlUtil.nodeMatches(curnode, WebdavTags._protected)) {
+        if (setting) {
+          if (debug) {
+            debugMsg("protected element when setting acls.");
+          }
+          cb.setErrorTag(WebdavTags.noAceConflict);
+          return null;
+        }
+
+        _protected = true;
+        pos++;
+      }
     }
-    */
 
     /* possible inherited */
-    if (XmlUtil.nodeMatches(curnode, WebdavTags.inherited)) {
-
-      curnode = XmlUtil.getOnlyElement(curnode);
-
-      if (!XmlUtil.nodeMatches(curnode, WebdavTags.href)) {
-        throw exc("Missing inherited href");
-      }
-
-      String href = XmlUtil.getElementContent(curnode);
-
-      if ((href == null) || (href.length() == 0)) {
-        throw exc("Missing inherited href");
-      }
-
-      inheritedFrom = href;
-    }
-
-    /* Need this
-    if (XmlUtil.nodeMatches(curnode, WebdavTags.protected)) {
-      pos++;
-      if (pos == children.length) {
-        return true;
-      }
+    if (pos < children.length) {
       curnode = children[pos];
-    }
-    */
+      if (XmlUtil.nodeMatches(curnode, WebdavTags.inherited)) {
+        if (setting) {
+          if (debug) {
+            debugMsg("inherited element when setting acls.");
+          }
+          cb.setErrorTag(WebdavTags.noAceConflict);
+          return null;
+        }
 
-    pos++;
+        curnode = XmlUtil.getOnlyElement(curnode);
+
+        if (!XmlUtil.nodeMatches(curnode, WebdavTags.href)) {
+          throw exc("Missing inherited href");
+        }
+
+        String href = XmlUtil.getElementContent(curnode);
+
+        if ((href == null) || (href.length() == 0)) {
+          throw exc("Missing inherited href");
+        }
+
+        inheritedFrom = href;
+        pos++;
+      }
+    }
+
     if (pos < children.length) {
       throw exc("Unexpected element " + children[pos]);
     }
 
     return new ParsedAce(Ace.makeAce(awho, privs.privs, inheritedFrom),
-                         privs.deny);
+                         privs.deny, _protected, inheritedFrom);
   }
 
   private AceWho parseAcePrincipal(final Node nd,
