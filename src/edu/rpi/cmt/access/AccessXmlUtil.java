@@ -190,7 +190,7 @@ public class AccessXmlUtil implements Serializable {
                                        final AccessXmlCb cb,
                                        final boolean debug) throws AccessException {
     try {
-      XmlEmit xml = new XmlEmit(true, false);  // no headers
+      XmlEmit xml = new XmlEmit(true);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
       AccessXmlUtil au = new AccessXmlUtil(privTags, xml, cb, debug);
@@ -418,7 +418,7 @@ public class AccessXmlUtil implements Serializable {
     try {
       char[] privileges = ps.getPrivileges();
 
-      XmlEmit xml = new XmlEmit(true, false);  // no headers
+      XmlEmit xml = new XmlEmit(true);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
       AccessXmlUtil.emitCurrentPrivSet(xml, privTags, privileges);
