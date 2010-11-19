@@ -15,8 +15,8 @@
 
   <property file="${project.home}/build.properties" />
 
-  <property name="project.name" value="${edu.rpi.cmt.project.name}"/>
-  <property name="project.version" value="${edu.rpi.cmt.version}"/>
+  <property name="project.name" value="${org.bedework.package.name}"/>
+  <property name="project.version" value="${org.bedework.access.version}"/>
 
   <property name="source.home" location="${project.home}/src"/>
   <property name="dist.home" location="${project.home}/dist"/>
@@ -38,7 +38,8 @@
     <getJar name="junit" version="4.4" />
     <getJar name="log4j" version="1.2.8" />
 
-    <getJar name="rpiutil" version="3.6" project="rpiutil" />
+    <getJar name="rpiutil" version="${org.bedework.rpiutil.version}" 
+            project="rpiutil" />
 
     <mkdir dir="${dist.home}" />
 
