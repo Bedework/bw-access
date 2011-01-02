@@ -10,28 +10,25 @@
 
 <project name="access" default="build">
   <property environment="env"/>
-  <property name="base.name" value="access"/>
   <dirname property="project.home" file="${ant.file}"/>
 
   <property file="${project.home}/build.properties" />
 
-  <property name="project.name" value="${org.bedework.package.name}"/>
-  <property name="project.version" value="${org.bedework.access.version}"/>
+  <property name="bedework.home"
+            location="${project.home}/../.." />
 
-  <property name="source.home" location="${project.home}/src"/>
-  <property name="dist.home" location="${project.home}/dist"/>
-  <property name="lib.dir" location="${project.home}/lib"/>
-  <property name="libapi.dir" location="${project.home}/libapi"/>
+  <property name="build.dir" location="${bedework.home}/build"/>
 
-  <property name="build.dir" location="${project.home}/build"/>
-  <property name="buildjar" location="${build.dir}/buildjar.xml"/>
+  <projectDefs name="${org.bedework.package.name}"
+               version="${org.bedework.access.version}" 
+               subproject="true"
+  />
 
-  <property name="org.bedework.libcache.dir"
-            location="${project.home}/libcache"/>
-
-  <import file="${build.dir}/getJar.xml"/>
+  <import file="${build.dir}/buildTools/getJar.xml"/>
 
   <target name="init">
+    <infoMsg message="* =========== Building ${project.name}" />
+    
     <delete dir="${lib.dir}" />
     <mkdir dir="${lib.dir}" />
 
@@ -94,7 +91,6 @@
        ================================================================= -->
   <target name="clean">
     <delete dir="${dist.home}" />
-    <delete dir="${libapi.dir}" />
   </target>
 
   <!-- =================================================================
@@ -138,8 +134,6 @@
       <property name="build.jar.file"
                 location="${generated.jar.file}" />
     </ant>
-
-    <antcall inheritrefs="true" target="copy.to.api.repository" />
   </target>
 
   <target name="build-test">
@@ -159,12 +153,6 @@
       <property name="build.jar.file"
                 location="${test.jar.file}" />
     </ant>
-  </target>
-
-  <target name="copy.to.api.repository" >
-    <mkdir dir="${libapi.dir}" />
-
-    <copy todir="${libapi.dir}" file="${generated.jar.file}" />
   </target>
 
   <!-- =================================================================
