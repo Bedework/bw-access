@@ -21,8 +21,7 @@
 
   <projectDefs name="${org.bedework.package.name}"
                version="${org.bedework.access.version}" 
-               subproject="true"
-  />
+               subproject="true" />
 
   <import file="${build.dir}/buildTools/getJar.xml"/>
 
@@ -38,6 +37,9 @@
     <getJar name="rpiutil" version="${org.bedework.rpiutil.version}" 
             project="rpiutil" />
 
+    <property name="org.bedework.access.base" location="${project.home}" />
+    <property name="org.bedework.accesstests.base" location="${project.home}/tests" />
+    
     <mkdir dir="${dist.home}" />
 
     <property name="test.data.dir"
@@ -114,45 +116,17 @@
   <target name="build" depends="init,build-source,cleanup"
           description="Compile access control classes"/>
 
-  <target name="build-all" depends="init,build-source,cleanup"
+  <target name="build-all" depends="build"
           description="Compile access control classes"/>
 
   <target name="build-source">
-    <!-- ==================== Sources and classes ====================== -->
-
-    <fileset id="buildjar.java.sources" dir="${source.home}" >
-      <include name="edu/rpi/cmt/access/*.java"/>
-    </fileset>
-
-    <patternset id="base.class.patternset">
-      <include name="edu/rpi/cmt/access/*.class"/>
-    </patternset>
-
-    <!-- ==================== Build the jar ============================= -->
-
-    <ant antfile="${buildjar}" inheritRefs="true" target="build" >
-      <property name="build.jar.file"
-                location="${generated.jar.file}" />
-    </ant>
+    <build-jar module-base="${org.bedework.access.base}" 
+               jar-file="${generated.jar.file}" />
   </target>
 
   <target name="build-test">
-    <!-- ==================== Sources and classes ====================== -->
-
-    <fileset id="buildjar.java.sources" dir="${source.home}" >
-      <include name="edu/rpi/cmt/access/test/*.java"/>
-    </fileset>
-
-    <patternset id="base.class.patternset">
-      <include name="edu/rpi/cmt/access/test/*.class"/>
-    </patternset>
-
-    <!-- ==================== Build the jar ============================= -->
-
-    <ant antfile="${buildjar}" inheritRefs="true" target="build" >
-      <property name="build.jar.file"
-                location="${test.jar.file}" />
-    </ant>
+    <build-jar module-base="${org.bedework.accesstests.base}" 
+               jar-file="${test.jar.file}" />
   </target>
 
   <!-- =================================================================
@@ -242,67 +216,5 @@
     </junitreport>
 
     <fail message="Tests failed. Check log and/or reports." if="test.failed"/>
-  </target>
-
-  <!-- =================================================================
-                   non-junit test - needs fixing or scrapping.
-       ================================================================= -->
-  <target name="initRun" depends="build" >
-    <property name="synchmltest.run.base"
-              location="${org.bedework.temp.test.dir}/synchmltest"/>
-
-    <property name="synchmltest.run.lib" location="${synchmltest.run.base}/lib"/>
-
-    <mkdir dir="${synchmltest.run.lib}" />
-
-    <copy todir="${synchmltest.run.lib}" failonerror="false">
-      <fileset dir="${org.bedework.default.lib}" includes="*.jar"/>
-      <fileset dir="${org.bedework.default.lib}/hibernate" includes="*.jar"/>
-      <fileset dir="${struts.dir}" includes="*.jar"/>
-      <fileset dir="${org.bedework.temp.jars}" includes="*.jar"/>
-    </copy>
-
-    <path id="lib.class.path">
-      <fileset dir="${synchmltest.run.lib}">
-        <include name="*.jar"/>
-      </fileset>
-
-      <pathelement location="${log4j.jar}"/>
-      <pathelement location="${uwcal.env.properties.root}" />
-      <pathelement location="${org.bedework.core.base}/resources/properties" />
-
-      <pathelement location="${org.bedework.testsuite.base}/resources" />
-    </path>
-  </target>
-
-  <target name="synchmltest.initdb" depends="initRun"
-          description="Init db for synchml test">
-    <pathconvert property="lib.txt.classpath"
-                 refid="lib.class.path"
-                 targetos="unix"  pathsep=":" />
-
-    <echo message="cp: ${lib.txt.classpath}" />
-    <java  classname="org.bedework.tests.synchml.TestSynchml"
-          fork="true"
-          failonerror="true">
-      <classpath refid="lib.class.path" />
-      <arg value="-initdb" />
-    </java>
-  </target>
-
-  <target name="synchmltest" depends="initRun"
-          description="Init db and run synchml test">
-    <pathconvert property="lib.txt.classpath"
-                 refid="lib.class.path"
-                 targetos="unix"  pathsep=":" />
-
-    <echo message="cp: ${lib.txt.classpath}" />
-
-    <java  classname="org.bedework.tests.synchml.TestSynchml"
-          fork="true"
-          failonerror="true">
-      <classpath refid="lib.class.path" />
-      <arg value="-runtest" />
-    </java>
   </target>
 </project>
