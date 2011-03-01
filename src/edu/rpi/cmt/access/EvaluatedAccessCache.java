@@ -55,7 +55,15 @@ public class EvaluatedAccessCache implements Serializable {
 
   private static Object synch = new Object();
 
-  private static Map<String, Map> ownerHrefs = new HashMap<String, Map>();
+  private static class AccessMap extends HashMap<String, CurrentAccess>{};
+
+  private static class PrivMap extends HashMap<PrivilegeSet, AccessMap>{};
+
+  private static class PrivSetMap extends HashMap<PrivilegeSet, PrivMap>{};
+
+  private static class AccessorsMap extends HashMap<String, PrivSetMap>{};
+
+  private static Map<String, AccessorsMap> ownerHrefs = new HashMap<String, AccessorsMap>();
 
   /* Back end of the queue is the most recently referenced. */
   private static LinkedList<String> accessorQueue = new LinkedList<String>();
@@ -93,15 +101,15 @@ public class EvaluatedAccessCache implements Serializable {
    * @param acl
    * @return CurrentAccess or null
    */
-  public static CurrentAccess get(String ownerHref,
-                                  String accessorHref,
-                                  PrivilegeSet desiredPriv,
-                                  PrivilegeSet maxAccess,
-                                  String acl) {
+  public static CurrentAccess get(final String ownerHref,
+                                  final String accessorHref,
+                                  final PrivilegeSet desiredPriv,
+                                  final PrivilegeSet maxAccess,
+                                  final String acl) {
     numGets.count++;
 
     synchronized (synch) {
-      Map<String, Map> accessors = ownerHrefs.get(ownerHref);
+      AccessorsMap accessors = ownerHrefs.get(ownerHref);
 
       if (accessors == null) {
         return null;
@@ -109,7 +117,7 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ===================== desired priv ================== */
 
-      Map<PrivilegeSet, Map> desiredPrivs = accessors.get(accessorHref);
+      PrivSetMap desiredPrivs = accessors.get(accessorHref);
 
       if (desiredPrivs == null) {
         return null;
@@ -120,7 +128,7 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ===================== max priv ================== */
 
-      Map<PrivilegeSet, Map> maxPrivs = desiredPrivs.get(desiredPriv);
+      PrivMap maxPrivs = desiredPrivs.get(desiredPriv);
 
       if (maxPrivs == null) {
         return null;
@@ -128,7 +136,7 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ===================== acl ================== */
 
-      Map<String, CurrentAccess> acls = maxPrivs.get(maxAccess);
+      AccessMap acls = maxPrivs.get(maxAccess);
 
       if (acls == null) {
         return null;
@@ -154,20 +162,20 @@ public class EvaluatedAccessCache implements Serializable {
    * @param acl
    * @param ca
    */
-  public static void put(String ownerHref,
-                         String accessorHref,
-                         PrivilegeSet desiredPriv,
-                         PrivilegeSet maxAccess,
-                         String acl,
-                         CurrentAccess ca) {
+  public static void put(final String ownerHref,
+                         final String accessorHref,
+                         final PrivilegeSet desiredPriv,
+                         final PrivilegeSet maxAccess,
+                         final String acl,
+                         final CurrentAccess ca) {
     boolean found = true;
 
 
     synchronized (synch) {
-      Map<String, Map> accessors = ownerHrefs.get(ownerHref);
+      AccessorsMap accessors = ownerHrefs.get(ownerHref);
 
       if (accessors == null) {
-        accessors = new HashMap<String, Map>();
+        accessors = new AccessorsMap();
         ownerHrefs.put(ownerHref, accessors);
         found = false;
       }
@@ -177,42 +185,42 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ===================== desired priv ================== */
 
-      Map<PrivilegeSet, Map> desiredPrivs = null;
+      PrivSetMap desiredPrivs = null;
       if (found) {
         // Try a search
         desiredPrivs = accessors.get(accessorHref);
       }
 
       if (desiredPrivs == null) {
-        desiredPrivs = new HashMap<PrivilegeSet, Map>();
+        desiredPrivs = new PrivSetMap();
         accessors.put(accessorHref, desiredPrivs);
         found = false;
       }
 
       /* ===================== max priv ================== */
 
-      Map<PrivilegeSet, Map> maxPrivs = null;
+      PrivMap maxPrivs = null;
       if (found) {
         // Try a search
         maxPrivs = desiredPrivs.get(desiredPriv);
       }
 
       if (maxPrivs == null) {
-        maxPrivs = new HashMap<PrivilegeSet, Map>();
+        maxPrivs = new PrivMap();
         desiredPrivs.put(desiredPriv, maxPrivs);
         found = false;
       }
 
       /* ===================== acl ================== */
 
-      Map<String, CurrentAccess> acls = null;
+      AccessMap acls = null;
       if (found) {
         // Try a search
         acls = maxPrivs.get(maxAccess);
       }
 
       if (acls == null) {
-        acls = new HashMap<String, CurrentAccess>();
+        acls = new AccessMap();
         maxPrivs.put(maxAccess, acls);
         numAclTables.count++;
         found = false;
@@ -256,7 +264,7 @@ public class EvaluatedAccessCache implements Serializable {
     return log;
   }
 
-  private static void error(String msg) {
+  private static void error(final String msg) {
     getLog().error(msg);
   }
 }
