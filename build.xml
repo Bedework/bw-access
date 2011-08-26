@@ -9,13 +9,15 @@
 -->
 
 <project name="access" default="build">
+  <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
   <property environment="env"/>
   <dirname property="project.home" file="${ant.file}"/>
 
   <property file="${project.home}/build.properties" />
 
   <property name="bedework.home"
-            location="${project.home}/../.." />
+            location="${project.home}/../bedework" />
 
   <property name="build.dir" location="${bedework.home}/build"/>
 
@@ -30,12 +32,6 @@
   <target name="init">
     <projectInit/>
     
-    <getJar name="junit" version="4.4" />
-    <getJar name="log4j" version="1.2.8" />
-
-    <getJar name="rpiutil" version="${org.bedework.rpiutil.version}" 
-            project="rpiutil" />
-
     <property name="org.bedework.access.base" location="${project.home}" />
     <property name="org.bedework.accesstests.base" location="${project.home}/tests" />
     
@@ -46,7 +42,22 @@
               location="${dist.home}/${edu.rpi.cmt.access.jar}-test-${project.version}.jar" />
   </target>
 
-  <target name="build-source">
+  <!-- =================================================================
+       Clean projects we depend on
+       ================================================================= -->
+  <target name="clean" depends="clean.rpiutil">
+    <antcall target="doDeftasks.clean"/>
+  </target>
+  
+  <target name="build-init" depends="init,build.rpiutil">
+    <getJar name="junit" version="4.4" />
+    <getJar name="log4j" version="1.2.8" />
+
+    <getJar name="rpiutil" version="${org.bedework.rpiutil.version}" 
+            project="rpiutil" />
+  </target>
+
+  <target name="build-source" depends="build-init">
     <build-jar module-base="${org.bedework.access.base}" 
                jar-file="${generated.jar.file}" />
   </target>
