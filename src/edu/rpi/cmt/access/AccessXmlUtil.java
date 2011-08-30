@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,17 +17,6 @@
     under the License.
 */
 package edu.rpi.cmt.access;
-
-import edu.rpi.sss.util.xml.XmlEmit;
-import edu.rpi.sss.util.xml.XmlUtil;
-import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
-import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
-
-import org.apache.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
 
 import java.io.Serializable;
 import java.io.StringReader;
@@ -39,6 +28,17 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+
+import edu.rpi.sss.util.xml.XmlEmit;
+import edu.rpi.sss.util.xml.XmlUtil;
+import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
+import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
+
 /** Class to generate xml from an access specification. The resulting xml follows
  * the webdav acl spec rfc3744
  *
@@ -48,7 +48,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class AccessXmlUtil implements Serializable {
   private transient Logger log;
 
-  private boolean debug;
+  protected boolean debug;
 
   private XmlEmit xml;
 
@@ -157,7 +157,7 @@ public class AccessXmlUtil implements Serializable {
    * @param debug
    */
   public AccessXmlUtil(final QName[] privTags, final XmlEmit xml,
-                       final AccessXmlCb cb, final boolean debug) {
+                       final AccessXmlCb cb) {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
       throw new RuntimeException("edu.rpi.cmt.access.BadParameter");
     }
@@ -165,7 +165,7 @@ public class AccessXmlUtil implements Serializable {
     this.privTags = privTags;
     this.xml = xml;
     this.cb = cb;
-    this.debug = debug;
+    debug = getLogger().isDebugEnabled();
   }
 
   /** Represent the acl as an xml string
@@ -174,19 +174,17 @@ public class AccessXmlUtil implements Serializable {
    * @param forWebDAV  - true if we should split deny from grant.
    * @param privTags
    * @param cb
-   * @param debug
    * @return String xml representation
    * @throws AccessException
    */
   public static String getXmlAclString(final Acl acl, final boolean forWebDAV,
                                        final QName[] privTags,
-                                       final AccessXmlCb cb,
-                                       final boolean debug) throws AccessException {
+                                       final AccessXmlCb cb) throws AccessException {
     try {
       XmlEmit xml = new XmlEmit(true);  // no headers
       StringWriter su = new StringWriter();
       xml.startEmit(su);
-      AccessXmlUtil au = new AccessXmlUtil(privTags, xml, cb, debug);
+      AccessXmlUtil au = new AccessXmlUtil(privTags, xml, cb);
 
       au.emitAcl(acl, forWebDAV);
 

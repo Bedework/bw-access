@@ -41,15 +41,8 @@
     <property name="test.jar.file"
               location="${dist.home}/${edu.rpi.cmt.access.jar}-test-${project.version}.jar" />
   </target>
-
-  <!-- =================================================================
-       Clean projects we depend on
-       ================================================================= -->
-  <target name="clean" depends="clean.rpiutil">
-    <antcall target="doDeftasks.clean"/>
-  </target>
   
-  <target name="build-init" depends="init,build.rpiutil">
+  <target name="build-init" depends="init">
     <getJar name="junit" version="4.4" />
     <getJar name="log4j" version="1.2.8" />
 
