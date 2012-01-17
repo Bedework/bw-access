@@ -14,8 +14,6 @@
   <property environment="env"/>
   <dirname property="project.home" file="${ant.file}"/>
 
-  <property file="${project.home}/build.properties" />
-
   <property name="bedework.home"
             location="${project.home}/../bedework" />
 
@@ -25,7 +23,7 @@
 
   <deftasks/>
 
-  <projectDefs name="${org.bedework.package.name}"
+  <projectDefs name="RPI access control package"
                version="${org.bedework.access.version}" 
                subproject="true" />
 
@@ -36,10 +34,10 @@
     <property name="org.bedework.accesstests.base" location="${project.home}/tests" />
     
     <property name="generated.jar.file"
-              location="${dist.home}/${edu.rpi.cmt.access.jar}-${project.version}.jar" />
+              location="${dist.home}/rpiaccess-${project.version}.jar" />
 
     <property name="test.jar.file"
-              location="${dist.home}/${edu.rpi.cmt.access.jar}-test-${project.version}.jar" />
+              location="${dist.home}/rpiaccess-test-${project.version}.jar" />
   </target>
   
   <target name="build-init" depends="init">
@@ -55,7 +53,7 @@
                jar-file="${generated.jar.file}" />
   </target>
 
-  <target name="build-test">
+  <target name="build-test" depends="build-init">
     <build-jar module-base="${org.bedework.accesstests.base}" 
                jar-file="${test.jar.file}" />
   </target>
