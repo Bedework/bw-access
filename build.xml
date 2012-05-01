@@ -8,7 +8,8 @@
      Authors: Mike Douglass   douglm rpi.edu
 -->
 
-<project name="access" default="build">
+<project name="access" default="deploy"
+         xmlns:artifact="antlib:org.apache.maven.artifact.ant">
   <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
 
   <property environment="env"/>
@@ -41,21 +42,43 @@
   </target>
   
   <target name="build-init" depends="init">
+    <!--
     <getJar name="junit" version="4.4" />
     <getJar name="log4j" version="1.2.8" />
 
     <getJar name="rpiutil" version="${org.bedework.rpiutil.version}" 
             project="rpiutil" />
+            -->
+    
+    <!--
+    <artifact:pom id="the-pom" file="pom.xml" />
+    
+    <artifact:dependencies filesetId="dependency.fileset" 
+                           useScope="runtime" pomRefId="the-pom">
+    </artifact:dependencies>
+    
+    <copy todir="${lib.dir}">
+      <fileset refid="dependency.fileset" />
+      <mapper type="flatten" />
+    </copy>
+    -->
+    <resolveDependencies pomFile="pom.xml" />
   </target>
 
   <target name="build-source" depends="build-init">
     <build-jar module-base="${org.bedework.access.base}" 
                jar-file="${generated.jar.file}" />
+    
+    <installJar dir="${org.bedework.access.base}" name="${generated.jar.file}"/>
   </target>
 
   <target name="build-test" depends="build-init">
     <build-jar module-base="${org.bedework.accesstests.base}" 
                jar-file="${test.jar.file}" />
+  </target>
+  
+  <target name="deploy" depends="deploy-init,build" >
+    <deployJar dir="${org.bedework.access.base}" name="${generated.jar.file}"/>
   </target>
 
   <!-- =================================================================
