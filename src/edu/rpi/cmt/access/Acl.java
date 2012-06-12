@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -155,6 +155,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       return accessAllowed;
     }
 
+    @Override
     public int compareTo(final CurrentAccess that) {
       if (this == that) {
         return 0;
@@ -573,8 +574,22 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @throws AccessException
    */
   public Acl removeWho(final AceWho who) throws AccessException {
-    if ((aces == null) || !getAces().contains(who)) {
+    if (aces == null) {
       return null;
+    }
+
+    /* Prescan looking for who */
+    boolean contains = false;
+
+    for (Ace a: getAces()) {
+      if (who.equals(a.getWho())) {
+        contains = true;
+        break;
+      }
+    }
+
+    if (!contains) {
+    	return null;
     }
 
     Collection<Ace> aces = new ArrayList<Ace>();
