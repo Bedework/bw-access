@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -32,7 +32,7 @@ import java.util.Map;
 
 /** This provides a cache of evaluated CurrentAccess objects. Rather than create
  * a composite key, which itself involves creating a new object per search, we
- * instead creae  hierarchical set of tables, each indexed by an element of the
+ * instead create a hierarchical set of tables, each indexed by an element of the
  * key. These levels are: <ul>
  * <li>owner href: the owner of the entity</li>
  * <li>accessor href: who's trying to get access</li>
