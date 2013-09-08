@@ -34,10 +34,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-import edu.rpi.sss.util.xml.XmlEmit;
-import edu.rpi.sss.util.xml.XmlUtil;
-import edu.rpi.sss.util.xml.tagdefs.CaldavTags;
-import edu.rpi.sss.util.xml.tagdefs.WebdavTags;
+import org.bedework.util.xml.XmlEmit;
+import org.bedework.util.xml.XmlUtil;
+import org.bedework.util.xml.tagdefs.CaldavTags;
+import org.bedework.util.xml.tagdefs.WebdavTags;
 
 /** Class to generate xml from an access specification. The resulting xml follows
  * the webdav acl spec rfc3744

@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,8 +18,9 @@
 */
 package edu.rpi.cmt.access;
 
+import org.bedework.util.caching.ObjectPool;
+
 import edu.rpi.cmt.access.Access.AccessCb;
-import edu.rpi.sss.util.ObjectPool;
 
 /** describe who we are giving access to. This object once created is immutable.
  *

@@ -44,11 +44,21 @@
 	</issueManagement>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.bedework</groupId>
-			<artifactId>bw-util</artifactId>
-			<version>${bw-util.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-caching</artifactId>
+      <version>${bw-util.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-misc</artifactId>
+      <version>${bw-util.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bedework</groupId>
+      <artifactId>bw-util-xml</artifactId>
+      <version>${bw-util.version}</version>
+    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

@@ -18,10 +18,11 @@
 */
 package edu.rpi.cmt.access;
 
+import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.Util;
+
 import edu.rpi.cmt.access.Access.AccessCb;
 import edu.rpi.cmt.access.Access.AccessStatsEntry;
-import edu.rpi.sss.util.ObjectPool;
-import edu.rpi.sss.util.Util;
 
 import org.apache.log4j.Logger;
 
