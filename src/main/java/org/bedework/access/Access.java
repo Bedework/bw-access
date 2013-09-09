@@ -159,7 +159,7 @@ public class Access implements Serializable {
 
   /** Callback for principal roots
    *
-   * @author douglm - rpi.edu
+   * @author douglm - bedework.edu
    */
   public interface AccessCb {
     /**

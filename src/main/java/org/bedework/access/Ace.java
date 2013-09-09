@@ -35,7 +35,7 @@ import java.util.Map;
  * should only be one entry per the above combination and the latest one on the
  * path should stand.
  *
- *  @author Mike Douglass   douglm   rpi.edu
+ *  @author Mike Douglass   douglm   bedework.edu
  */
 public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   //private static boolean debug;

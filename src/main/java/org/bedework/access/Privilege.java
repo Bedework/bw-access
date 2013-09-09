@@ -24,7 +24,7 @@ import java.util.Collections;
 
 /** Define the properties of a privilege for the calendar.
  *
- *  @author Mike Douglass   douglm @ rpi.edu
+ *  @author Mike Douglass   douglm @ bedework.edu
  */
 /**
  * @author douglm

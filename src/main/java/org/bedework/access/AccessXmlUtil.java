@@ -18,6 +18,17 @@
 */
 package org.bedework.access;
 
+import org.bedework.util.xml.XmlEmit;
+import org.bedework.util.xml.XmlUtil;
+import org.bedework.util.xml.tagdefs.CaldavTags;
+import org.bedework.util.xml.tagdefs.WebdavTags;
+
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -27,17 +38,6 @@ import java.util.Collection;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import org.apache.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-
-import org.bedework.util.xml.XmlEmit;
-import org.bedework.util.xml.XmlUtil;
-import org.bedework.util.xml.tagdefs.CaldavTags;
-import org.bedework.util.xml.tagdefs.WebdavTags;
 
 /** Class to generate xml from an access specification. The resulting xml follows
  * the webdav acl spec rfc3744
@@ -154,7 +154,6 @@ public class AccessXmlUtil implements Serializable {
    * @param privTags
    * @param xml
    * @param cb
-   * @param debug
    */
   public AccessXmlUtil(final QName[] privTags, final XmlEmit xml,
                        final AccessXmlCb cb) {

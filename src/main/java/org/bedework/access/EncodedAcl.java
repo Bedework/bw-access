@@ -25,7 +25,7 @@ import java.io.Serializable;
 
 /** Object to represent an encoded acl for a calendar entity or service.
  *
- *  @author Mike Douglass   douglm@rpi.edu
+ *  @author Mike Douglass   douglm@bedework.edu
  */
 public class EncodedAcl implements Serializable {
   /** We represent the acl as a sequence of characters which we try to

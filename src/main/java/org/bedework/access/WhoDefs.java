@@ -21,7 +21,7 @@ package org.bedework.access;
 import java.io.Serializable;
 
 /** describe who we are giving access to
- * @author douglm - rpi.edu
+ * @author douglm - bedework.edu
  */
 public interface WhoDefs extends Serializable {
   /** Who defines a principal, NotWho means the principal must not be

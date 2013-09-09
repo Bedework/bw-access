@@ -23,7 +23,7 @@ import org.bedework.access.Ace;
 
 /** Value object to represent a calendar user.
  *
- *   @author Mike Douglass douglm@rpi.edu
+ *   @author Mike Douglass douglm@bedework.edu
  *  @version 1.0
  */
 public class User extends Principal {
