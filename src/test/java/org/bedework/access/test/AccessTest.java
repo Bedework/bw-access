@@ -6,9 +6,9 @@
     Version 2.0 (the "License"); you may not use this file
     except in compliance with the License. You may obtain a
     copy of the License at:
-        
+
     http://www.apache.org/licenses/LICENSE-2.0
-        
+
     Unless required by applicable law or agreed to in writing,
     software distributed under the License is distributed on
     an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -16,16 +16,16 @@
     specific language governing permissions and limitations
     under the License.
 */
-package edu.rpi.cmt.access.test;
+package org.bedework.access.test;
 
-import edu.rpi.cmt.access.AccessException;
-import edu.rpi.cmt.access.Ace;
-import edu.rpi.cmt.access.AceWho;
-import edu.rpi.cmt.access.Acl;
-import edu.rpi.cmt.access.Privilege;
-import edu.rpi.cmt.access.Privileges;
-import edu.rpi.cmt.access.Access.AccessCb;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.AccessException;
+import org.bedework.access.Ace;
+import org.bedework.access.AceWho;
+import org.bedework.access.Acl;
+import org.bedework.access.Privilege;
+import org.bedework.access.Privileges;
+import org.bedework.access.Access.AccessCb;
+import org.bedework.access.Acl.CurrentAccess;
 
 import java.util.ArrayList;
 import java.util.Collection;

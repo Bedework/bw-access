@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package edu.rpi.cmt.access;
+package org.bedework.access;
 
 import java.io.Serializable;
 import java.io.StringReader;
@@ -42,7 +42,7 @@ import org.bedework.util.xml.tagdefs.WebdavTags;
 /** Class to generate xml from an access specification. The resulting xml follows
  * the webdav acl spec rfc3744
  *
- *  @author Mike Douglass   douglm @ rpi.edu
+ *  @author Mike Douglass   douglm @ bedework.edu
  *  @author Dave Brondsema
  */
 public class AccessXmlUtil implements Serializable {
@@ -92,7 +92,7 @@ public class AccessXmlUtil implements Serializable {
 
   /** Callback for xml utility
    *
-   * @author douglm - rpi.edu
+   * @author douglm - bedework.edu
    */
   public interface AccessXmlCb {
     /**
@@ -159,7 +159,7 @@ public class AccessXmlUtil implements Serializable {
   public AccessXmlUtil(final QName[] privTags, final XmlEmit xml,
                        final AccessXmlCb cb) {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
-      throw new RuntimeException("edu.rpi.cmt.access.BadParameter");
+      throw new RuntimeException("edu.bedework.cmt.access.BadParameter");
     }
 
     this.privTags = privTags;
@@ -370,7 +370,7 @@ public class AccessXmlUtil implements Serializable {
                                         final QName[] privTags,
                                         final char[] privileges) throws AccessException {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
-      throw new AccessException("edu.rpi.cmt.access.BadParameter");
+      throw new AccessException("edu.bedework.cmt.access.BadParameter");
     }
 
     try {

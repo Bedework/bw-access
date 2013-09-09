@@ -16,10 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-package edu.rpi.cmt.access;
+package org.bedework.access;
 
-import edu.rpi.cmt.access.Access.AccessStatsEntry;
-import edu.rpi.cmt.access.Acl.CurrentAccess;
+import org.bedework.access.Acl.CurrentAccess;
 
 import org.apache.log4j.Logger;
 
@@ -61,22 +60,22 @@ public class EvaluatedAccessCache implements Serializable {
   /* Back end of the queue is the most recently referenced. */
   private static LinkedList<String> accessorQueue = new LinkedList<String>();
 
-  private static AccessStatsEntry accessorQueueLen =
-    new AccessStatsEntry("Access cache accessor queue len");
+  private static Access.AccessStatsEntry accessorQueueLen =
+    new Access.AccessStatsEntry("Access cache accessor queue len");
 
-  private static AccessStatsEntry numGets =
-    new AccessStatsEntry("Access cache gets");
+  private static Access.AccessStatsEntry numGets =
+    new Access.AccessStatsEntry("Access cache gets");
 
-  private static AccessStatsEntry numHits =
-    new AccessStatsEntry("Access cache hits");
+  private static Access.AccessStatsEntry numHits =
+    new Access.AccessStatsEntry("Access cache hits");
 
-  private static AccessStatsEntry numAclTables =
-    new AccessStatsEntry("Access cache ACL tables");
+  private static Access.AccessStatsEntry numAclTables =
+    new Access.AccessStatsEntry("Access cache ACL tables");
 
-  private static AccessStatsEntry numEntries =
-    new AccessStatsEntry("Access cache entries");
+  private static Access.AccessStatsEntry numEntries =
+    new Access.AccessStatsEntry("Access cache entries");
 
-  private static Collection<AccessStatsEntry> stats = new ArrayList<AccessStatsEntry>();
+  private static Collection<Access.AccessStatsEntry> stats = new ArrayList<Access.AccessStatsEntry>();
 
   static {
     stats.add(accessorQueueLen);
@@ -243,7 +242,7 @@ public class EvaluatedAccessCache implements Serializable {
    *
    * @return Collection of stats
    */
-  public static Collection<AccessStatsEntry> getStatistics() {
+  public static Collection<Access.AccessStatsEntry> getStatistics() {
     accessorQueueLen.count = accessorQueue.size();
 
     return stats;

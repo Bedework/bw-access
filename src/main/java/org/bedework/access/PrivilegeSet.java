@@ -16,7 +16,7 @@
     specific language governing permissions and limitations
     under the License.
 */
-package edu.rpi.cmt.access;
+package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
 
@@ -26,7 +26,7 @@ import java.util.Collection;
 
 /** Immutable object to define allowed privileges for a principal
  *
- *  @author Mike Douglass   douglm  rpi.edu
+ *  @author Mike Douglass   douglm  bedework.edu
  */
 public class PrivilegeSet implements Serializable, PrivilegeDefs,
                                      Comparable<PrivilegeSet> {

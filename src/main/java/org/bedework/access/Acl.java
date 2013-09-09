@@ -16,13 +16,10 @@
     specific language governing permissions and limitations
     under the License.
 */
-package edu.rpi.cmt.access;
+package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
 import org.bedework.util.misc.Util;
-
-import edu.rpi.cmt.access.Access.AccessCb;
-import edu.rpi.cmt.access.Access.AccessStatsEntry;
 
 import org.apache.log4j.Logger;
 
@@ -62,8 +59,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   private static boolean usePool = false;
 
-  private static AccessStatsEntry evaluations =
-    new AccessStatsEntry("evaluations");
+  private static Access.AccessStatsEntry evaluations =
+    new Access.AccessStatsEntry("evaluations");
 
   /** Create a new Acl
    *
@@ -83,8 +80,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * @return Collection of stats
    */
-  public static Collection<AccessStatsEntry> getStatistics() {
-    Collection<AccessStatsEntry> stats = new ArrayList<AccessStatsEntry>();
+  public static Collection<Access.AccessStatsEntry> getStatistics() {
+    Collection<Access.AccessStatsEntry> stats = new ArrayList<Access.AccessStatsEntry>();
 
     stats.add(evaluations);
     stats.addAll(Ace.getStatistics());
@@ -269,7 +266,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException
    */
-  public static CurrentAccess evaluateAccess(final AccessCb cb,
+  public static CurrentAccess evaluateAccess(final Access.AccessCb cb,
                                              final AccessPrincipal who,
                                              final AccessPrincipal owner,
                                              final Privilege[] how,
@@ -303,7 +300,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return ca;
   }
 
-  private static CurrentAccess evaluateAccessInt(final AccessCb cb,
+  private static CurrentAccess evaluateAccessInt(final Access.AccessCb cb,
                                                  final AccessPrincipal who,
                                                  final AccessPrincipal owner,
                                                  final Privilege[] how,

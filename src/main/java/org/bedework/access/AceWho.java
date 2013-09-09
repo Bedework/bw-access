@@ -16,11 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-package edu.rpi.cmt.access;
+package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-
-import edu.rpi.cmt.access.Access.AccessCb;
 
 /** describe who we are giving access to. This object once created is immutable.
  *
@@ -40,17 +38,17 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
   private static boolean poolAceWhos = true;
 
   /** Represents all */
-  public static final AceWho all = getAceWho(null, Ace.whoTypeAll, false);
+  public static final AceWho all = getAceWho(null, whoTypeAll, false);
 
   /** Represents an owner */
-  public static final AceWho owner = getAceWho(null, Ace.whoTypeOwner, false);
+  public static final AceWho owner = getAceWho(null, whoTypeOwner, false);
 
   /** Represents other than owner */
-  public static final AceWho other = getAceWho(null, Ace.whoTypeOther, false);
+  public static final AceWho other = getAceWho(null, whoTypeOther, false);
 
   /** Represents unauthenticated users */
   public static final AceWho unauthenticated = getAceWho(null,
-                                                         Ace.whoTypeUnauthenticated,
+                                                         whoTypeUnauthenticated,
                                                          false);
 
   /** Gat an AceWho corresponding to the parameters.
@@ -115,7 +113,7 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
    * @return boolean true if the name matches
      * @throws AccessException
    */
-  public boolean whoMatch(AccessCb cb, String pref) throws AccessException {
+  public boolean whoMatch(Access.AccessCb cb, String pref) throws AccessException {
     if ((pref == null) && (getWho() == null)) {
       return !getNotWho();
     }
@@ -214,7 +212,7 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
 
     sb.append(whoTypeNames[whoType]);
 
-    if ((Ace.whoTypeNamed[whoType])) {
+    if ((whoTypeNamed[whoType])) {
       sb.append("=");
       sb.append(getWho());
     }
@@ -245,7 +243,7 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
       return 1;
     }
 
-    if (!Ace.whoTypeNamed[whoType]) {
+    if (!whoTypeNamed[whoType]) {
       return 0;
     }
 

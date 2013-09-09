@@ -16,12 +16,9 @@
     specific language governing permissions and limitations
     under the License.
 */
-package edu.rpi.cmt.access;
+package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-
-import edu.rpi.cmt.access.Access.AccessCb;
-import edu.rpi.cmt.access.Access.AccessStatsEntry;
 
 import org.apache.log4j.Logger;
 
@@ -67,14 +64,14 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   private static Map<String, Ace> aceCache = new HashMap<String, Ace>();
 
-  private static AccessStatsEntry aceCacheSize =
-    new AccessStatsEntry("ACE cache size");
+  private static Access.AccessStatsEntry aceCacheSize =
+    new Access.AccessStatsEntry("ACE cache size");
 
-  private static AccessStatsEntry aceCacheHits =
-    new AccessStatsEntry("ACE cache hits");
+  private static Access.AccessStatsEntry aceCacheHits =
+    new Access.AccessStatsEntry("ACE cache hits");
 
-  private static AccessStatsEntry aceCacheMisses =
-    new AccessStatsEntry("ACE cache misses");
+  private static Access.AccessStatsEntry aceCacheMisses =
+    new Access.AccessStatsEntry("ACE cache misses");
 
   /**
    * @param who
@@ -134,8 +131,8 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    *
    * @return Collection of stats
    */
-  public static Collection<AccessStatsEntry> getStatistics() {
-    Collection<AccessStatsEntry> stats = new ArrayList<AccessStatsEntry>();
+  public static Collection<Access.AccessStatsEntry> getStatistics() {
+    Collection<Access.AccessStatsEntry> stats = new ArrayList<Access.AccessStatsEntry>();
 
     stats.add(aceCacheSize);
     stats.add(aceCacheHits);
@@ -193,16 +190,16 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    * @throws AccessException
    */
   public static PrivilegeSet findMergedPrivilege(Acl acl,
-                                                 AccessCb cb,
+                                                 Access.AccessCb cb,
                                                  String name,
                                                  int whoType) throws AccessException {
     PrivilegeSet privileges = null;
     for (Ace ace: acl.getAces()) {
       if ((whoType == ace.who.getWhoType()) &&
-          ((whoType == AceWho.whoTypeUnauthenticated) ||
-           (whoType == AceWho.whoTypeAuthenticated) ||
-           (whoType == AceWho.whoTypeAll) ||
-           (whoType == AceWho.whoTypeOwner) ||
+          ((whoType == whoTypeUnauthenticated) ||
+           (whoType == whoTypeAuthenticated) ||
+           (whoType == whoTypeAll) ||
+           (whoType == whoTypeOwner) ||
             ace.getWho().whoMatch(cb, name))) {
         privileges = PrivilegeSet.mergePrivileges(privileges, ace.getHow(),
                                                   ace.getInheritedFrom() != null);
