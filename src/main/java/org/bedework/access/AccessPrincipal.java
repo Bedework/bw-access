@@ -32,18 +32,18 @@ public interface AccessPrincipal extends Serializable {
    *
    * @return int kind
    */
-  public int getKind();
+  int getKind();
 
   /** Set the unauthenticated state.
    *
-   * @param val
+   * @param val unauthenticated state
    */
-  public void setUnauthenticated(boolean val);
+  void setUnauthenticated(boolean val);
 
   /**
-   * @return  boolean authenticated state
+   * @return  boolean unauthenticated state
    */
-  public boolean getUnauthenticated();
+  boolean getUnauthenticated();
 
   /** This is the external account name - that which we generally show the user.
    * It may be sufficient to uniquely identify the principal, at least in context.
@@ -55,14 +55,14 @@ public interface AccessPrincipal extends Serializable {
    * principal, using prefixes or paths for example.
    *
    * <p>The access routines do
-   * @param val
+   * @param val account
    */
-  public void setAccount(String val);
+  void setAccount(String val);
 
   /**
    * @return  String account name
    */
-  public String getAccount();
+  String getAccount();
 
   /** This is the value which uniquely identifies the
    * principal, using prefixes or paths for example.
@@ -71,12 +71,12 @@ public interface AccessPrincipal extends Serializable {
    *
    * @param val principal reference
    */
-  public void setPrincipalRef(String val);
+  void setPrincipalRef(String val);
 
   /**
    * @return  String principal reference
    */
-  public String getPrincipalRef();
+  String getPrincipalRef();
 
   /** Set of groupNames of which principal is a member. These are not just those
    * of which the principal is a direct member but also those it is a member of
@@ -86,11 +86,24 @@ public interface AccessPrincipal extends Serializable {
    *
    * @param val        Set of String
    */
-  public void setGroupNames(Collection<String> val);
+  @SuppressWarnings("UnusedDeclaration")
+  void setGroupNames(Collection<String> val);
 
   /** Get the group principal names of which principal is a member.
    *
    * @return Set    of String
    */
-  public Collection<String> getGroupNames();
+  Collection<String> getGroupNames();
+
+  /** Set the description of the principal.
+   *
+   * @param   val     String principal description.
+   */
+  void setDescription(String val);
+
+  /** Return the description of the principal.
+   *
+   * @return String        principal description
+   */
+  String getDescription();
 }
