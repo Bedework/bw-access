@@ -116,6 +116,13 @@ public abstract class Principal implements Comparator<Principal>,
     return principalRef;
   }
 
+  public void setDescription(String val) {
+  }
+
+  public String getDescription() {
+    return null;
+  }
+
   /** Set of groups of which principal is a member
    *
    * @param val        Collection of Principal
