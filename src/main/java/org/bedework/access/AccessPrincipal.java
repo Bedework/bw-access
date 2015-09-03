@@ -64,6 +64,15 @@ public interface AccessPrincipal extends Serializable {
    */
   String getAccount();
 
+  /** This is a fix to get around an issue with shortened names in the
+   * acl. If we have a principal href of /principals/groups/bwadmin/groupa
+   * we lost the bwadmin segment of the name. This should return
+   * bwadmin/groupa while getAccount() will return groupa
+   *
+   * @return  String account name to store in acl
+   */
+  String getAclAccount();
+
   /** This is the value which uniquely identifies the
    * principal, using prefixes or paths for example.
    *

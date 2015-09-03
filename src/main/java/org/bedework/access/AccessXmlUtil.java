@@ -158,7 +158,7 @@ public class AccessXmlUtil implements Serializable {
   public AccessXmlUtil(final QName[] privTags, final XmlEmit xml,
                        final AccessXmlCb cb) {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
-      throw new RuntimeException("edu.bedework.cmt.access.BadParameter");
+      throw new RuntimeException("edu.rpi.cmt.access.BadParameter");
     }
 
     this.privTags = privTags;
@@ -369,7 +369,7 @@ public class AccessXmlUtil implements Serializable {
                                         final QName[] privTags,
                                         final char[] privileges) throws AccessException {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
-      throw new AccessException("edu.bedework.cmt.access.BadParameter");
+      throw new AccessException("edu.rpi.cmt.access.BadParameter");
     }
 
     try {
@@ -600,7 +600,7 @@ public class AccessXmlUtil implements Serializable {
       }
 
       whoType = ap.getKind();
-      who = ap.getAccount();
+      who = ap.getAclAccount();
     } else if (XmlUtil.nodeMatches(el, WebdavTags.all)) {
       whoType = Ace.whoTypeAll;
     } else if (XmlUtil.nodeMatches(el, WebdavTags.authenticated)) {

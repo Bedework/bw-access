@@ -98,10 +98,13 @@ public abstract class Principal implements Comparator<Principal>,
     account = val;
   }
 
-  /**
-   * @return  String account name
-   */
+  @Override
   public String getAccount() {
+    return account;
+  }
+
+  @Override
+  public String getAclAccount() {
     return account;
   }
 
@@ -114,13 +117,6 @@ public abstract class Principal implements Comparator<Principal>,
    */
   public String getPrincipalRef() {
     return principalRef;
-  }
-
-  public void setDescription(String val) {
-  }
-
-  public String getDescription() {
-    return null;
   }
 
   /** Set of groups of which principal is a member
