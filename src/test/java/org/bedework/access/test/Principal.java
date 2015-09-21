@@ -38,6 +38,8 @@ public abstract class Principal implements Comparator<Principal>,
 
   private String principalRef;  // null for guest
 
+  private String description;
+
   /* groups of which this user is a member */
   protected Collection<Principal> groups;
 
@@ -68,6 +70,16 @@ public abstract class Principal implements Comparator<Principal>,
   /* ====================================================================
    *                   Bean methods
    * ==================================================================== */
+
+  @Override
+  public void setDescription(final String val) {
+    description = val;
+  }
+
+  @Override
+  public String getDescription() {
+    return description;
+  }
 
   /**
    * @return int kind
