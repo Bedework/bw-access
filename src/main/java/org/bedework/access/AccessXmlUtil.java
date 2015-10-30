@@ -96,64 +96,64 @@ public class AccessXmlUtil implements Serializable {
    */
   public interface AccessXmlCb {
     /**
-     * @param id
+     * @param id account
      * @param whoType - from WhoDefs
      * @return String href
      * @throws AccessException
      */
-    public String makeHref(String id, int whoType) throws AccessException;
+    String makeHref(String id, int whoType) throws AccessException;
 
     /** Return AccessPrincipal for the current principal
      *
      * @return AccessPrincipal
-     * @throws AccessException
+     * @throws AccessException on error
      */
-    public AccessPrincipal getPrincipal() throws AccessException;
+    AccessPrincipal getPrincipal() throws AccessException;
 
     /** Return AccessPrincipal for the given href
      *
-     * @param href
+     * @param href the href
      * @return AccessPrincipal or null for unknown.
-     * @throws AccessException
+     * @throws AccessException on error
      */
-    public AccessPrincipal getPrincipal(String href) throws AccessException;
+    AccessPrincipal getPrincipal(String href) throws AccessException;
 
     /** Called during processing to indicate an error
      *
-     * @param tag
-     * @throws AccessException
+     * @param tag QNAME identifying error
+     * @throws AccessException on error
      */
-    public void setErrorTag(QName tag) throws AccessException;
+    void setErrorTag(QName tag) throws AccessException;
 
     /** Return any error tag
      *
      * @return QName
-     * @throws AccessException
+     * @throws AccessException on error
      */
-    public QName getErrorTag() throws AccessException;
+    QName getErrorTag() throws AccessException;
 
     /** Called during processing to indicate an error
      *
-     * @param val
-     * @throws AccessException
+     * @param val a message
+     * @throws AccessException on error
      */
-    public void setErrorMsg(String val) throws AccessException;
+    void setErrorMsg(String val) throws AccessException;
 
     /** Return any error message
      *
      * @return String or null
-     * @throws AccessException
+     * @throws AccessException on error
      */
-    public String getErrorMsg() throws AccessException;
+    String getErrorMsg() throws AccessException;
   }
 
   private AccessXmlCb cb;
 
   /** Acls use tags in the webdav and caldav namespace.
    *
-   * @param privTags
-   * @param xml
-   * @param cb
+   * @param privTags the tags
+   * @param xml      for emitting xml
+   * @param cb       callback
    */
   public AccessXmlUtil(final QName[] privTags, final XmlEmit xml,
                        final AccessXmlCb cb) {
@@ -169,12 +169,12 @@ public class AccessXmlUtil implements Serializable {
 
   /** Represent the acl as an xml string
    *
-   * @param acl
+   * @param acl the ACL object
    * @param forWebDAV  - true if we should split deny from grant.
-   * @param privTags
-   * @param cb
+   * @param privTags the tags
+   * @param cb       callback
    * @return String xml representation
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public static String getXmlAclString(final Acl acl, final boolean forWebDAV,
                                        final QName[] privTags,
@@ -208,7 +208,7 @@ public class AccessXmlUtil implements Serializable {
   /** Return any error tag
    *
    * @return QName
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public QName getErrorTag() throws AccessException {
     return cb.getErrorTag();
@@ -217,7 +217,7 @@ public class AccessXmlUtil implements Serializable {
   /** Return any error message
    *
    * @return String or null
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public String getErrorMsg() throws AccessException {
     return cb.getErrorMsg();
@@ -225,10 +225,10 @@ public class AccessXmlUtil implements Serializable {
 
   /** Given a webdav like xml acl return the internalized form as an Acl.
    *
-   * @param xmlStr
+   * @param xmlStr the XML string form
    * @param setting - true if we are being called to set a value
    * @return Acl
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public Acl getAcl(final String xmlStr,
                     final boolean setting) throws AccessException {
@@ -249,10 +249,10 @@ public class AccessXmlUtil implements Serializable {
   }
 
   /**
-   * @param root
+   * @param root parsed XML root element
    * @param setting - true if we are being called to set a value
    * @return Acl
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public Acl getAcl(final Element root,
                     final boolean setting) throws AccessException {
@@ -322,9 +322,9 @@ public class AccessXmlUtil implements Serializable {
   /**
    * Emit an acl as an xml string using the current xml writer
    *
-   * @param acl
+   * @param acl the ACL object
    * @param forWebDAV  - true if we should split deny from grant.
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public void emitAcl(final Acl acl, final boolean forWebDAV) throws AccessException {
     try {
@@ -340,7 +340,7 @@ public class AccessXmlUtil implements Serializable {
    * at all points in the system and is identical to the webdav/caldav
    * requirements.
    *
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public void emitSupportedPrivSet() throws AccessException {
     try {
@@ -360,10 +360,10 @@ public class AccessXmlUtil implements Serializable {
    * <p>Each position i in privileges corrsponds to a privilege defined by
    * privTags[i].
    *
-   * @param xml
-   * @param privTags
+   * @param xml to emit
+   * @param privTags the tags
    * @param privileges    char[] of allowed/disallowed
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public static void emitCurrentPrivSet(final XmlEmit xml,
                                         final QName[] privTags,
@@ -397,10 +397,10 @@ public class AccessXmlUtil implements Serializable {
    * of allowed/disallowed/unspecified flags indexed by a privilege index,
    * returning the representation a a String
    *
-   * @param privTags
+   * @param privTags the tags
    * @param ps    PrivilegeSet allowed/disallowed
    * @return String xml
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public static String getCurrentPrivSetString(final QName[] privTags,
                                                final PrivilegeSet ps)
@@ -468,10 +468,10 @@ public class AccessXmlUtil implements Serializable {
 
          protected is for acl display only
    *
-   * @param nd
+   * @param nd representing an ACE
    * @param setting - true if we are being called to set a value
    * @return ParsedAce object
-   * @throws Throwable
+   * @throws Throwable on error
    */
   private ParsedAce processAce(final Node nd,
                                final boolean setting) throws Throwable {

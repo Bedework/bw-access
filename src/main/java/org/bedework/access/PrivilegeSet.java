@@ -196,31 +196,31 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                      denied));   // privNone
 
   /**
-   * @param privAllState
-   * @param privReadState
-   * @param privReadAclState
-   * @param privReadCurrentUserPrivilegeSetState
-   * @param privReadFreeBusyState
-   * @param privWriteState
-   * @param privWriteAclState
-   * @param privWritePropertiesState
-   * @param privWriteContentState
-   * @param privBindState
-   * @param privScheduleState
-   * @param privScheduleRequestState
-   * @param privScheduleReplyState
-   * @param privScheduleFreeBusyState
-   * @param privUnbindState
-   * @param privUnlockState
-   * @param privScheduleDeliverState
-   * @param privScheduleDeliverInviteState
-   * @param privScheduleDeliverReplyState
-   * @param privScheduleQueryFreebusyState
-   * @param privScheduleSendState
-   * @param privScheduleSendInviteState
-   * @param privScheduleSendReplyState
-   * @param privScheduleSendFreebusyState
-   * @param privNoneState
+   * @param privAllState                         from PrivilegeDefs
+   * @param privReadState                        from PrivilegeDefs
+   * @param privReadAclState                     from PrivilegeDefs
+   * @param privReadCurrentUserPrivilegeSetState from PrivilegeDefs
+   * @param privReadFreeBusyState                from PrivilegeDefs
+   * @param privWriteState                       from PrivilegeDefs
+   * @param privWriteAclState                    from PrivilegeDefs
+   * @param privWritePropertiesState             from PrivilegeDefs
+   * @param privWriteContentState                from PrivilegeDefs
+   * @param privBindState                        from PrivilegeDefs
+   * @param privScheduleState                    from PrivilegeDefs
+   * @param privScheduleRequestState             from PrivilegeDefs
+   * @param privScheduleReplyState               from PrivilegeDefs
+   * @param privScheduleFreeBusyState            from PrivilegeDefs
+   * @param privUnbindState                      from PrivilegeDefs
+   * @param privUnlockState                      from PrivilegeDefs
+   * @param privScheduleDeliverState             from PrivilegeDefs
+   * @param privScheduleDeliverInviteState       from PrivilegeDefs
+   * @param privScheduleDeliverReplyState        from PrivilegeDefs
+   * @param privScheduleQueryFreebusyState       from PrivilegeDefs
+   * @param privScheduleSendState                from PrivilegeDefs
+   * @param privScheduleSendInviteState          from PrivilegeDefs
+   * @param privScheduleSendReplyState           from PrivilegeDefs
+   * @param privScheduleSendFreebusyState        from PrivilegeDefs
+   * @param privNoneState                        from PrivilegeDefs
    */
   public PrivilegeSet(final char privAllState,
                       final char privReadState,
@@ -283,7 +283,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
   }
 
   /**
-   * @param privileges
+   * @param privileges the priv set
    */
   public PrivilegeSet(final char[] privileges) {
     this.privileges = privileges;
@@ -352,7 +352,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
   /** Returns a set of flags indicating if the indexed privilege (see above
    * for index) is allowed, denied or unspecified.
    *
-   * @param acl
+   * @param acl encode ACL
    * @return char[] access flags
    * @throws AccessException
    */
@@ -430,7 +430,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   /** Make a PrivilegeSet from the given privileges
    *
-   * @param privs
+   * @param privs privileges
    * @return PrivilegeSet
    */
   public static PrivilegeSet makePrivilegeSet(final Privilege[] privs) {
@@ -457,7 +457,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   /** Get the given privilege
    *
-   * @param index
+   * @param index of priv
    * @return char
    */
   public char getPrivilege(final int index) {
@@ -471,7 +471,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
   /** Ensure this privilegeset has no privilege greater than those in the filter
    *
    * @param pset PrivilegeSet to filter
-   * @param filter
+   * @param filter the filter
    * @return PrivilegeSet
    */
   public static PrivilegeSet filterPrivileges(final PrivilegeSet pset,
@@ -528,8 +528,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    *
    * <p>Only allowed and denied appear in encoded aces.
    *
-   * @param current
-   * @param morePriv
+   * @param current current privs
+   * @param morePriv more
    * @param inherited   true if the ace was an inherited ace
    * @return PrivilegeSet  mergedPrivileges
    */
@@ -565,8 +565,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   /** Set all unspecified values to allowed for the owner or denied otherwise.
    *
-   * @param pset
-   * @param isOwner
+   * @param pset privilege set
+   * @param isOwner true if owner
    * @return PrivilegeSet
    */
   public static PrivilegeSet setUnspecified(final PrivilegeSet pset,

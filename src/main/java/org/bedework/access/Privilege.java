@@ -52,11 +52,11 @@ public class Privilege implements PrivilegeDefs {
 
   /** Constructor
    *
-   * @param name
-   * @param description
-   * @param abstractPriv
-   * @param denial
-   * @param index
+   * @param name         the privilege name
+   * @param description  a description
+   * @param abstractPriv is it abstract
+   * @param denial       is it a denial
+   * @param index        an index
    */
   public Privilege(String name,
                    String description,
@@ -72,9 +72,9 @@ public class Privilege implements PrivilegeDefs {
 
   /** Constructor for non-abstract non-denial
    *
-   * @param name
-   * @param description
-   * @param index
+   * @param name         the privilege name
+   * @param description  a description
+   * @param index        an index
    */
   public Privilege(String name,
                    String description,
@@ -84,10 +84,10 @@ public class Privilege implements PrivilegeDefs {
 
   /** Constructor for non-abstract
    *
-   * @param name
-   * @param description
-   * @param denial
-   * @param index
+   * @param name         the privilege name
+   * @param description  a description
+   * @param denial       is it a denial
+   * @param index        an index
    */
   public Privilege(String name,
                    String description,
@@ -98,11 +98,11 @@ public class Privilege implements PrivilegeDefs {
 
   /** Constructor for non-abstract privilege container
    *
-   * @param name
-   * @param description
-   * @param denial
-   * @param index
-   * @param contained
+   * @param name         the privilege name
+   * @param description  a description
+   * @param denial       is it a denial
+   * @param index        an index
+   * @param contained    contained privileges
    */
   public Privilege(String name,
                    String description,
@@ -164,11 +164,11 @@ public class Privilege implements PrivilegeDefs {
   /** Works its way down the tree of privileges finding the highest entry
    * that matches the privilege in the acl.
    *
-   * @param allowedRoot
-   * @param deniedRoot
-   * @param acl
+   * @param allowedRoot allowed privs
+   * @param deniedRoot  denied privs
+   * @param acl         the encoded ACL
    * @return Privilege
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public static Privilege findPriv(Privilege allowedRoot,
                                    Privilege deniedRoot,
@@ -214,7 +214,7 @@ public class Privilege implements PrivilegeDefs {
   /** We matched denied at the start. Here only the encoding is compared.
    *
    * @param subRoot Privilege
-   * @param acl
+   * @param acl         the encoded ACL
    * @return Privilege or null
    * @throws AccessException
    */
@@ -254,7 +254,7 @@ public class Privilege implements PrivilegeDefs {
    * @param acl   EncodedAcl for result.
    */
   /**
-   * @param acl
+   * @param acl         the encoded ACL
    * @throws AccessException
    */
   public void encode(EncodedAcl acl) throws AccessException {
@@ -291,7 +291,7 @@ public class Privilege implements PrivilegeDefs {
    * ==================================================================== */
 
   /**
-   * @param val
+   * @param val the index
    */
   private void setIndex(int val) {
     index = val;

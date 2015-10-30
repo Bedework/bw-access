@@ -45,20 +45,20 @@ import java.util.Map;
 public class EvaluatedAccessCache implements Serializable {
   private transient static Logger log;
 
-  private static Object synch = new Object();
+  private final static Object synch = new Object();
 
-  private static class AccessMap extends HashMap<String, CurrentAccess>{};
+  private static class AccessMap extends HashMap<String, CurrentAccess>{}
 
-  private static class PrivMap extends HashMap<PrivilegeSet, AccessMap>{};
+  private static class PrivMap extends HashMap<PrivilegeSet, AccessMap>{}
 
-  private static class PrivSetMap extends HashMap<PrivilegeSet, PrivMap>{};
+  private static class PrivSetMap extends HashMap<PrivilegeSet, PrivMap>{}
 
-  private static class AccessorsMap extends HashMap<String, PrivSetMap>{};
+  private static class AccessorsMap extends HashMap<String, PrivSetMap>{}
 
-  private static Map<String, AccessorsMap> ownerHrefs = new HashMap<String, AccessorsMap>();
+  private static Map<String, AccessorsMap> ownerHrefs = new HashMap<>();
 
   /* Back end of the queue is the most recently referenced. */
-  private static LinkedList<String> accessorQueue = new LinkedList<String>();
+  private static LinkedList<String> accessorQueue = new LinkedList<>();
 
   private static Access.AccessStatsEntry accessorQueueLen =
     new Access.AccessStatsEntry("Access cache accessor queue len");
@@ -75,7 +75,7 @@ public class EvaluatedAccessCache implements Serializable {
   private static Access.AccessStatsEntry numEntries =
     new Access.AccessStatsEntry("Access cache entries");
 
-  private static Collection<Access.AccessStatsEntry> stats = new ArrayList<Access.AccessStatsEntry>();
+  private static Collection<Access.AccessStatsEntry> stats = new ArrayList<>();
 
   static {
     stats.add(accessorQueueLen);
@@ -86,11 +86,11 @@ public class EvaluatedAccessCache implements Serializable {
   }
 
   /**
-   * @param ownerHref
-   * @param accessorHref
-   * @param desiredPriv
-   * @param maxAccess
-   * @param acl
+   * @param ownerHref     href
+   * @param accessorHref  href
+   * @param desiredPriv   priv set
+   * @param maxAccess     max allowed
+   * @param acl           String acl
    * @return CurrentAccess or null
    */
   public static CurrentAccess get(final String ownerHref,
@@ -147,12 +147,12 @@ public class EvaluatedAccessCache implements Serializable {
   }
 
   /**
-   * @param ownerHref
-   * @param accessorHref
-   * @param desiredPriv
-   * @param maxAccess
-   * @param acl
-   * @param ca
+   * @param ownerHref     href
+   * @param accessorHref  href
+   * @param desiredPriv   priv set
+   * @param maxAccess     max allowed
+   * @param acl           String acl
+   * @param ca            current access object
    */
   public static void put(final String ownerHref,
                          final String accessorHref,

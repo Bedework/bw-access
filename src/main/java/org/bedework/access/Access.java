@@ -18,11 +18,11 @@
 */
 package org.bedework.access;
 
+import org.bedework.access.Acl.CurrentAccess;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import org.bedework.access.Acl.CurrentAccess;
 
 /** Class to handle access control. Because we may be evaluating access
  * frequently we try do so without creating (many) objects.
@@ -150,7 +150,7 @@ public class Access implements Serializable {
     public long count;
 
     /**
-     * @param name
+     * @param name of statistic
      */
     public AccessStatsEntry(final String name) {
       this.name = name;
@@ -163,7 +163,7 @@ public class Access implements Serializable {
    */
   public interface AccessCb {
     /**
-     * @param id
+     * @param id account
      * @param whoType - from WhoDefs
      * @return String href
      * @throws AccessException
@@ -232,14 +232,14 @@ public class Access implements Serializable {
    * <li>Otherwise apply defaults - for the owner full acccess, for any others no
    * access</li>
    *
-   * @param cb
+   * @param cb       callback
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param how      Privilege set definign desired access
    * @param aclString String defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public CurrentAccess evaluateAccess(AccessCb cb,
                                       AccessPrincipal who,
@@ -254,14 +254,14 @@ public class Access implements Serializable {
 
   /** convenience method
    *
-   * @param cb
+   * @param cb       callback
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param how      Privilege set defining desired access
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public CurrentAccess evaluateAccess(AccessCb cb,
                                       AccessPrincipal who,
@@ -275,13 +275,13 @@ public class Access implements Serializable {
 
   /** convenience method - check for read access
    *
-   * @param cb
+   * @param cb       callback
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public CurrentAccess checkRead(AccessCb cb,
                                  AccessPrincipal who,
@@ -295,13 +295,13 @@ public class Access implements Serializable {
 
   /** convenience method - check for read write access
    *
-   * @param cb
+   * @param cb       callback
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public CurrentAccess checkReadWrite(AccessCb cb,
                                       AccessPrincipal who,
@@ -315,13 +315,13 @@ public class Access implements Serializable {
 
   /** convenience method - check for any access
    *
-   * @param cb
+   * @param cb       callback
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public CurrentAccess checkAny(AccessCb cb,
                                 AccessPrincipal who,
@@ -335,14 +335,14 @@ public class Access implements Serializable {
 
   /** convenience method - check for given access
    *
-   * @param cb
+   * @param cb       callback
    * @param who      Acl.Principal defining who is trying to get access
    * @param owner    owner of object
    * @param priv     int desired access as defined above
    * @param aclChars char[] defining current acls for object
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
+   * @throws AccessException on error
    */
   public CurrentAccess evaluateAccess(AccessCb cb,
                                       AccessPrincipal who,
