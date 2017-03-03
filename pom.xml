@@ -2,6 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.bedework</groupId>
 	<artifactId>bw-access</artifactId>
+  
 	<version>4.0.2-SNAPSHOT</version>
 	<name>bw-access</name>
   <description>This project provides access control as defined by WebDAV and CalDAV</description>
@@ -13,7 +14,7 @@
 		<maven.compiler.plugin.version>2.3.2</maven.compiler.plugin.version>
 		<maven.source.plugin.version>2.1.2</maven.source.plugin.version>
 		<!-- Bedework Versions -->
-    <bw-util.version>4.0.2</bw-util.version>
+    <bw-util.version>4.0.12-SNAPSHOT</bw-util.version>
 
 		<!-- Third Party Library Versions -->
 		<junit.version>4.8.2</junit.version>
