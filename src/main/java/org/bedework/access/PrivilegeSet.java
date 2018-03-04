@@ -26,7 +26,7 @@ import java.util.Collection;
 
 /** Immutable object to define allowed privileges for a principal
  *
- *  @author Mike Douglass   douglm  bedework.edu
+ *  @author Mike Douglass   douglm  bedework.org
  */
 public class PrivilegeSet implements Serializable, PrivilegeDefs,
                                      Comparable<PrivilegeSet> {

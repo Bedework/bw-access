@@ -82,7 +82,7 @@ import java.util.Collection;
  *   the allowed access. However, for acl manipulation which occurs much less
  *   frequently it is usually better to expand.
  *
- *  @author Mike Douglass   douglm@bedework.edu
+ *  @author Mike Douglass   douglm@bedework.org
  */
 public class Privileges implements PrivilegeDefs {
 

@@ -22,7 +22,7 @@ import java.io.Serializable;
 
 /** Some privilege definitions.
  *
- *  @author Mike Douglass   douglm@bedework.edu
+ *  @author Mike Douglass   douglm@bedework.org
  */
 public interface PrivilegeDefs extends Serializable {
   /* old allowed and old denied allow us to respecify the flags allowing for

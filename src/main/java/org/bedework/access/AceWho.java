@@ -22,7 +22,7 @@ import org.bedework.util.caching.ObjectPool;
 
 /** describe who we are giving access to. This object once created is immutable.
  *
- * @author douglm - bedework.edu
+ * @author douglm - bedework.org
  */
 public final class AceWho implements WhoDefs, Comparable<AceWho> {
   private String who;

@@ -42,7 +42,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 /** Class to generate xml from an access specification. The resulting xml follows
  * the webdav acl spec rfc3744
  *
- *  @author Mike Douglass   douglm @ bedework.edu
+ *  @author Mike Douglass   douglm @ bedework.org
  *  @author Dave Brondsema
  */
 public class AccessXmlUtil implements Serializable {
@@ -92,7 +92,7 @@ public class AccessXmlUtil implements Serializable {
 
   /** Callback for xml utility
    *
-   * @author douglm - bedework.edu
+   * @author douglm - bedework.org
    */
   public interface AccessXmlCb {
     /**

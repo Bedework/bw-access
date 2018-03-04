@@ -48,7 +48,7 @@ import java.util.TreeMap;
  * <p>In the list of Ace there can only be one entry per AceWho so we can
  * represent the list as a SortedMap. Replacement then becomes easy.
  *
- *  @author Mike Douglass   douglm - bedework.edu
+ *  @author Mike Douglass   douglm - bedework.org
  */
 public class Acl extends EncodedAcl implements PrivilegeDefs {
   static boolean debug;

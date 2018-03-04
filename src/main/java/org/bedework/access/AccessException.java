@@ -20,19 +20,19 @@ package org.bedework.access;
 
 /** Various exceptions that can arise during access checks
  *
- * @author Mike Douglass douglm @ bedework.edu
+ * @author Mike Douglass douglm @ bedework.org
  *
  */
 public class AccessException extends Exception {
-  private static final String badACEMsg = "edu.bedework.cmt.access.badace";
+  private static final String badACEMsg = "org.bedework.cmt.access.badace";
 
-  private static final String badACLMsg = "edu.bedework.cmt.access.badacl";
+  private static final String badACLMsg = "org.bedework.cmt.access.badacl";
 
-  private static final String badACLLengthMsg = "edu.bedework.cmt.access.badacllength";
+  private static final String badACLLengthMsg = "org.bedework.cmt.access.badacllength";
 
-  private static final String badACLRewindMsg = "edu.bedework.cmt.access.badaclrewinf";
+  private static final String badACLRewindMsg = "org.bedework.cmt.access.badaclrewinf";
 
-  private static final String badXmlACLMsg = "edu.bedework.cmt.access.badxmlacl";
+  private static final String badXmlACLMsg = "org.bedework.cmt.access.badxmlacl";
 
   /**
    *
