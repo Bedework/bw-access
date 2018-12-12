@@ -18,7 +18,8 @@
 */
 package org.bedework.access;
 
-import org.apache.log4j.Logger;
+import org.bedework.util.logging.Logged;
+import org.bedework.util.misc.ToString;
 
 import java.io.CharArrayWriter;
 import java.io.Serializable;
@@ -27,7 +28,7 @@ import java.io.Serializable;
  *
  *  @author Mike Douglass   douglm@bedework.org
  */
-public class EncodedAcl implements Serializable {
+public class EncodedAcl implements Serializable, Logged {
   /** We represent the acl as a sequence of characters which we try to
       process with the minimum of overhead.
    */
@@ -39,10 +40,6 @@ public class EncodedAcl implements Serializable {
   /* When encoding an acl we build it here.
    */
   private transient CharArrayWriter caw;
-
-  protected static transient Logger log;
-
-  private static boolean debug = false;
 
   private static final String[] encodedLengths;
 
@@ -97,15 +94,15 @@ public class EncodedAcl implements Serializable {
    */
   public char getChar() {
     if ((encoded == null) || (pos == encoded.length)) {
-      if (debug) {
-        debugMsg("getChar=-1");
+      if (debug()) {
+        debug("getChar=-1");
       }
       return (char)-1;
     }
 
     char c = encoded[pos];
-    if (debug) {
-      debugMsg("getChar='" + c + "'");
+    if (debug()) {
+      debug("getChar='" + c + "'");
     }
     pos++;
 
@@ -132,8 +129,8 @@ public class EncodedAcl implements Serializable {
 
     pos -= n;
 
-    if (debug) {
-      debugMsg("pos back to " + pos);
+    if (debug()) {
+      debug("pos back to " + pos);
     }
   }
 
@@ -152,8 +149,8 @@ public class EncodedAcl implements Serializable {
   public void setPos(int val) {
     pos = val;
 
-    if (debug) {
-      debugMsg("set pos to " + pos);
+    if (debug()) {
+      debug("set pos to " + pos);
     }
   }
 
@@ -162,8 +159,8 @@ public class EncodedAcl implements Serializable {
   public void rewind() {
     pos = 0;
 
-    if (debug) {
-      debugMsg("rewind");
+    if (debug()) {
+      debug("rewind");
     }
   }
 
@@ -403,34 +400,16 @@ public class EncodedAcl implements Serializable {
     return enc;
   }
 
-  protected static Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(EncodedAcl.class);
-    }
-
-    return log;
-  }
-
-  protected static void debugMsg(String msg) {
-    getLog().debug(msg);
-  }
-
-  protected void error(Throwable t) {
-    getLog().error(this, t);
-  }
-
   /* ====================================================================
    *                   Object methods
    * ==================================================================== */
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final ToString ts = new ToString(this);
 
-    sb.append("EncodedAcl{pos=");
-    sb.append(pos);
-    sb.append("}");
+    ts.append("pos", pos);
 
-    return sb.toString();
+    return ts.toString();
   }
 }
 

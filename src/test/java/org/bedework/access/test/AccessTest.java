@@ -18,19 +18,20 @@
 */
 package org.bedework.access.test;
 
+import org.bedework.access.Access.AccessCb;
 import org.bedework.access.AccessException;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl;
+import org.bedework.access.CurrentAccess;
+import org.bedework.access.EvaluatedAccessCache;
 import org.bedework.access.Privilege;
 import org.bedework.access.Privileges;
-import org.bedework.access.Access.AccessCb;
-import org.bedework.access.Acl.CurrentAccess;
+
+import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import junit.framework.TestCase;
 
 /** Test the access classes
  *
@@ -199,8 +200,10 @@ public class AccessTest extends TestCase {
   private void tryEvaluateAccess(Principal who, Principal owner,
                                  Privilege[] how, char[] encoded,
                                  boolean expected, String title) throws Throwable {
-    CurrentAccess ca = Acl.evaluateAccess(new TestAccessCb(), who, owner, how,
-                                          encoded, null);
+    CurrentAccess ca =
+            EvaluatedAccessCache.evaluateAccess(new TestAccessCb(),
+                                                who, owner, how,
+                                                encoded, null);
 
     if (debug) {
       log(title + " got " + ca.getAccessAllowed() + " and expected " + expected);

@@ -18,8 +18,6 @@
 */
 package org.bedework.access;
 
-import org.bedework.access.Acl.CurrentAccess;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -247,9 +245,9 @@ public class Access implements Serializable {
                                       Privilege[] how, String aclString,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(cb, who, owner, how,
-                              aclString.toCharArray(),
-                              filter);
+    return EvaluatedAccessCache.evaluateAccess(cb, who, owner, how,
+                                               aclString.toCharArray(),
+                                               filter);
   }
 
   /** convenience method
@@ -269,8 +267,9 @@ public class Access implements Serializable {
                                       Privilege[] how, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(cb, who, owner, how, aclChars,
-                              filter);
+    return EvaluatedAccessCache.evaluateAccess(cb, who, owner, how,
+                                               aclChars,
+                                               filter);
   }
 
   /** convenience method - check for read access
@@ -289,8 +288,9 @@ public class Access implements Serializable {
                                  char[] aclChars,
                                  PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(cb, who, owner, privSetRead, aclChars,
-                              filter);
+    return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
+                                               privSetRead, aclChars,
+                                               filter);
   }
 
   /** convenience method - check for read write access
@@ -309,8 +309,9 @@ public class Access implements Serializable {
                                       char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(cb, who, owner, privSetReadWrite, aclChars,
-                              filter);
+    return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
+                                               privSetReadWrite, aclChars,
+                                               filter);
   }
 
   /** convenience method - check for any access
@@ -329,8 +330,8 @@ public class Access implements Serializable {
                                 char[] aclChars,
                                 PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(cb, who, owner, privSetAny, aclChars,
-                              filter);
+    return EvaluatedAccessCache.evaluateAccess(cb, who, owner, privSetAny, aclChars,
+                                               filter);
   }
 
   /** convenience method - check for given access
@@ -350,9 +351,9 @@ public class Access implements Serializable {
                                       int priv, char[] aclChars,
                                       PrivilegeSet filter)
           throws AccessException {
-    return Acl.evaluateAccess(cb, who, owner,
-                              new Privilege[]{Privileges.makePriv(priv)},
-                              aclChars, filter);
+    return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
+                                               new Privilege[]{Privileges.makePriv(priv)},
+                                               aclChars, filter);
   }
 }
 

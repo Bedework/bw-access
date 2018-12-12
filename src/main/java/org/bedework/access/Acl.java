@@ -19,12 +19,10 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-import org.bedework.util.misc.Util;
+import org.bedework.util.misc.ToString;
 
-import org.apache.log4j.Logger;
-
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeMap;
@@ -51,15 +49,13 @@ import java.util.TreeMap;
  *  @author Mike Douglass   douglm - bedework.org
  */
 public class Acl extends EncodedAcl implements PrivilegeDefs {
-  static boolean debug;
-
   private TreeMap<AceWho, Ace> aces;
 
-  private static ObjectPool<PrivilegeSet> privSets = new ObjectPool<PrivilegeSet>();
+  static ObjectPool<PrivilegeSet> privSets = new ObjectPool<PrivilegeSet>();
 
-  private static boolean usePool = false;
+  static boolean usePool = false;
 
-  private static Access.AccessStatsEntry evaluations =
+  static Access.AccessStatsEntry evaluations =
     new Access.AccessStatsEntry("evaluations");
 
   /** Create a new Acl
@@ -67,8 +63,6 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @param aces
    */
   public Acl(final Collection<Ace> aces) {
-    debug = getLog().isDebugEnabled();
-
     this.aces = new TreeMap<AceWho, Ace>();
 
     for (Ace ace: aces) {
@@ -90,124 +84,6 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return stats;
   }
 
-  /** Immutable object created as a result of evaluating access to an entity for
-   * a principal
-   */
-  public static class CurrentAccess implements Serializable,
-                                               Comparable<CurrentAccess> {
-    /** The Acl used to evaluate the access. We should not necessarily
-     * make this available to the client.
-     */
-    private Acl acl;
-
-    private char[] aclChars;
-
-    private PrivilegeSet privileges = null;
-
-    /** Was it succesful */
-    private boolean accessAllowed;
-
-    /**
-     *
-     */
-    public CurrentAccess() {
-    }
-
-    /**
-     * @param privs
-     */
-    public CurrentAccess(final PrivilegeSet privs) {
-      privileges = privs;
-    }
-
-    /**
-     * @param accessAllowed
-     */
-    public CurrentAccess(final boolean accessAllowed) {
-      this.accessAllowed = accessAllowed;
-    }
-
-    /** The Acl used to evaluate the access. We should not necessarily
-     * make this available to the client.
-     *
-     * @return acl
-     */
-    public Acl getAcl() {
-      return acl;
-    }
-
-    /**  Allowed access for each privilege type
-     * @see PrivilegeDefs
-     *
-     * @return privileges
-     */
-    public PrivilegeSet getPrivileges() {
-      return privileges;
-    }
-
-    /** Is access allowed to this?
-     *
-     * @return boolean
-     */
-    public boolean getAccessAllowed() {
-      return accessAllowed;
-    }
-
-    @Override
-    public int compareTo(final CurrentAccess that) {
-      if (this == that) {
-        return 0;
-      }
-
-      int res = Util.compare(aclChars, that.aclChars);
-
-      if (res != 0) {
-        return res;
-      }
-
-      res = Util.cmpObjval(privileges, that.privileges);
-
-      if (res != 0) {
-        return res;
-      }
-
-      return Util.cmpBoolval(accessAllowed, that.accessAllowed);
-    }
-
-    @Override
-    public int hashCode() {
-      int hc = 7;
-
-      if (aclChars != null) {
-        hc *= aclChars.hashCode();
-      }
-
-      if (privileges != null) {
-        hc *= privileges.hashCode();
-      }
-
-      return hc;
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-      return compareTo((CurrentAccess)o) == 0;
-    }
-
-    @Override
-    public String toString() {
-      StringBuilder sb = new StringBuilder("CurrentAccess{");
-      sb.append("acl=");
-      sb.append(acl);
-
-      sb.append("accessAllowed=");
-      sb.append(accessAllowed);
-      sb.append("}");
-
-      return sb.toString();
-    }
-  }
-
   /** We use this for things like user home access.
    *
    */
@@ -227,329 +103,6 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     newCa.privileges = ca.privileges;
 
     return newCa;
-  }
-
-  /** Evaluating an ACL
-   *
-   * <p>The process of evaluating access is as follows:
-   *
-   * <p>For an unauthenticated (guest) user we look for an entry with an
-   * unauthenticated 'who' field. If none exists access is denied othewise the
-   * indicated privileges are used to determine access.
-   *
-   * <p>If the principal is authenticated there are a number of steps in the process
-   * which are executed in the following order:
-   *
-   * <ol>
-   * <li>If the principal is the owner then use the given access or the default.</li>
-   *
-   * <li>If there are specific ACEs for the user use the merged access. </li>
-   *
-   * <li>Find all group entries for the given user's groups. If there is more than
-   * one combine them with the more permissive taking precedence, e.g
-   * write allowed overrides write denied
-   * <p>If any group entries were found we're done.</li>
-   *
-   * <li>if there is an 'other' entry (i.e. not Owner) use that.</li>
-   *
-   * <li>if there is an authenticated entry use that.</li>
-   *
-   * <li>Otherwise apply defaults - for the owner full acccess, for any others no
-   * access</li>
-   *
-   * @param cb
-   * @param who
-   * @param owner
-   * @param how
-   * @param aclChars
-   * @param filter    if not null specifies maximum access
-   * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
-   */
-  public static CurrentAccess evaluateAccess(final Access.AccessCb cb,
-                                             final AccessPrincipal who,
-                                             final AccessPrincipal owner,
-                                             final Privilege[] how,
-                                             final char[] aclChars,
-                                             final PrivilegeSet filter)
-          throws AccessException {
-    String aclString = new String(aclChars);
-    PrivilegeSet howPriv = PrivilegeSet.makePrivilegeSet(how);
-
-    CurrentAccess ca = EvaluatedAccessCache.get(owner.getPrincipalRef(),
-                                                who.getPrincipalRef(),
-                                                howPriv, filter,
-                                                aclString);
-
-    if (ca != null) {
-      return ca;
-    }
-
-    ca = evaluateAccessInt(cb, who, owner, how, aclChars, filter);
-
-    if (ca == null) {
-      return null;
-    }
-
-    EvaluatedAccessCache.put(owner.getPrincipalRef(),
-                             who.getPrincipalRef(),
-                             howPriv, filter,
-                             aclString,
-                             ca);
-
-    return ca;
-  }
-
-  private static CurrentAccess evaluateAccessInt(final Access.AccessCb cb,
-                                                 final AccessPrincipal who,
-                                                 final AccessPrincipal owner,
-                                                 final Privilege[] how,
-                                                 final char[] aclChars,
-                                                 final PrivilegeSet filter)
-            throws AccessException {
-    evaluations.count++;
-
-    boolean authenticated = !who.getUnauthenticated();
-    boolean isOwner = false;
-    CurrentAccess ca = new CurrentAccess();
-
-    Acl acl = decode(aclChars);
-    ca.acl = acl;
-    ca.aclChars = aclChars;
-
-    if (authenticated) {
-      isOwner = who.equals(owner);
-    }
-
-    StringBuilder debugsb = null;
-
-    if (debug) {
-      debugsb = new StringBuilder("Check access for '");
-      if (aclChars == null) {
-        debugsb.append("NULL");
-      } else {
-        debugsb.append(new String(aclChars));
-      }
-      debugsb.append("'\n");
-
-      if (authenticated) {
-        debugsb.append("   with authenticated principal ");
-        debugsb.append(who.getPrincipalRef());
-      } else {
-        debugsb.append("   unauthenticated ");
-      }
-      debugsb.append(" isOwner = ");
-      debugsb.append(isOwner);
-      debugsb.append("'\n");
-    }
-
-    if (aclChars == null) {
-      return ca;
-    }
-
-    getPrivileges: {
-      if (!authenticated) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb, null,
-                                                Ace.whoTypeUnauthenticated);
-
-        if (ca.privileges == null) {
-          // All might be available
-          ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeAll);
-        }
-
-        if (ca.privileges != null) {
-          if (debug) {
-            debugsb.append("... For unauthenticated got: " + ca.privileges);
-            debugsb.append("'\n");
-          }
-
-          break getPrivileges;
-        }
-      }
-
-      if (isOwner) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeOwner);
-        if (ca.privileges == null) {
-          ca.privileges = PrivilegeSet.makeDefaultOwnerPrivileges();
-        }
-
-        if (debug) {
-          debugsb.append("... For owner got: " + ca.privileges);
-          debugsb.append("'\n");
-        }
-
-        break getPrivileges;
-      }
-
-      // Not owner - look for user
-      ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                              who.getPrincipalRef(),
-                                              Ace.whoTypeUser);
-
-      // Treat resources, tickets, hosts and venues like user
-      // XXX This assumes the account name is distinguishable.
-      if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getPrincipalRef(),
-                                                Ace.whoTypeResource);
-      }
-      if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getPrincipalRef(),
-                                                Ace.whoTypeTicket);
-      }
-      if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getPrincipalRef(),
-                                                Ace.whoTypeVenue);
-      }
-      if (ca.privileges == null) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb,
-                                                who.getPrincipalRef(),
-                                                Ace.whoTypeHost);
-      }
-
-      if (ca.privileges != null) {
-        if (debug) {
-          debugsb.append("... For user got: " + ca.privileges);
-          debugsb.append("'\n");
-        }
-
-        break getPrivileges;
-      }
-
-      // No specific user access - look for group access
-
-      if (who.getGroupNames() != null) {
-        for (String group: who.getGroupNames()) {
-          if (debug) {
-            debugsb.append("...Try access for group " + group);
-            debugsb.append("'\n");
-          }
-          PrivilegeSet privs = Ace.findMergedPrivilege(acl, cb, group,
-                                                       Ace.whoTypeGroup);
-          if (privs != null) {
-            ca.privileges = PrivilegeSet.mergePrivileges(ca.privileges, privs,
-                                                         false);
-          }
-        }
-      }
-
-      if (ca.privileges != null) {
-        if (debug) {
-          debugsb.append("...For groups got: " + ca.privileges);
-          debugsb.append("'\n");
-        }
-
-        break getPrivileges;
-      }
-
-      // "authenticated" access set?
-      if (authenticated) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb, null,
-                                                Ace.whoTypeAuthenticated);
-      }
-
-      if (ca.privileges != null) {
-        if (debug) {
-          debugsb.append("...For authenticated got: " + ca.privileges);
-          debugsb.append("'\n");
-        }
-
-        break getPrivileges;
-      }
-
-      // "other" access set?
-      ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeOther);
-
-      if (ca.privileges == null) {
-        // All might be available
-        ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeAll);
-      }
-
-      if (ca.privileges != null) {
-        if (debug) {
-          debugsb.append("...For other got: " + ca.privileges);
-          debugsb.append("'\n");
-        }
-
-        break getPrivileges;
-      }
-    } // getPrivileges
-
-    if (isOwner) {
-      // Owner always has read/write acl privilege
-
-      char racl = ca.privileges.getPrivilege(privReadAcl);
-      char wacl = ca.privileges.getPrivilege(privWriteAcl);
-
-      if (((racl != allowed) && (racl != allowedInherited)) ||
-          ((wacl != allowed) && (wacl != allowedInherited))) {
-        ca.privileges = PrivilegeSet.mergePrivileges(ca.privileges,
-                                                     PrivilegeSet.ownerAclPrivileges,
-                                                     false);
-      }
-    }
-
-    if (ca.privileges == null) {
-      if (debug) {
-        debugMsg(debugsb.toString() + "...Check access denied (noprivs)");
-      }
-      return ca;
-    }
-
-    ca.privileges = PrivilegeSet.setUnspecified(ca.privileges, isOwner);
-
-    if (filter != null) {
-      ca.privileges = PrivilegeSet.filterPrivileges(ca.privileges, filter);
-    }
-
-    if (usePool) {
-      ca.privileges = privSets.get(ca.privileges);
-    }
-
-    if (how.length == 0) {
-      // Means any access will do
-
-      ca.accessAllowed = ca.privileges.getAnyAllowed();
-      if (debug) {
-        if (ca.accessAllowed) {
-          debugMsg(debugsb.toString() + "...Check access allowed (any requested)");
-        } else {
-          debugMsg(debugsb.toString() + "...Check access denied (any requested)");
-        }
-      }
-
-      return ca;
-    }
-
-    /* Check each requested access right. If denied, fail immediately, otherwise
-     * continue to the next request right.
-     */
-
-    for (int i = 0; i < how.length; i++) {
-      char priv = ca.privileges.getPrivilege(how[i].getIndex());
-
-      if ((priv != allowed) && (priv != allowedInherited)) {
-        if (debug) {
-          debugsb.append("...Check access denied (!allowed) ");
-          debugsb.append(ca.privileges);
-          debugMsg(debugsb.toString());
-        }
-        return ca;
-      }
-    }
-
-    /* Caller specified some access rights they wanted and all of them are
-     * granted.
-     */
-
-    if (debug) {
-      debugMsg(debugsb.toString() + "...Check access allowed");
-    }
-
-    ca.accessAllowed = true;
-    return ca;
   }
 
   /** Return the ace collection for previously decoded access
@@ -828,17 +381,11 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    final ToString ts = new ToString(this);
 
-    sb.append("Acl{");
     if (!empty()) {
-      sb.append("encoded=[");
-
       rewind();
-      while (hasMore()) {
-        sb.append(getChar());
-      }
-      sb.append("] ");
+      ts.append("encoded", Arrays.asList(getEncoded()));
 
       rewind();
 
@@ -847,26 +394,13 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
           decode(getEncoded());
         }
 
-        for (Ace ace: aces.values()) {
-          sb.append("\n");
-          sb.append(ace.toString());
-        }
+        ts.append("decoded", aces);
       } catch (Throwable t) {
-        error(t);
-        sb.append("Decode exception " + t.getMessage());
+        ts.append("Decode exception", t.getMessage());
       }
     }
-    sb.append("}");
 
-    return sb.toString();
-  }
-
-  protected static Logger getLog(final Class cl) {
-    if (log == null) {
-      log = Logger.getLogger(EncodedAcl.class);
-    }
-
-    return log;
+    return ts.toString();
   }
 
   /** For testing
