@@ -20,8 +20,6 @@ package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
 
-import org.apache.log4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,10 +36,6 @@ import java.util.Map;
  *  @author Mike Douglass   douglm   bedework.org
  */
 public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
-  //private static boolean debug;
-
-  private static transient Logger log;
-
   private AceWho who;
 
   /** allowed/denied/undefined indexed by Privilege index
@@ -364,22 +358,6 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     sb.append(")");
 
     return sb.toString();
-  }
-
-  /* ====================================================================
-   *                   private methods
-   * ==================================================================== */
-
-  protected static Logger getLog() {
-    if (log == null) {
-      log = Logger.getLogger(Ace.class);
-    }
-
-    return log;
-  }
-
-  protected static void debugMsg(String msg) {
-    getLog().debug(msg);
   }
 
   /* ====================================================================

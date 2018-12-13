@@ -18,12 +18,13 @@
 */
 package org.bedework.access;
 
+import org.bedework.util.logging.BwLogger;
+import org.bedework.util.logging.Logged;
 import org.bedework.util.xml.XmlEmit;
 import org.bedework.util.xml.XmlUtil;
 import org.bedework.util.xml.tagdefs.CaldavTags;
 import org.bedework.util.xml.tagdefs.WebdavTags;
 
-import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -45,11 +46,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
  *  @author Mike Douglass   douglm @ bedework.org
  *  @author Dave Brondsema
  */
-public class AccessXmlUtil implements Serializable {
-  private transient Logger log;
-
-  protected boolean debug;
-
+public class AccessXmlUtil implements Logged, Serializable {
   private XmlEmit xml;
 
   private QName[] privTags;
@@ -164,7 +161,6 @@ public class AccessXmlUtil implements Serializable {
     this.privTags = privTags;
     this.xml = xml;
     this.cb = cb;
-    debug = getLogger().isDebugEnabled();
   }
 
   /** Represent the acl as an xml string
@@ -278,11 +274,11 @@ public class AccessXmlUtil implements Serializable {
           break;
         }
 
-        if (debug && (pace._protected)) {
-        }
+        //if (debug() && (pace._protected)) {
+       // }
 
-        if (debug && (pace.inheritedFrom != null)) {
-        }
+        //if (debug() && (pace.inheritedFrom != null)) {
+        //}
 
         /* Look for this 'who' in the list */
 
@@ -423,22 +419,6 @@ public class AccessXmlUtil implements Serializable {
     }
   }
 
-  /* ********************************************************************
-   *                        Protected methods
-   * ******************************************************************** */
-
-  protected Logger getLogger() {
-    if (log == null) {
-      log = Logger.getLogger(this.getClass());
-    }
-
-    return log;
-  }
-
-  protected void debugMsg(final String msg) {
-    getLogger().debug(msg);
-  }
-
   /* ====================================================================
    *                   Private methods
    * ==================================================================== */
@@ -509,8 +489,8 @@ public class AccessXmlUtil implements Serializable {
     Privs privs = parseGrantDeny(curnode);
 
     if (privs == null) {
-      if (debug) {
-        debugMsg("Expected grant | deny");
+      if (debug()) {
+        debug("Expected grant | deny");
       }
       cb.setErrorTag(WebdavTags.noAceConflict);
       return null;
@@ -524,8 +504,8 @@ public class AccessXmlUtil implements Serializable {
 
       if (XmlUtil.nodeMatches(curnode, WebdavTags._protected)) {
         if (setting) {
-          if (debug) {
-            debugMsg("protected element when setting acls.");
+          if (debug()) {
+            debug("protected element when setting acls.");
           }
           cb.setErrorTag(WebdavTags.noAceConflict);
           return null;
@@ -541,8 +521,8 @@ public class AccessXmlUtil implements Serializable {
       curnode = children[pos];
       if (XmlUtil.nodeMatches(curnode, WebdavTags.inherited)) {
         if (setting) {
-          if (debug) {
-            debugMsg("inherited element when setting acls.");
+          if (debug()) {
+            debug("inherited element when setting acls.");
           }
           cb.setErrorTag(WebdavTags.noAceConflict);
           return null;
@@ -623,8 +603,8 @@ public class AccessXmlUtil implements Serializable {
 
     AceWho awho = AceWho.getAceWho(who, whoType, inverted);
 
-    if (debug) {
-      debugMsg("Parsed ace/principal =" + awho);
+    if (debug()) {
+      debug("Parsed ace/principal =" + awho);
     }
 
     return awho;
@@ -682,8 +662,8 @@ public class AccessXmlUtil implements Serializable {
       throw exc("Bad privilege");
     }
 
-    if (debug) {
-      debugMsg("Add priv " + priv + " denied=" + denial);
+    if (debug()) {
+      debug("Add priv " + priv + " denied=" + denial);
     }
 
     return Privileges.makePriv(priv, denial);
@@ -915,9 +895,24 @@ public class AccessXmlUtil implements Serializable {
   }
 
   private AccessException exc(final String msg) {
-    if (debug) {
-      debugMsg(msg);
+    if (debug()) {
+      debug(msg);
     }
     return AccessException.badXmlACL(msg);
+  }
+
+  /* ====================================================================
+   *                   Logged methods
+   * ==================================================================== */
+
+  private BwLogger logger = new BwLogger();
+
+  @Override
+  public BwLogger getLogger() {
+    if ((logger.getLoggedClass() == null) && (logger.getLoggedName() == null)) {
+      logger.setLoggedClass(getClass());
+    }
+
+    return logger;
   }
 }

@@ -14,6 +14,9 @@
     <orderEntry type="module" module-name="bw-util-logging" />
     <orderEntry type="module" module-name="bw-util-misc" />
     <orderEntry type="module" module-name="bw-util-xml" />
-    <orderEntry type="library" name="Maven: junit:junit:4.8.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.8.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: log4j:log4j:1.2.15" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: javax.mail:mail:1.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: javax.activation:activation:1.1" level="project" />
   </component>
 </module>
