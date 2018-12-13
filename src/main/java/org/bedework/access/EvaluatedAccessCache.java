@@ -18,7 +18,7 @@
 */
 package org.bedework.access;
 
-import org.bedework.util.logging.SLogged;
+import org.bedework.util.logging.BwLogger;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -27,7 +27,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import static org.bedework.access.Acl.*;
+import static org.bedework.access.Acl.decode;
+import static org.bedework.access.Acl.evaluations;
+import static org.bedework.access.Acl.privSets;
+import static org.bedework.access.Acl.usePool;
 import static org.bedework.access.PrivilegeDefs.allowed;
 import static org.bedework.access.PrivilegeDefs.allowedInherited;
 import static org.bedework.access.PrivilegeDefs.privReadAcl;
@@ -46,7 +49,7 @@ import static org.bedework.access.PrivilegeDefs.privWriteAcl;
  * @author douglm
  *
  */
-public class EvaluatedAccessCache implements Serializable, SLogged {
+public class EvaluatedAccessCache implements Serializable {
   private final static Object synch = new Object();
 
   private static class AccessMap extends HashMap<String, CurrentAccess>{}
@@ -79,14 +82,15 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
 
   private static Collection<Access.AccessStatsEntry> stats = new ArrayList<>();
 
+  private static BwLogger logger = 
+          new BwLogger().setLoggedClass(EvaluatedAccessCache.class);
+
   static {
     stats.add(accessorQueueLen);
     stats.add(numGets);
     stats.add(numHits);
     stats.add(numAclTables);
     stats.add(numEntries);
-
-    SLogged.setLoggerClass(EvaluatedAccessCache.class);
   }
 
   /**
@@ -231,7 +235,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
         if (tca != null) {
           if (!tca.equals(ca)) {
             // That's bad.
-            SLogged.error("Current access in table does not match, " +
+            logger.error("Current access in table does not match, " +
                                   "table:" + tca +
                                   " new version " + ca);
           }
@@ -347,7 +351,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
 
     StringBuilder debugsb = null;
 
-    if (SLogged.debug()) {
+    if (logger.debug()) {
       debugsb = new StringBuilder("Check access for '");
       if (aclChars == null) {
         debugsb.append("NULL");
@@ -382,7 +386,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
         }
 
         if (ca.privileges != null) {
-          if (SLogged.debug()) {
+          if (logger.debug()) {
             debugsb.append("... For unauthenticated got: " + ca.privileges);
             debugsb.append("'\n");
           }
@@ -397,7 +401,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
           ca.privileges = PrivilegeSet.makeDefaultOwnerPrivileges();
         }
 
-        if (SLogged.debug()) {
+        if (logger.debug()) {
           debugsb.append("... For owner got: " + ca.privileges);
           debugsb.append("'\n");
         }
@@ -434,7 +438,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
       }
 
       if (ca.privileges != null) {
-        if (SLogged.debug()) {
+        if (logger.debug()) {
           debugsb.append("... For user got: " + ca.privileges);
           debugsb.append("'\n");
         }
@@ -446,7 +450,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
 
       if (who.getGroupNames() != null) {
         for (String group: who.getGroupNames()) {
-          if (SLogged.debug()) {
+          if (logger.debug()) {
             debugsb.append("...Try access for group " + group);
             debugsb.append("'\n");
           }
@@ -460,7 +464,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
       }
 
       if (ca.privileges != null) {
-        if (SLogged.debug()) {
+        if (logger.debug()) {
           debugsb.append("...For groups got: " + ca.privileges);
           debugsb.append("'\n");
         }
@@ -475,7 +479,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
       }
 
       if (ca.privileges != null) {
-        if (SLogged.debug()) {
+        if (logger.debug()) {
           debugsb.append("...For authenticated got: " + ca.privileges);
           debugsb.append("'\n");
         }
@@ -492,7 +496,7 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
       }
 
       if (ca.privileges != null) {
-        if (SLogged.debug()) {
+        if (logger.debug()) {
           debugsb.append("...For other got: " + ca.privileges);
           debugsb.append("'\n");
         }
@@ -516,8 +520,8 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
     }
 
     if (ca.privileges == null) {
-      if (SLogged.debug()) {
-        SLogged.debug(debugsb.toString() + "...Check access denied (noprivs)");
+      if (logger.debug()) {
+        logger.debug(debugsb.toString() + "...Check access denied (noprivs)");
       }
       return ca;
     }
@@ -536,12 +540,12 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
       // Means any access will do
 
       ca.accessAllowed = ca.privileges.getAnyAllowed();
-      if (SLogged.debug()) {
+      if (logger.debug()) {
         if (ca.accessAllowed) {
-          SLogged.debug(debugsb.toString() +
+          logger.debug(debugsb.toString() +
                                 "...Check access allowed (any requested)");
         } else {
-          SLogged.debug(debugsb.toString() +
+          logger.debug(debugsb.toString() +
                                 "...Check access denied (any requested)");
         }
       }
@@ -557,10 +561,10 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
       char priv = ca.privileges.getPrivilege(how[i].getIndex());
 
       if ((priv != allowed) && (priv != allowedInherited)) {
-        if (SLogged.debug()) {
+        if (logger.debug()) {
           debugsb.append("...Check access denied (!allowed) ");
           debugsb.append(ca.privileges);
-          SLogged.debug(debugsb.toString());
+          logger.debug(debugsb.toString());
         }
         return ca;
       }
@@ -570,8 +574,8 @@ public class EvaluatedAccessCache implements Serializable, SLogged {
      * granted.
      */
 
-    if (SLogged.debug()) {
-      SLogged.debug(debugsb.toString() + "...Check access allowed");
+    if (logger.debug()) {
+      logger.debug(debugsb.toString() + "...Check access allowed");
     }
 
     ca.accessAllowed = true;
