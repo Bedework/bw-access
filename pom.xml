@@ -3,7 +3,7 @@
 	<groupId>org.bedework</groupId>
 	<artifactId>bw-access</artifactId>
   
-	<version>4.0.4</version>
+	<version>4.0.5-SNAPSHOT</version>
 	<name>bw-access</name>
   <description>This project provides access control as defined by WebDAV and CalDAV</description>
   <url>https://github.com/Bedework/bw-access</url>
@@ -39,7 +39,7 @@
 		<connection>scm:git:git@github.com:Bedework/bw-access.git</connection>
 		<developerConnection>scm:git:git@github.com:Bedework/bw-access.git</developerConnection>
 		<url>https://github.com/Bedework/bw-access</url>
-	  <tag>bw-access-4.0.4</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<issueManagement>
