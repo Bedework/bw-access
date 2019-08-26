@@ -183,7 +183,7 @@
         <version>3.1.1</version>
         <configuration>
           <!--
-          <additionalparam>-Xdoclint:none</additionalparam>
+          <additionalJOption>-Xdoclint:none</additionalJOption>
           -->
           <failOnError>false</failOnError>
         </configuration>
@@ -222,7 +222,7 @@
               </execution>
             </executions>
             <configuration>
-              <additionalparam>-Xdoclint:none</additionalparam>
+              <additionalJOption>-Xdoclint:none</additionalJOption>
               <failOnError>false</failOnError>
             </configuration>
           </plugin>
