@@ -8,7 +8,7 @@ These classes implement access control as described in the WebDAV and
 
 ### Requirements
 
-1. JDK 7
+1. JDK 11
 2. Maven 3
 
 ### Building Locally
@@ -26,11 +26,14 @@ To create a release, you must have:
 
 To perform a new release:
 
-> mvn release:clean release:prepare
+> mvn -P bedework-dev release:clean release:prepare
 
 When prompted, select the desired version; accept the defaults for scm tag and next development version.
 When the build completes, and the changes are committed and pushed successfully, execute:
 
-> mvn release:perform
+> mvn -P bedework-dev release:perform
 
 For full details, see [Sonatype's documentation for using Maven to publish releases](http://central.sonatype.org/pages/apache-maven.html).
+
+## Release Notes
+### 4.0.3
