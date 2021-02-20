@@ -17,6 +17,7 @@
 		<!-- Bedework Versions -->
     <bw-util.version>4.0.27</bw-util.version>
     <bw-util-logging.version>4.0.5</bw-util-logging.version>
+    <bw-util-deploy.version>4.0.28-SNAPSHOT</bw-util-deploy.version>
 
 		<!-- Third Party Library Versions -->
     <!-- test only -->
@@ -138,6 +139,7 @@
 				<version>2.9</version>
 			</extension>
 		</extensions>
+
 		<plugins>
 			<!-- Specify the compiler options and settings -->
 			<plugin>
@@ -186,6 +188,39 @@
           <additionalJOption>-Xdoclint:none</additionalJOption>
           -->
           <failOnError>false</failOnError>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-util-maven-deploy-wfmodule</artifactId>
+        <version>${bw-util-deploy.version}</version>
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>bw-deploy-wfmodule</goal>
+            </goals>
+          </execution>
+        </executions>
+
+        <configuration>
+          <moduleName>org.bedework.access</moduleName>
+
+          <moduleDependencies>
+            <moduleDependency>
+              <name>org.bedework.logging</name>
+            </moduleDependency>
+            <moduleDependency>
+              <name>org.bedework.util.caching</name>
+            </moduleDependency>
+            <moduleDependency>
+              <name>org.bedework.util.misc</name>
+            </moduleDependency>
+            <moduleDependency>
+              <name>org.bedework.util.xml</name>
+            </moduleDependency>
+          </moduleDependencies>
         </configuration>
       </plugin>
 		</plugins>
