@@ -16,12 +16,12 @@
 
 		<!-- Bedework Versions -->
     <bw-util.version>4.0.31</bw-util.version>
-    <bw-util-logging.version>5.0.0</bw-util-logging.version>
+    <bw-util-logging.version>5.0.1-SNAPSHOT</bw-util-logging.version>
 
 		<!-- Third Party Library Versions -->
     <!-- test only -->
 		<junit.version>4.13.1</junit.version>
-    <log4j.version>2.14.1</log4j.version>
+    <log4j.version>2.15.0</log4j.version>
 	</properties>
 
 	<organization>
