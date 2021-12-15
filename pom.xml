@@ -21,7 +21,7 @@
 		<!-- Third Party Library Versions -->
     <!-- test only -->
 		<junit.version>4.13.1</junit.version>
-    <log4j.version>2.15.0</log4j.version>
+    <log4j.version>2.16.0</log4j.version>
 	</properties>
 
 	<organization>
