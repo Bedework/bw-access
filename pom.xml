@@ -14,6 +14,13 @@
   <description>This project provides access control as defined by WebDAV and CalDAV</description>
   <url>https://github.com/Bedework/bw-access</url>
 
+  <scm>
+    <connection>scm:git:git@github.com:Bedework/bw-access.git</connection>
+    <developerConnection>scm:git:git@github.com:Bedework/bw-access.git</developerConnection>
+    <url>https://github.com/Bedework/bw-access</url>
+    <tag>HEAD</tag>
+  </scm>
+
 	<dependencies>
     <dependency>
       <groupId>org.bedework</groupId>
