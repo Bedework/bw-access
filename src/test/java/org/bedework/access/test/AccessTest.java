@@ -28,17 +28,20 @@ import org.bedework.access.EvaluatedAccessCache;
 import org.bedework.access.Privilege;
 import org.bedework.access.Privileges;
 
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /** Test the access classes
  *
  * @author Mike Douglass       douglm@bedework.edu
    @version 1.0
  */
-public class AccessTest extends TestCase {
+public class AccessTest {
   boolean debug = true;
 
   static class TestAccessCb implements AccessCb {
@@ -62,6 +65,7 @@ public class AccessTest extends TestCase {
   /**
    *
    */
+  @Test
   public void testBasics() {
     try {
       // Make some test objects
@@ -208,7 +212,8 @@ public class AccessTest extends TestCase {
     if (debug) {
       log(title + " got " + ca.getAccessAllowed() + " and expected " + expected);
     }
-    assertEquals(title, expected, ca.getAccessAllowed());
+
+    assertEquals(expected, ca.getAccessAllowed(), title);
   }
 
   private void tryDecode(char[] encoded, String title) throws Throwable {
