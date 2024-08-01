@@ -19,7 +19,6 @@
 package org.bedework.access.test;
 
 import org.bedework.access.Access.AccessCb;
-import org.bedework.access.AccessException;
 import org.bedework.access.Ace;
 import org.bedework.access.AceWho;
 import org.bedework.access.Acl;
@@ -34,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /** Test the access classes
@@ -45,7 +45,8 @@ public class AccessTest {
   boolean debug = true;
 
   static class TestAccessCb implements AccessCb {
-    public String makeHref(String id, int whoType) throws AccessException {
+    public String makeHref(final String id,
+                           final int whoType) {
       if (id.startsWith("/principals")) {
         return id;
       }
@@ -69,36 +70,38 @@ public class AccessTest {
   public void testBasics() {
     try {
       // Make some test objects
-      User unauth = new User();
-      User owner = new User("anowner");
-      User auser = new User("auser");
-      User auserInGroup = new User("auseringroup");
+      final User unauth = new User();
+      final User owner = new User("anowner");
+      final User auser = new User("auser");
+      final User auserInGroup = new User("auseringroup");
 
-      Group agroup = new Group("agroup");
-      Group bgroup = new Group("bgroup");
+      final Group agroup = new Group("agroup");
+      final Group bgroup = new Group("bgroup");
 
       auserInGroup.addGroup(agroup);
       auserInGroup.addGroup(bgroup);
 
-      Group cgroup = new Group("cgroup");
+      final Group cgroup = new Group("cgroup");
 
       cgroup.addGroup(agroup);
 
-      User userInCgroup = new User("userincgroup");
+      final User userInCgroup = new User("userincgroup");
       userInCgroup.addGroup(cgroup);
       userInCgroup.addGroup(agroup); // cgroup is in agroup
 
-      Privilege read = Privileges.makePriv(Privileges.privRead);
-      Privilege delete = Privileges.makePriv(Privileges.privUnbind);
-      Privilege write = Privileges.makePriv(Privileges.privWrite);
-      Privilege writeContent = Privileges.makePriv(Privileges.privWriteContent);
+      final Privilege read =
+              Privileges.makePriv(Privileges.privRead);
+      final Privilege delete =
+              Privileges.makePriv(Privileges.privUnbind);
+      final Privilege write = Privileges.makePriv(Privileges.privWrite);
+      final Privilege writeContent = Privileges.makePriv(Privileges.privWriteContent);
 
-      Privilege[] privSetRead = {read};
-      Privilege[] privSetWrite = {write};
-      Privilege[] privSetWriteContent = {writeContent};
-      Privilege[] privSetReadWrite = {read, write};
-      Privilege[] privSetReadWriteContent = {read, writeContent};
-      Privilege[] privSetDelete = {delete};
+      final Privilege[] privSetRead = {read};
+      final Privilege[] privSetWrite = {write};
+      final Privilege[] privSetWriteContent = {writeContent};
+      final Privilege[] privSetReadWrite = {read, write};
+      final Privilege[] privSetReadWriteContent = {read, writeContent};
+      final Privilege[] privSetDelete = {delete};
 
       /* See what we get when we encode a null - acl.
        *
@@ -119,10 +122,10 @@ public class AccessTest {
 
       /* read others - i.e. not owner */
 
-      Collection<Privilege> readPrivs = new ArrayList<Privilege>();
+      final Collection<Privilege> readPrivs = new ArrayList<>();
       readPrivs.add(read);
 
-      Collection<Ace> aces = new ArrayList<Ace>();
+      final Collection<Ace> aces = new ArrayList<>();
 
       aces.add(Ace.makeAce(AceWho.other, readPrivs, null));
 
@@ -140,10 +143,10 @@ public class AccessTest {
       /* read for group "agroup", rw for user "auser" */
       aces.clear();
 
-      Collection<Privilege> privs = new ArrayList<Privilege>();
+      final Collection<Privilege> privs = new ArrayList<>();
       privs.add(read);
 
-      Collection<Privilege> noPrivs = new ArrayList<Privilege>();
+      final Collection<Privilege> noPrivs = new ArrayList<>();
       noPrivs.add(Privileges.makePriv(Privileges.privNone));
 
       AceWho who = AceWho.getAceWho("agroup",
@@ -191,7 +194,7 @@ public class AccessTest {
                         "User access for read others,none unauthenticated");
       tryEvaluateAccess(unauth, owner, privSetRead, encoded, false,
                         "Unauthenticated access for read others,none unauthenticated");
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       t.printStackTrace();
       fail("Exception testing access: " + t.getMessage());
     }
@@ -201,13 +204,17 @@ public class AccessTest {
    *                       Private methods.
    * ==================================================================== */
 
-  private void tryEvaluateAccess(Principal who, Principal owner,
-                                 Privilege[] how, char[] encoded,
-                                 boolean expected, String title) throws Throwable {
-    CurrentAccess ca =
+  private void tryEvaluateAccess(final Principal who,
+                                 final Principal owner,
+                                 final Privilege[] how,
+                                 final char[] encoded,
+                                 final boolean expected,
+                                 final String title) throws Throwable {
+    final CurrentAccess ca =
             EvaluatedAccessCache.evaluateAccess(new TestAccessCb(),
                                                 who, owner, how,
                                                 encoded, null);
+    assertNotNull(ca);
 
     if (debug) {
       log(title + " got " + ca.getAccessAllowed() + " and expected " + expected);
@@ -216,29 +223,31 @@ public class AccessTest {
     assertEquals(expected, ca.getAccessAllowed(), title);
   }
 
-  private void tryDecode(char[] encoded, String title) throws Throwable {
-    Acl acl = Acl.decode(encoded);
+  private void tryDecode(final char[] encoded,
+                         final String title) throws Throwable {
+    final Acl acl = Acl.decode(encoded);
     log("Result of decoding " + title);
     log(acl.toString());
     log(acl.toUserString());
   }
 
-  private char[] logEncoded(Acl acl, String title) throws Throwable {
-    char [] encoded = acl.encode();
+  private char[] logEncoded(final Acl acl,
+                            final String title) throws Throwable {
+    final char [] encoded = acl.encode();
 
     if (encoded == null) {
       log(title + "=NULL");
       return null;
     }
 
-    String s = new String(encoded);
+    final String s = new String(encoded);
 
     log(title + "='" + s + "'");
 
     return encoded;
   }
 
-  private void log(String msg) {
+  private void log(final String msg) {
     System.out.println(this.getClass().getName() + ": " + msg);
   }
 }
