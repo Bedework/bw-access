@@ -56,7 +56,7 @@ public class EncodedAcl implements Serializable, Logged {
    *
    * @param val char[] encoded value
    */
-  public void setEncoded(char[] val) {
+  public void setEncoded(final char[] val) {
     encoded = val;
     pos = 0;
   }
@@ -74,7 +74,7 @@ public class EncodedAcl implements Serializable, Logged {
    * @return String segment
    */
   public String getErrorInfo() {
-    StringBuffer sb = new StringBuffer();
+    final StringBuilder sb = new StringBuilder();
 
     sb.append("at ");
     sb.append(pos - 1);
@@ -85,9 +85,9 @@ public class EncodedAcl implements Serializable, Logged {
     return sb.toString();
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                 Decoding methods
-   * ==================================================================== */
+   * ============================================================== */
 
   /** Get next char from encoded value. Return < 0 for no more
    *
@@ -101,7 +101,7 @@ public class EncodedAcl implements Serializable, Logged {
       return (char)-1;
     }
 
-    char c = encoded[pos];
+    final char c = encoded[pos];
     if (debug()) {
       debug("getChar='" + c + "'");
     }
@@ -112,18 +112,16 @@ public class EncodedAcl implements Serializable, Logged {
 
   /** Back off one char
    *
-   * @throws AccessException
    */
-  public void back() throws AccessException {
+  public void back() {
     back(1);
   }
 
   /** Back off n chars
    *
    * @param n   int number of chars
-   * @throws AccessException
    */
-  public void back(int n) throws AccessException {
+  public void back(final int n) {
     if (pos - n < 0) {
       throw AccessException.badACLRewind();
     }
@@ -147,7 +145,7 @@ public class EncodedAcl implements Serializable, Logged {
    *
    * @param val  int position
    */
-  public void setPos(int val) {
+  public void setPos(final int val) {
     pos = val;
 
     if (debug()) {
@@ -196,19 +194,14 @@ public class EncodedAcl implements Serializable, Logged {
    * has been incremented.
    *
    * @return int length
-   * @throws AccessException
    */
-  public int getLength() throws AccessException {
+  public int getLength() {
     int res = 0;
 
     for (;;) {
-      char c = getChar();
+      final char c = getChar();
       if (c == ' ') {
         break;
-      }
-
-      if (c < 0) {
-        throw AccessException.badACLLength();
       }
 
       if ((c < '0') || (c > '9')) {
@@ -224,20 +217,19 @@ public class EncodedAcl implements Serializable, Logged {
   /** Get a String from the encoded acl at the current position.
    *
    * @return String decoded String value
-   * @throws AccessException
    */
-  public String getString() throws AccessException {
+  public String getString() {
     if (getChar() == 'N') {
       return null;
     }
     back();
-    int len = getLength();
+    final int len = getLength();
 
     if ((encoded.length - pos) < len) {
       throw AccessException.badACLLength();
     }
 
-    String s = new String(encoded, pos, len);
+    final String s = new String(encoded, pos, len);
     pos += len;
 
     return s;
@@ -245,31 +237,29 @@ public class EncodedAcl implements Serializable, Logged {
 
   /** Skip a String from the encoded acl at the current position.
    *
-   * @throws AccessException
    */
-  public void skipString() throws AccessException {
+  public void skipString() {
     if (getChar() == 'N') {
       return;
     }
 
     back();
-    int len = getLength();
+    final int len = getLength();
     pos += len;
   }
 
-  /** Get a String from the encoded acl at the given position and length.
+  /** Get a String from the encoded acl at the given position.
    *
-   * @param begin
+   * @param begin starting position
    * @return String value
-   * @throws AccessException
    */
-  public String getString(int begin) throws AccessException {
+  public String getString(final int begin) {
     return new String(encoded, begin, pos - begin);
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                 Encoding methods
-   * ==================================================================== */
+   * ============================================================== */
 
   /** Get ready to encode
    *
@@ -280,31 +270,30 @@ public class EncodedAcl implements Serializable, Logged {
 
   /** Encode a blank terminated 0 prefixed length.
    *
-   * @param len
-   * @throws AccessException
+   * @param len to encode
    */
-  public void encodeLength(int len) throws AccessException {
+  public void encodeLength(final int len) {
     try {
       if (len < encodedLengths.length) {
         caw.write(encodedLengths[len]);
         return;
       }
 
-      String slen = String.valueOf(len);
+      final String slen = String.valueOf(len);
       caw.write('0');
       caw.write(slen, 0, slen.length());
       caw.write(' ');
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
 
   /** Produce string encoding of length
    *
-   * @param len
+   * @param len to encode
    * @return String
    */
-  public static String encodedLength(int len) {
+  public static String encodedLength(final int len) {
     if (len < encodedLengths.length) {
       return encodedLengths[len];
     }
@@ -312,8 +301,8 @@ public class EncodedAcl implements Serializable, Logged {
     return intEncodedLength(len);
   }
 
-  private static String intEncodedLength(int len) {
-    StringBuilder sb = new StringBuilder();
+  private static String intEncodedLength(final int len) {
+    final StringBuilder sb = new StringBuilder();
 
     sb.append('0');
     sb.append(len);
@@ -328,10 +317,9 @@ public class EncodedAcl implements Serializable, Logged {
    * <li>String value.</li>
    * </ul>
    *
-   * @param val
-   * @throws AccessException
+   * @param val String to encode
    */
-  public void encodeString(String val) throws AccessException {
+  public void encodeString(final String val) {
     try {
       if (val == null) {
         caw.write('N'); // flag null
@@ -339,23 +327,23 @@ public class EncodedAcl implements Serializable, Logged {
         encodeLength(val.length());
         caw.write(val, 0, val.length());
       }
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw ae;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
 
   /**
-   * @param val
+   * @param val to encode
    * @return String encoding.
    */
-  public static String encodedString(String val) {
+  public static String encodedString(final String val) {
     if (val == null) {
       return "N";
     }
 
-    StringBuilder sb = new StringBuilder(encodedLength(val.length()));
+    final StringBuilder sb = new StringBuilder(encodedLength(val.length()));
     sb.append(val);
 
     return sb.toString();
@@ -364,12 +352,11 @@ public class EncodedAcl implements Serializable, Logged {
   /** Add a character
    *
    * @param c char
-   * @throws AccessException
    */
-  public void addChar(char c) throws AccessException {
+  public void addChar(final char c) {
     try {
       caw.write(c);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
@@ -377,12 +364,11 @@ public class EncodedAcl implements Serializable, Logged {
   /** Add an array of character
    *
    * @param c char[]
-   * @throws AccessException
    */
-  public void addChar(char[] c) throws AccessException {
+  public void addChar(final char[] c) {
     try {
       caw.write(c);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
@@ -392,7 +378,7 @@ public class EncodedAcl implements Serializable, Logged {
    * @return char[] encoded value
    */
   public char[] getEncoding() {
-    char[] enc = caw.toCharArray();
+    final char[] enc = caw.toCharArray();
     caw = null;
     if ((enc == null) || (enc.length == 0)) {
       return null;
@@ -401,9 +387,9 @@ public class EncodedAcl implements Serializable, Logged {
     return enc;
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Object methods
-   * ==================================================================== */
+   * ============================================================== */
 
   public String toString() {
     final ToString ts = new ToString(this);
@@ -417,7 +403,7 @@ public class EncodedAcl implements Serializable, Logged {
    *                   Logged methods
    * ==================================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

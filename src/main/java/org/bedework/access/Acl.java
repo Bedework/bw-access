@@ -22,7 +22,6 @@ import org.bedework.util.caching.ObjectPool;
 import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.TreeMap;
@@ -49,9 +48,9 @@ import java.util.TreeMap;
  *  @author Mike Douglass   douglm - bedework.org
  */
 public class Acl extends EncodedAcl implements PrivilegeDefs {
-  private TreeMap<AceWho, Ace> aces;
+  private final TreeMap<AceWho, Ace> aces;
 
-  static ObjectPool<PrivilegeSet> privSets = new ObjectPool<PrivilegeSet>();
+  static ObjectPool<PrivilegeSet> privSets = new ObjectPool<>();
 
   static boolean usePool = false;
 
@@ -60,12 +59,12 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   /** Create a new Acl
    *
-   * @param aces
+   * @param aces access control entries
    */
   public Acl(final Collection<Ace> aces) {
-    this.aces = new TreeMap<AceWho, Ace>();
+    this.aces = new TreeMap<>();
 
-    for (Ace ace: aces) {
+    for (final Ace ace: aces) {
       this.aces.put(ace.getWho(), ace);
     }
   }
@@ -75,7 +74,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return Collection of stats
    */
   public static Collection<Access.AccessStatsEntry> getStatistics() {
-    Collection<Access.AccessStatsEntry> stats = new ArrayList<Access.AccessStatsEntry>();
+    final Collection<Access.AccessStatsEntry> stats = new ArrayList<>();
 
     stats.add(evaluations);
     stats.addAll(Ace.getStatistics());
@@ -92,11 +91,11 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   /** We use this for superuser access.
    *
-   * @param ca
+   * @param ca CurrentAccess object to update from
    * @return new CurrentAccess with access allowed
    */
   public static CurrentAccess forceAccessAllowed(final CurrentAccess ca) {
-    CurrentAccess newCa = new CurrentAccess(true);
+    final CurrentAccess newCa = new CurrentAccess(true);
 
     newCa.acl = ca.acl;
     newCa.aclChars = ca.aclChars;
@@ -108,9 +107,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
   /** Return the ace collection for previously decoded access
    *
    * @return Collection ace collection for previously decoded access
-   * @throws AccessException
    */
-  public Collection<Ace> getAces() throws AccessException {
+  public Collection<Ace> getAces() {
     if (aces == null) {
       return null;
     }
@@ -120,11 +118,10 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   /** Remove access for a given 'who' entry
    *
-   * @param who
+   * @param who accessor
    * @return null if unchanged otehrwise new Acl
-   * @throws AccessException
    */
-  public Acl removeWho(final AceWho who) throws AccessException {
+  public Acl removeWho(final AceWho who) {
     if (aces == null) {
       return null;
     }
@@ -132,7 +129,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     /* Prescan looking for who */
     boolean contains = false;
 
-    for (Ace a: getAces()) {
+    for (final Ace a: getAces()) {
       if (who.equals(a.getWho())) {
         contains = true;
         break;
@@ -143,9 +140,9 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     	return null;
     }
 
-    Collection<Ace> aces = new ArrayList<Ace>();
+    final Collection<Ace> aces = new ArrayList<>();
 
-    for (Ace a: getAces()) {
+    for (final Ace a: getAces()) {
       if (!who.equals(a.getWho())) {
         aces.add(a);
       }
@@ -164,9 +161,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * @param val String val to decode
    * @return decoded Acl
-   * @throws AccessException
    */
-  public static Acl decode(final String val) throws AccessException {
+  public static Acl decode(final String val) {
     return decode(val.toCharArray());
   }
 
@@ -175,9 +171,8 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    *
    * @param val char[] val to decode
    * @return decoded Acl
-   * @throws AccessException
    */
-  public static Acl decode(final char[] val) throws AccessException {
+  public static Acl decode(final char[] val) {
     return decode(val, null);
   }
 
@@ -186,18 +181,17 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * ace objects.
    *
    * @param val char[] val to decode
-   * @param path
+   * @param path If non-null flags an inherited ace
    * @return decoded Acl
-   * @throws AccessException
    */
-  public static Acl decode(final char[] val, final String path) throws AccessException {
-    EncodedAcl eacl = new EncodedAcl();
+  public static Acl decode(final char[] val, final String path) {
+    final EncodedAcl eacl = new EncodedAcl();
     eacl.setEncoded(val);
 
-    Collection<Ace> aces = new ArrayList<Ace>();
+    final Collection<Ace> aces = new ArrayList<>();
 
     while (eacl.hasMore()) {
-      Ace ace = Ace.decode(eacl, path);
+      final Ace ace = Ace.decode(eacl, path);
 
       aces.add(ace);
     }
@@ -235,18 +229,14 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @param val char[] val to decode and merge
    * @param path   path of current entity to flag the inheritance
    * @return merged Acl
-   * @throws AccessException
    */
-  public Acl merge(final char[] val, final String path) throws AccessException {
-    Collection<Ace> newAces = new ArrayList<Ace>();
-
-    newAces.addAll(getAces());
-
-    Acl encAcl = decode(val, path);
+  public Acl merge(final char[] val, final String path) {
+    final Collection<Ace> newAces = new ArrayList<>(getAces());
+    final Acl encAcl = decode(val, path);
 
     domerge:
-    for (Ace a: encAcl.getAces()) {
-      for (Ace ace: newAces) {
+    for (final Ace a: encAcl.getAces()) {
+      for (final Ace ace: newAces) {
         if (a.getWho().equals(ace.getWho())) {
           // Take the child entry
           continue domerge;
@@ -275,7 +265,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @param val Acl to merge
    * @throws AccessException
    * /
-  public void merge(Acl val) throws AccessException {
+  public void merge(Acl val) {
     Collection<Ace> valAces = val.getAces();
 
     if (valAces == null) {
@@ -291,24 +281,23 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     }
   }*/
 
-  /* ====================================================================
+  /* ==============================================================
    *                 Encoding methods
-   * ==================================================================== */
+   * ============================================================== */
 
   /** Encode this object after manipulation or creation. Inherited entries
    * will be skipped.
    *
    * @return char[] encoded value
-   * @throws AccessException
    */
-  public char[] encode() throws AccessException {
+  public char[] encode() {
     startEncoding();
 
     if (aces == null) {
       return null;
     }
 
-    for (Ace ace: aces.values()) {
+    for (final Ace ace: aces.values()) {
       if (ace.getInheritedFrom() == null) {
         ace.encode(this);
       }
@@ -321,10 +310,9 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * will be skipped. Returns null for no aces
    *
    * @return String encoded value or null
-   * @throws AccessException
    */
-  public String encodeStr() throws AccessException {
-    char[] encoded = encode();
+  public String encodeStr() {
+    final char[] encoded = encode();
     if (encoded == null) {
        return null;
     }
@@ -336,25 +324,24 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * will NOT be skipped.
    *
    * @return char[] encoded value
-   * @throws AccessException
    */
-  public char[] encodeAll() throws AccessException {
+  public char[] encodeAll() {
     startEncoding();
 
     if (aces == null) {
       return null;
     }
 
-    for (Ace ace: aces.values()) {
+    for (final Ace ace: aces.values()) {
       ace.encode(this);
     }
 
     return getEncoding();
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Object methods
-   * ==================================================================== */
+   * ============================================================== */
 
   /** Provide a string representation for user display - this should
    * use a localized resource and be part of a display level.
@@ -362,18 +349,18 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
    * @return String representation
    */
   public String toUserString() {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     try {
       decode(getEncoded());
 
-      for (Ace ace: aces.values()) {
+      for (final Ace ace: aces.values()) {
         sb.append(ace.toString());
         sb.append(" ");
       }
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       error(t);
-      sb.append("Decode exception " + t.getMessage());
+      sb.append("Decode exception ").append(t.getMessage());
     }
 
     return sb.toString();
@@ -385,7 +372,7 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
     if (!empty()) {
       rewind();
-      ts.append("encoded", Arrays.asList(getEncoded()));
+      ts.append("encoded", Collections.singletonList(getEncoded()));
 
       rewind();
 
@@ -395,26 +382,12 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         }
 
         ts.append("decoded", aces);
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         ts.append("Decode exception", t.getMessage());
       }
     }
 
     return ts.toString();
-  }
-
-  /** For testing
-   *
-   * @param args
-   */
-  public static void main(final String[] args) {
-    try {
-      Acl acl = decode(args[0]);
-
-      System.out.println(acl.toString());
-    } catch (Throwable t) {
-      t.printStackTrace();
-    }
   }
 }
 

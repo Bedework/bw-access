@@ -19,6 +19,7 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +37,7 @@ import java.util.Map;
  *  @author Mike Douglass   douglm   bedework.org
  */
 public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
-  private AceWho who;
+  private final AceWho who;
 
   /** allowed/denied/undefined indexed by Privilege index
    */
@@ -44,9 +45,9 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   /** Privilege objects defining the access. Used when manipulating acls
    */
-  private Collection<Privilege> privs;
+  private final Collection<Privilege> privs;
 
-  private String inheritedFrom;
+  private final String inheritedFrom;
 
   /* If non-null the encoding for this ace. */
   private String encoding;
@@ -54,30 +55,29 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   /* If non-null the encoding as characters. */
   private char[] encodingChars;
 
-  private static ObjectPool<String> inheritedFroms = new ObjectPool<String>();
+  private static final ObjectPool<String> inheritedFroms = new ObjectPool<>();
 
-  private static Map<String, Ace> aceCache = new HashMap<String, Ace>();
+  private static final Map<String, Ace> aceCache = new HashMap<>();
 
-  private static Access.AccessStatsEntry aceCacheSize =
+  private static final Access.AccessStatsEntry aceCacheSize =
     new Access.AccessStatsEntry("ACE cache size");
 
-  private static Access.AccessStatsEntry aceCacheHits =
+  private static final Access.AccessStatsEntry aceCacheHits =
     new Access.AccessStatsEntry("ACE cache hits");
 
-  private static Access.AccessStatsEntry aceCacheMisses =
+  private static final Access.AccessStatsEntry aceCacheMisses =
     new Access.AccessStatsEntry("ACE cache misses");
 
   /**
-   * @param who
-   * @param privs
-   * @param inheritedFrom
+   * @param who to assign access to
+   * @param privs privilege set
+   * @param inheritedFrom path
    * @return Ace
-   * @throws AccessException
    */
   public static Ace makeAce(final AceWho who,
                             final Collection<Privilege> privs,
-                            final String inheritedFrom) throws AccessException {
-    Ace ace = new Ace(who, privs, inheritedFrom);
+                            final String inheritedFrom) {
+    final Ace ace = new Ace(who, privs, inheritedFrom);
 
     Ace cace = aceCache.get(ace.encoding);
 
@@ -91,22 +91,21 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   }
 
   /**
-   * @param who
-   * @param privs
-   * @param inheritedFrom
-   * @throws AccessException
+   * @param who to assign access to
+   * @param privs privilege set
+   * @param inheritedFrom path
    */
   private Ace(final AceWho who,
               final Collection<Privilege> privs,
-              final String inheritedFrom) throws AccessException {
+              final String inheritedFrom) {
     //debug = getLog().isDebugEnabled();
 
     this.who = who;
 
     how = new PrivilegeSet();
-    this.privs = new ArrayList<Privilege>();
+    this.privs = new ArrayList<>();
     if (privs != null) {
-      for (Privilege p: privs) {
+      for (final Privilege p: privs) {
         this.privs.add(p);
         how = PrivilegeSet.addPrivilege(how, p);
       }
@@ -126,7 +125,7 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    * @return Collection of stats
    */
   public static Collection<Access.AccessStatsEntry> getStatistics() {
-    Collection<Access.AccessStatsEntry> stats = new ArrayList<Access.AccessStatsEntry>();
+    final Collection<Access.AccessStatsEntry> stats = new ArrayList<>();
 
     stats.add(aceCacheSize);
     stats.add(aceCacheHits);
@@ -145,7 +144,8 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   /**
    *
-   * @return PrivilegeSet array of allowed/denied/undefined indexed by Privilege index
+   * @return PrivilegeSet array of allowed/denied/undefined indexed
+   * by Privilege index
    */
   public PrivilegeSet getHow() {
     if (how == null) {
@@ -157,7 +157,8 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   /**
    *
-   * @return Collection of Privilege objects defining the access. Used when manipulating acls
+   * @return Collection of Privilege objects defining the access.
+   * Used when manipulating acls
    */
   public Collection<Privilege> getPrivs() {
     if (privs == null) {
@@ -176,19 +177,18 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   /** Return the merged privileges for all aces which match the name and whoType.
    *
-   * @param acl
-   * @param cb
-   * @param name
-   * @param whoType
+   * @param acl to search
+   * @param cb callback to makeHref
+   * @param name to find
+   * @param whoType of name
    * @return PrivilegeSet    merged privileges if we find a match else null
-   * @throws AccessException
    */
-  public static PrivilegeSet findMergedPrivilege(Acl acl,
-                                                 Access.AccessCb cb,
-                                                 String name,
-                                                 int whoType) throws AccessException {
+  public static PrivilegeSet findMergedPrivilege(final Acl acl,
+                                                 final Access.AccessCb cb,
+                                                 final String name,
+                                                 final int whoType) {
     PrivilegeSet privileges = null;
-    for (Ace ace: acl.getAces()) {
+    for (final Ace ace: acl.getAces()) {
       if ((whoType == ace.who.getWhoType()) &&
           ((whoType == whoTypeUnauthenticated) ||
            (whoType == whoTypeAuthenticated) ||
@@ -209,16 +209,15 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
 
   /** Get the next ace in the acl.
    *
-   * @param acl
+   * @param acl to search
    * @param path If non-null flags an inherited ace
-   * @return Ace
-   * @throws AccessException
+   * @return Ace access control entry
    */
-  public static Ace decode(EncodedAcl acl,
-                           String path) throws AccessException {
+  public static Ace decode(final EncodedAcl acl,
+                           final String path) {
     /* Find the end of the ace and see if we have a cached version */
 
-    int pos = acl.getPos();
+    final int pos = acl.getPos();
 
     AceWho.skip(acl);
     Privileges.skip(acl);
@@ -234,14 +233,14 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
       }
     }
 
-    String enc;
+    final String enc;
 
     if (hasInherited || (path == null)) {
       enc = acl.getString(pos);
     } else {
       acl.back(); // Don't catch the terminating space
 
-      StringBuilder sb = new StringBuilder(acl.getString(pos));
+      final StringBuilder sb = new StringBuilder(acl.getString(pos));
 
       acl.getChar();  // discard terminator
 
@@ -268,9 +267,9 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     /* Do it the hard way */
     acl.setPos(pos);
 
-    AceWho who = AceWho.decode(acl);
+    final AceWho who = AceWho.decode(acl);
 
-    Collection<Privilege> privs = Privileges.getPrivs(acl);
+    final Collection<Privilege> privs = Privileges.getPrivs(acl);
 
     // See if we got an inherited flag
     acl.back();
@@ -296,16 +295,15 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     return ace;
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                 Encoding methods
-   * ==================================================================== */
+   * ============================================================== */
 
   /** Encode this object as a sequence of char. privs must have been set.
    *
    * @param acl   EncodedAcl
-   * @throws AccessException
    */
-  public void encode(EncodedAcl acl) throws AccessException {
+  public void encode(final EncodedAcl acl) {
     if (encoding == null) {
       encode();
     }
@@ -314,16 +312,14 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   }
 
   /** Encode this object for caching
-   *
-   * @throws AccessException
    */
-  private void encode() throws AccessException {
-    EncodedAcl eacl = new EncodedAcl();
+  private void encode() {
+    final EncodedAcl eacl = new EncodedAcl();
     eacl.startEncoding();
 
     getWho().encode(eacl);
 
-    for (Privilege p: privs) {
+    for (final Privilege p: privs) {
       p.encode(eacl);
     }
 
@@ -346,12 +342,12 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
    * @return String representation
    */
   public String toUserString() {
-    StringBuilder sb = new StringBuilder("(");
+    final StringBuilder sb = new StringBuilder("(");
 
     sb.append(getWho().toUserString());
     sb.append(" ");
 
-    for (Privilege p: privs) {
+    for (final Privilege p: privs) {
       sb.append(p.toUserString());
       sb.append(" ");
     }
@@ -360,11 +356,11 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     return sb.toString();
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Object methods
-   * ==================================================================== */
+   * ============================================================== */
 
-  public int compareTo(Ace that) {
+  public int compareTo(final Ace that) {
     if (this == that) {
       return 0;
     }
@@ -392,32 +388,25 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   }
 
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    final ToString ts = new ToString(this);
 
-    sb.append("Ace{");
-    sb.append(getWho().toString());
+    ts.append(getWho().toString());
     if (how != null) {
-      sb.append(", how=");
-      sb.append(how);
+      ts.append("how", how);
     }
 
     if (getInheritedFrom() != null) {
-      sb.append(", \ninherited from \"");
-      sb.append(getInheritedFrom());
-      sb.append("\"");
+      ts.newLine().append("inherited from ", getInheritedFrom());
     }
 
-    sb.append(", \nprivs=[");
+    ts.newLine().append("privs=[");
 
-    for (Privilege p: privs) {
-      sb.append(p.toString());
-      sb.append("\n");
+    for (final Privilege p: privs) {
+      ts.append(p.toString()).newLine();
     }
-    sb.append("]");
+    ts.append("]");
 
-    sb.append("}");
-
-    return sb.toString();
+    return ts.toString();
   }
 }
 

@@ -23,7 +23,7 @@ package org.bedework.access;
  * @author Mike Douglass douglm @ bedework.org
  *
  */
-public class AccessException extends Exception {
+public class AccessException extends RuntimeException {
   private static final String badACEMsg = "org.bedework.cmt.access.badace";
 
   private static final String badACLMsg = "org.bedework.cmt.access.badacl";
@@ -38,7 +38,7 @@ public class AccessException extends Exception {
    *
    * @param s String exception message
    */
-  public AccessException(String s) {
+  public AccessException(final String s) {
     super(s);
   }
 
@@ -47,7 +47,7 @@ public class AccessException extends Exception {
    * @param s String exception message
    * @param extra String exception message parameter
    */
-  public AccessException(String s, String extra) {
+  public AccessException(final String s, final String extra) {
     super(s + " " + extra);
   }
 
@@ -55,7 +55,7 @@ public class AccessException extends Exception {
    *
    * @param t Throwable to wrap
    */
-  public AccessException(Throwable t) {
+  public AccessException(final Throwable t) {
     super(t);
   }
 
@@ -64,16 +64,16 @@ public class AccessException extends Exception {
    * @param extra String explanation
    * @return AccessException
    */
-  public static AccessException badACE(String extra) {
+  public static AccessException badACE(final String extra) {
     return new AccessException(badACEMsg, extra);
   }
 
   /** We got a bad acl
    *
-   * @param extra
+   * @param extra information
    * @return AccessException
    */
-  public static AccessException badACL(String extra) {
+  public static AccessException badACL(final String extra) {
     return new AccessException(badACLMsg, extra);
   }
 
@@ -95,10 +95,10 @@ public class AccessException extends Exception {
 
   /** We got a bad xml acl
    *
-   * @param extra
+   * @param extra information
    * @return AccessException
    */
-  public static AccessException badXmlACL(String extra) {
+  public static AccessException badXmlACL(final String extra) {
     return new AccessException(badXmlACLMsg, extra);
   }
 }

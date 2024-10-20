@@ -30,11 +30,11 @@ public interface PrivilegeDefs extends Serializable {
    */
   /** Old allowed flag - appears in old acls being converted to new form
    */
-  public static final char oldAllowed = '3';
+  char oldAllowed = '3';
 
   /** Old denied privilege.
    */
-  public static final char oldDenied = '2';
+  char oldDenied = '2';
 
   /* The following flags must sort with values in the order:
    * allowed, denied, allowedInherited, deniedInherited, unspecified.
@@ -42,141 +42,141 @@ public interface PrivilegeDefs extends Serializable {
 
   /** Allowed flag - appears in acls
    */
-  public static final char allowed = 'y';
+  char allowed = 'y';
 
   /** A denied privilege is a privilege, e.g. read which is denied to the
      associated 'who' - appears in ace.
    */
-  public static final char denied = 'n';
+  char denied = 'n';
 
   /** This only appears in the final result from Privileges.fromEncoding
    */
-  public static final char allowedInherited = 'Y';
+  char allowedInherited = 'Y';
 
   /** This only appears in the final result from Privileges.fromEncoding
    */
-  public static final char deniedInherited = 'N';
+  char deniedInherited = 'N';
 
   /** This only appears in the final result from Privileges.fromEncoding
    */
-  public static final char unspecified = '?';
+  char unspecified = '?';
 
   /** Shows an ace was inherited - appears in ace
    */
-  public static final char inheritedFlag = 'I';
+  char inheritedFlag = 'I';
 
   // ENUM
-  /** Define a privilege type index
+  /* Define a privilege type index
    */
 
   /** All access
    */
-  public static final int privAll = 0;
+  int privAll = 0;
 
   /** Read access
    */
-  public static final int privRead = 1;
+  int privRead = 1;
 
   /** Read acl access
    */
-  public static final int privReadAcl = 2;
+  int privReadAcl = 2;
 
   /** read current user privs access
    */
-  public static final int privReadCurrentUserPrivilegeSet = 3;
+  int privReadCurrentUserPrivilegeSet = 3;
 
   /** Read free busy access
    */
-  public static final int privReadFreeBusy = 4;
+  int privReadFreeBusy = 4;
 
   /** Write access
    */
-  public static final int privWrite = 5;
+  int privWrite = 5;
 
   /** Write acl access
    */
-  public static final int privWriteAcl = 6;
+  int privWriteAcl = 6;
 
   /** Write properties access
    */
-  public static final int privWriteProperties = 7;
+  int privWriteProperties = 7;
 
   /** Write content (change) access
    */
-  public static final int privWriteContent = 8;
+  int privWriteContent = 8;
 
   /** Bind (create) access
    */
-  public static final int privBind = 9;
+  int privBind = 9;
 
   /** CalDAV schedule access
    */
-  public static final int privSchedule = 10;
+  int privSchedule = 10;
 
   /** CalDAV schedule-request access
    */
-  public static final int privScheduleRequest = 11;
+  int privScheduleRequest = 11;
 
   /** CalDAV schedule-reply access
    */
-  public static final int privScheduleReply = 12;
+  int privScheduleReply = 12;
 
   /** CalDAV schedule-free-busy access
    */
-  public static final int privScheduleFreeBusy = 13;
+  int privScheduleFreeBusy = 13;
 
   /** Unbind (destroy) access
    */
-  public static final int privUnbind = 14;
+  int privUnbind = 14;
 
   /** Unlock access
    */
-  public static final int privUnlock = 15;
+  int privUnlock = 15;
 
   /* ----------------- CalDAV Scheduling ------------------------ */
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleDeliver = 16;
+  int privScheduleDeliver = 16;
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleDeliverInvite = 17;
+  int privScheduleDeliverInvite = 17;
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleDeliverReply = 18;
+  int privScheduleDeliverReply = 18;
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleQueryFreebusy = 19;
+  int privScheduleQueryFreebusy = 19;
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleSend = 20;
+  int privScheduleSend = 20;
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleSendInvite = 21;
+  int privScheduleSendInvite = 21;
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleSendReply = 22;
+  int privScheduleSendReply = 22;
 
   /** CalDAV schedule access
    */
-  public static final int privScheduleSendFreebusy = 23;
+  int privScheduleSendFreebusy = 23;
 
   /** Deny all access */
-  public static final int privNone = 24;
+  int privNone = 24;
 
   /** Max access index
    */
-  public static final int privMaxType = 24;
+  int privMaxType = 24;
 
   /** Indicate any allowed access will do
    */
-  public static final int privAny = privMaxType + 1;
+  int privAny = privMaxType + 1;
 
 
   /* !!!!!!!!!!!!!!!!!! need default access - i.e. remove any mention of who
@@ -186,7 +186,7 @@ public interface PrivilegeDefs extends Serializable {
    * BCGHJKLMOVXYZ
    * dfghjklmnovwxz
    */
-  public final static char[] privEncoding = {
+  char[] privEncoding = {
     'A',     // privAll
 
     'R',     // privRead

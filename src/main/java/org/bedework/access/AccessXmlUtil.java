@@ -49,7 +49,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class AccessXmlUtil implements Logged, Serializable {
   private XmlEmit xml;
 
-  private QName[] privTags;
+  private final QName[] privTags;
 
   /** xml privilege tags */
   public static final QName[] caldavPrivTags = {
@@ -96,16 +96,15 @@ public class AccessXmlUtil implements Logged, Serializable {
      * @param id account
      * @param whoType - from WhoDefs
      * @return String href
-     * @throws AccessException
      */
-    String makeHref(String id, int whoType) throws AccessException;
+    String makeHref(String id, int whoType);
 
     /** Return AccessPrincipal for the current principal
      *
      * @return AccessPrincipal
      * @throws AccessException on error
      */
-    AccessPrincipal getPrincipal() throws AccessException;
+    AccessPrincipal getPrincipal();
 
     /** Return AccessPrincipal for the given href
      *
@@ -113,38 +112,38 @@ public class AccessXmlUtil implements Logged, Serializable {
      * @return AccessPrincipal or null for unknown.
      * @throws AccessException on error
      */
-    AccessPrincipal getPrincipal(String href) throws AccessException;
+    AccessPrincipal getPrincipal(String href);
 
     /** Called during processing to indicate an error
      *
      * @param tag QNAME identifying error
      * @throws AccessException on error
      */
-    void setErrorTag(QName tag) throws AccessException;
+    void setErrorTag(QName tag);
 
     /** Return any error tag
      *
      * @return QName
      * @throws AccessException on error
      */
-    QName getErrorTag() throws AccessException;
+    QName getErrorTag();
 
     /** Called during processing to indicate an error
      *
      * @param val a message
      * @throws AccessException on error
      */
-    void setErrorMsg(String val) throws AccessException;
+    void setErrorMsg(String val);
 
     /** Return any error message
      *
      * @return String or null
      * @throws AccessException on error
      */
-    String getErrorMsg() throws AccessException;
+    String getErrorMsg();
   }
 
-  private AccessXmlCb cb;
+  private final AccessXmlCb cb;
 
   /** Acls use tags in the webdav and caldav namespace.
    *
@@ -170,25 +169,24 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @param privTags the tags
    * @param cb       callback
    * @return String xml representation
-   * @throws AccessException on error
    */
   public static String getXmlAclString(final Acl acl, final boolean forWebDAV,
                                        final QName[] privTags,
-                                       final AccessXmlCb cb) throws AccessException {
+                                       final AccessXmlCb cb) {
     try {
-      XmlEmit xml = new XmlEmit(true);  // no headers
-      StringWriter su = new StringWriter();
+      final XmlEmit xml = new XmlEmit(true);  // no headers
+      final StringWriter su = new StringWriter();
       xml.startEmit(su);
-      AccessXmlUtil au = new AccessXmlUtil(privTags, xml, cb);
+      final AccessXmlUtil au = new AccessXmlUtil(privTags, xml, cb);
 
       au.emitAcl(acl, forWebDAV);
 
       su.close();
 
       return su.toString();
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw ae;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
@@ -206,7 +204,7 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @return QName
    * @throws AccessException on error
    */
-  public QName getErrorTag() throws AccessException {
+  public QName getErrorTag() {
     return cb.getErrorTag();
   }
 
@@ -215,7 +213,7 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @return String or null
    * @throws AccessException on error
    */
-  public String getErrorMsg() throws AccessException {
+  public String getErrorMsg() {
     return cb.getErrorMsg();
   }
 
@@ -224,22 +222,21 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @param xmlStr the XML string form
    * @param setting - true if we are being called to set a value
    * @return Acl
-   * @throws AccessException on error
    */
   public Acl getAcl(final String xmlStr,
-                    final boolean setting) throws AccessException {
+                    final boolean setting) {
     try {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       factory.setNamespaceAware(true);
 
-      DocumentBuilder builder = factory.newDocumentBuilder();
+      final DocumentBuilder builder = factory.newDocumentBuilder();
 
-      Document doc = builder.parse(new InputSource(new StringReader(xmlStr)));
+      final Document doc = builder.parse(new InputSource(new StringReader(xmlStr)));
 
       return getAcl(doc.getDocumentElement(), setting);
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw ae;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
@@ -248,10 +245,9 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @param root parsed XML root element
    * @param setting - true if we are being called to set a value
    * @return Acl
-   * @throws AccessException on error
    */
   public Acl getAcl(final Element root,
-                    final boolean setting) throws AccessException {
+                    final boolean setting) {
     try {
       /* We expect an acl root element containing 0 or more ace elements
        <!ELEMENT acl (ace)* >
@@ -260,16 +256,16 @@ public class AccessXmlUtil implements Logged, Serializable {
         throw exc("Expected ACL");
       }
 
-      Element[] aceEls = XmlUtil.getElementsArray(root);
+      final Element[] aceEls = XmlUtil.getElementsArray(root);
 
-      Collection<ParsedAce> paces = new ArrayList<ParsedAce>();
+      final Collection<ParsedAce> paces = new ArrayList<>();
 
-      for (Element curnode: aceEls) {
+      for (final Element curnode: aceEls) {
         if (!XmlUtil.nodeMatches(curnode, WebdavTags.ace)) {
           throw exc("Expected ACE");
         }
 
-        ParsedAce pace = processAce(curnode, setting);
+        final ParsedAce pace = processAce(curnode, setting);
         if (pace == null) {
           break;
         }
@@ -282,7 +278,7 @@ public class AccessXmlUtil implements Logged, Serializable {
 
         /* Look for this 'who' in the list */
 
-        for (ParsedAce pa: paces) {
+        for (final ParsedAce pa: paces) {
           if (pa.ace.getWho().equals(pace.ace.getWho()) &&
               (pa.deny == pace.deny)) {
             throw exc("Multiple ACEs for " + pa.ace.getWho());
@@ -292,25 +288,25 @@ public class AccessXmlUtil implements Logged, Serializable {
         paces.add(pace);
       }
 
-      Collection<Ace> aces = new ArrayList<Ace>();
+      final Collection<Ace> aces = new ArrayList<>();
 
-      for (ParsedAce pa: paces) {
+      for (final ParsedAce pa: paces) {
         if (pa.deny) {
           aces.add(pa.ace);
         }
       }
 
-      for (ParsedAce pa: paces) {
+      for (final ParsedAce pa: paces) {
         if (!pa.deny) {
           aces.add(pa.ace);
         }
       }
 
       return new Acl(aces);
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw ae;
-    } catch (Throwable t) {
-      t.printStackTrace();
+    } catch (final Throwable t) {
+      error(t);
       throw new AccessException(t);
     }
   }
@@ -320,14 +316,13 @@ public class AccessXmlUtil implements Logged, Serializable {
    *
    * @param acl the ACL object
    * @param forWebDAV  - true if we should split deny from grant.
-   * @throws AccessException on error
    */
-  public void emitAcl(final Acl acl, final boolean forWebDAV) throws AccessException {
+  public void emitAcl(final Acl acl, final boolean forWebDAV) {
     try {
       emitAces(acl.getAces(), forWebDAV);
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw ae;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
@@ -336,16 +331,15 @@ public class AccessXmlUtil implements Logged, Serializable {
    * at all points in the system and is identical to the webdav/caldav
    * requirements.
    *
-   * @throws AccessException on error
    */
-  public void emitSupportedPrivSet() throws AccessException {
+  public void emitSupportedPrivSet() {
     try {
       xml.openTag(WebdavTags.supportedPrivilegeSet);
 
       emitSupportedPriv(Privileges.getPrivAll());
 
       xml.closeTag(WebdavTags.supportedPrivilegeSet);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
@@ -359,11 +353,10 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @param xml to emit
    * @param privTags the tags
    * @param privileges    char[] of allowed/disallowed
-   * @throws AccessException on error
    */
   public static void emitCurrentPrivSet(final XmlEmit xml,
                                         final QName[] privTags,
-                                        final char[] privileges) throws AccessException {
+                                        final char[] privileges) {
     if (privTags.length != PrivilegeDefs.privEncoding.length) {
       throw new AccessException("edu.rpi.cmt.access.BadParameter");
     }
@@ -375,7 +368,7 @@ public class AccessXmlUtil implements Logged, Serializable {
         if ((privileges[pi] == PrivilegeDefs.allowed) ||
             (privileges[pi] == PrivilegeDefs.allowedInherited)) {
           // XXX further work - don't emit abstract privs or contained privs.
-          QName pr = privTags[pi];
+          final QName pr = privTags[pi];
 
           if (pr != null) {
             xml.propertyTagVal(WebdavTags.privilege, pr);
@@ -384,7 +377,7 @@ public class AccessXmlUtil implements Logged, Serializable {
       }
 
       xml.closeTag(WebdavTags.currentUserPrivilegeSet);
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
@@ -396,32 +389,30 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @param privTags the tags
    * @param ps    PrivilegeSet allowed/disallowed
    * @return String xml
-   * @throws AccessException on error
    */
   public static String getCurrentPrivSetString(final QName[] privTags,
-                                               final PrivilegeSet ps)
-          throws AccessException {
+                                               final PrivilegeSet ps) {
     try {
-      char[] privileges = ps.getPrivileges();
+      final char[] privileges = ps.getPrivileges();
 
-      XmlEmit xml = new XmlEmit(true);  // no headers
-      StringWriter su = new StringWriter();
+      final XmlEmit xml = new XmlEmit(true);  // no headers
+      final StringWriter su = new StringWriter();
       xml.startEmit(su);
       AccessXmlUtil.emitCurrentPrivSet(xml, privTags, privileges);
 
       su.close();
 
       return su.toString();
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw ae;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Private methods
-   * ==================================================================== */
+   * ============================================================== */
 
   private static class ParsedAce {
     Ace ace;
@@ -451,11 +442,10 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @param nd representing an ACE
    * @param setting - true if we are being called to set a value
    * @return ParsedAce object
-   * @throws Throwable on error
    */
   private ParsedAce processAce(final Node nd,
-                               final boolean setting) throws Throwable {
-    Element[] children = XmlUtil.getElementsArray(nd);
+                               final boolean setting) {
+    final Element[] children = XmlUtil.getElementsArray(nd);
     int pos = 0;
 
     if (children.length < 2) {
@@ -476,7 +466,7 @@ public class AccessXmlUtil implements Logged, Serializable {
       curnode = XmlUtil.getOnlyElement(curnode);
     }
 
-    AceWho awho = parseAcePrincipal(curnode, inverted);
+    final AceWho awho = parseAcePrincipal(curnode, inverted);
 
     if (awho == null) {
       return null;
@@ -486,7 +476,7 @@ public class AccessXmlUtil implements Logged, Serializable {
     curnode = children[pos];
 
     /* grant or deny required here */
-    Privs privs = parseGrantDeny(curnode);
+    final Privs privs = parseGrantDeny(curnode);
 
     if (privs == null) {
       if (debug()) {
@@ -534,9 +524,9 @@ public class AccessXmlUtil implements Logged, Serializable {
           throw exc("Missing inherited href");
         }
 
-        String href = XmlUtil.getElementContent(curnode);
+        final String href = XmlUtil.getElementContent(curnode);
 
-        if ((href == null) || (href.length() == 0)) {
+        if ((href == null) || (href.isEmpty())) {
           throw exc("Missing inherited href");
         }
 
@@ -554,24 +544,24 @@ public class AccessXmlUtil implements Logged, Serializable {
   }
 
   private AceWho parseAcePrincipal(final Node nd,
-                                   final boolean inverted) throws Throwable {
+                                   final boolean inverted) {
     if (!XmlUtil.nodeMatches(nd, WebdavTags.principal)) {
       throw exc("Bad ACE - expect principal");
     }
 
     Element el = XmlUtil.getOnlyElement(nd);
 
-    int whoType = -1;
+    final int whoType;
     String who = null;
 
     if (XmlUtil.nodeMatches(el, WebdavTags.href)) {
-      String href = XmlUtil.getElementContent(el);
+      final String href = XmlUtil.getElementContent(el);
 
-      if ((href == null) || (href.length() == 0)) {
+      if ((href == null) || (href.isEmpty())) {
         throw exc("Missing href");
       }
 
-      AccessPrincipal ap = cb.getPrincipal(href);
+      final AccessPrincipal ap = cb.getPrincipal(href);
 
       if (ap == null) {
         cb.setErrorTag(WebdavTags.recognizedPrincipal);
@@ -601,7 +591,7 @@ public class AccessXmlUtil implements Logged, Serializable {
       throw exc("Bad WHO");
     }
 
-    AceWho awho = AceWho.getAceWho(who, whoType, inverted);
+    final AceWho awho = AceWho.getAceWho(who, whoType, inverted);
 
     if (debug()) {
       debug("Parsed ace/principal =" + awho);
@@ -621,7 +611,7 @@ public class AccessXmlUtil implements Logged, Serializable {
     }
   }
 
-  private Privs parseGrantDeny(final Node nd) throws Throwable {
+  private Privs parseGrantDeny(final Node nd) {
     boolean denial = false;
 
     if (XmlUtil.nodeMatches(nd, WebdavTags.deny)) {
@@ -630,12 +620,10 @@ public class AccessXmlUtil implements Logged, Serializable {
       return null;
     }
 
-    Collection<Privilege> privs = new ArrayList<Privilege>();
-    Element[] pchildren = XmlUtil.getElementsArray(nd);
+    final Collection<Privilege> privs = new ArrayList<>();
+    final Element[] pchildren = XmlUtil.getElementsArray(nd);
 
-    for (int pi = 0; pi < pchildren.length; pi++) {
-      Element pnode = pchildren[pi];
-
+    for (final Element pnode: pchildren) {
       if (!XmlUtil.nodeMatches(pnode, WebdavTags.privilege)) {
         throw exc("Bad ACE - expect privilege");
       }
@@ -647,8 +635,8 @@ public class AccessXmlUtil implements Logged, Serializable {
   }
 
   private Privilege parsePrivilege(final Node nd,
-                                   final boolean denial) throws Throwable {
-    Element el = XmlUtil.getOnlyElement(nd);
+                                   final boolean denial) {
+    final Element el = XmlUtil.getOnlyElement(nd);
 
     int priv;
 
@@ -675,12 +663,12 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @throws AccessException
    */
   private void emitAces(final Collection<Ace> aces,
-                        final boolean forWebDAV) throws AccessException {
+                        final boolean forWebDAV) {
     try {
       xml.openTag(WebdavTags.acl);
 
       if (aces != null) {
-        for (Ace ace: aces) {
+        for (final Ace ace: aces) {
           boolean aceOpen = emitAce(ace, false, false);
 
           if (aceOpen && forWebDAV) {
@@ -699,16 +687,16 @@ public class AccessXmlUtil implements Logged, Serializable {
       }
 
       xml.closeTag(WebdavTags.acl);
-    } catch (AccessException ae) {
+    } catch (final AccessException ae) {
       throw ae;
-    } catch (Throwable t) {
+    } catch (final Throwable t) {
       throw new AccessException(t);
     }
   }
 
-  private void closeAce(final Ace ace) throws Throwable {
+  private void closeAce(final Ace ace) {
     if (ace.getInheritedFrom() != null) {
-      QName tag = WebdavTags.inherited;
+      final QName tag = WebdavTags.inherited;
       xml.openTag(tag);
       xml.property(WebdavTags.href, ace.getInheritedFrom());
       xml.closeTag(tag);
@@ -716,7 +704,7 @@ public class AccessXmlUtil implements Logged, Serializable {
     xml.closeTag(WebdavTags.ace);
   }
 
-  private void emitSupportedPriv(final Privilege priv) throws Throwable {
+  private void emitSupportedPriv(final Privilege priv) {
     xml.openTag(WebdavTags.supportedPrivilege);
 
     xml.openTagNoNewline(WebdavTags.privilege);
@@ -729,7 +717,7 @@ public class AccessXmlUtil implements Logged, Serializable {
 
     xml.property(WebdavTags.description, priv.getDescription());
 
-    for (Privilege p: priv.getContainedPrivileges()) {
+    for (final Privilege p: priv.getContainedPrivileges()) {
       emitSupportedPriv(p);
     }
 
@@ -739,17 +727,19 @@ public class AccessXmlUtil implements Logged, Serializable {
   /* This gets called twice, once to do denials, once to do grants
    *
    */
-  private boolean emitAce(final Ace ace, final boolean denials, boolean aceOpen) throws Throwable {
+  private boolean emitAce(final Ace ace,
+                          final boolean denials,
+                          boolean aceOpen) {
     boolean tagOpen = false;
 
-    QName tag;
+    final QName tag;
     if (denials) {
       tag = WebdavTags.deny;
     } else {
       tag = WebdavTags.grant;
     }
 
-    for (Privilege p: ace.getPrivs()) {
+    for (final Privilege p: ace.getPrivs()) {
       if (denials == p.getDenial()) {
         if (!aceOpen) {
           xml.openTag(WebdavTags.ace);
@@ -774,7 +764,7 @@ public class AccessXmlUtil implements Logged, Serializable {
     return aceOpen;
   }
 
-  private void emitAceWho(final AceWho who) throws Throwable {
+  private void emitAceWho(final AceWho who) {
     boolean invert = who.getNotWho();
 
     if (who.getWhoType() == Ace.whoTypeOther) {
@@ -787,7 +777,7 @@ public class AccessXmlUtil implements Logged, Serializable {
 
     xml.openTag(WebdavTags.principal);
 
-    int whoType = who.getWhoType();
+    final int whoType = who.getWhoType();
 
     /*
            <!ELEMENT principal (href)
@@ -809,7 +799,7 @@ public class AccessXmlUtil implements Logged, Serializable {
       xml.emptyTag(WebdavTags.all);
     } else  {
       /* Just emit href */
-      String href = escapeChars(cb.makeHref(who.getWho(), whoType));
+      final String href = escapeChars(cb.makeHref(who.getWho(), whoType));
       xml.property(WebdavTags.href, href);
     }
 
@@ -822,7 +812,7 @@ public class AccessXmlUtil implements Logged, Serializable {
 
   /**
    * Lifted from org.apache.struts.util.ResponseUtils#filter
-   *
+   * <br/>
    * Filter the specified string for characters that are senstive to HTML
    * interpreters, returning the string with these characters replaced by the
    * corresponding character entities.
@@ -831,59 +821,37 @@ public class AccessXmlUtil implements Logged, Serializable {
    * @return String   escaped value
    */
   public static String escapeChars(final String value) {
-    if ((value == null) || (value.length() == 0)) {
+    if ((value == null) || (value.isEmpty())) {
       return value;
     }
 
-    StringBuffer result = null;
-    String filtered = null;
+    StringBuilder result = null;
+    String filtered;
 
     for (int i = 0; i < value.length(); i++) {
-      filtered = null;
-
-      switch (value.charAt(i)) {
-      case '<':
-        filtered = "&lt;";
-
-        break;
-
-      case '>':
-        filtered = "&gt;";
-
-        break;
-
-      case '&':
-        filtered = "&amp;";
-
-        break;
-
-      case '"':
-        filtered = "&quot;";
-
-        break;
-
-      case '\'':
-        filtered = "&#39;";
-
-        break;
-      }
+      filtered = switch (value.charAt(i)) {
+        case '<' -> "&lt;";
+        case '>' -> "&gt;";
+        case '&' -> "&amp;";
+        case '"' -> "&quot;";
+        case '\'' -> "&#39;";
+        default -> null;
+      };
 
       if (result == null) {
         if (filtered != null) {
-          result = new StringBuffer(value.length() + 50);
+          result = new StringBuilder(value.length() + 50);
 
           if (i > 0) {
-            result.append(value.substring(0, i));
+            result.append(value, 0, i);
           }
 
           result.append(filtered);
         }
+      } else if (filtered == null) {
+        result.append(value.charAt(i));
       } else {
-        if (filtered == null) {
-          result.append(value.charAt(i));
-        } else {
-          result.append(filtered);
-        }
+        result.append(filtered);
       }
     }
 
@@ -901,11 +869,11 @@ public class AccessXmlUtil implements Logged, Serializable {
     return AccessException.badXmlACL(msg);
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Logged methods
-   * ==================================================================== */
+   * ============================================================== */
 
-  private BwLogger logger = new BwLogger();
+  private final BwLogger logger = new BwLogger();
 
   @Override
   public BwLogger getLogger() {

@@ -7,10 +7,11 @@ import org.bedework.util.misc.ToString;
 import org.bedework.util.misc.Util;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /** Immutable object created as a result of evaluating access to an entity for
  * a principal
- *
+ * <br/>
  * User: mike Date: 12/11/18 Time: 23:14
  */
 public class CurrentAccess implements Serializable,
@@ -34,14 +35,14 @@ public class CurrentAccess implements Serializable,
   }
 
   /**
-   * @param privs
+   * @param privs the privilege set
    */
   public CurrentAccess(final PrivilegeSet privs) {
     privileges = privs;
   }
 
   /**
-   * @param accessAllowed
+   * @param accessAllowed true if access is allowed
    */
   public CurrentAccess(final boolean accessAllowed) {
     this.accessAllowed = accessAllowed;
@@ -99,7 +100,7 @@ public class CurrentAccess implements Serializable,
     int hc = 7;
 
     if (aclChars != null) {
-      hc *= aclChars.hashCode();
+      hc *= Arrays.hashCode(aclChars);
     }
 
     if (privileges != null) {

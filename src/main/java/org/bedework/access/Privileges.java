@@ -129,7 +129,7 @@ public class Privileges implements PrivilegeDefs {
    * @param privType int access
    * @return Privilege defining access
    */
-  public static Privilege makePriv(int privType) {
+  public static Privilege makePriv(final int privType) {
     return privs[privType];
   }
 
@@ -139,7 +139,8 @@ public class Privileges implements PrivilegeDefs {
    * @param  denial   true for a denial
    * @return Privilege defining access
    */
-  public static Privilege makePriv(int privType, boolean denial) {
+  public static Privilege makePriv(final int privType,
+                                   final boolean denial) {
     if (!denial) {
       return privs[privType];
     }
@@ -148,12 +149,11 @@ public class Privileges implements PrivilegeDefs {
 
   /** Skip all the privileges info.
    *
-   * @param acl
-   * @throws AccessException
+   * @param acl encoded acl
    */
-  public static void skip(EncodedAcl acl) throws AccessException {
+  public static void skip(final EncodedAcl acl) {
     while (acl.hasMore()) {
-      char c = acl.getChar();
+      final char c = acl.getChar();
       if ((c == ' ') || (c == inheritedFlag)) {
         break;
       }
@@ -163,22 +163,21 @@ public class Privileges implements PrivilegeDefs {
   /** Returns the collection of privilege objects representing the access.
    * Used for acl manipulation..
    *
-   * @param acl
+   * @param acl encoded acl
    * @return Collection
-   * @throws AccessException
    */
-  public static Collection<Privilege> getPrivs(EncodedAcl acl) throws AccessException {
-    ArrayList<Privilege> al = new ArrayList<Privilege>();
+  public static Collection<Privilege> getPrivs(final EncodedAcl acl) {
+    final ArrayList<Privilege> al = new ArrayList<>();
 
     while (acl.hasMore()) {
-      char c = acl.getChar();
+      final char c = acl.getChar();
       if ((c == ' ') || (c == inheritedFlag)) {
         break;
       }
       acl.back();
 
-      Privilege p = Privilege.findPriv(privs[privAll],
-                                       privs[privNone], acl);
+      final Privilege p = Privilege.findPriv(privs[privAll],
+                                             privs[privNone], acl);
       if (p == null) {
         throw AccessException.badACL("unknown priv");
       }
@@ -189,8 +188,8 @@ public class Privileges implements PrivilegeDefs {
     return al;
   }
 
-  private static void makePrivileges(Privilege[] ps,
-                                     boolean denial) {
+  private static void makePrivileges(final Privilege[] ps,
+                                     final boolean denial) {
     /* ---------------- read privileges ----------------------- */
 
     ps[privReadAcl] = new Privilege("read-acl", "Read calendar accls",
@@ -205,9 +204,9 @@ public class Privileges implements PrivilegeDefs {
                                          "View a users free busy information",
                                          denial, privReadFreeBusy);
 
-    Privilege[] containedRead = {ps[privReadAcl],
-                                 ps[privReadCurrentUserPrivilegeSet],
-                                 ps[privReadFreeBusy]};
+    final Privilege[] containedRead = {ps[privReadAcl],
+                                       ps[privReadCurrentUserPrivilegeSet],
+                                       ps[privReadFreeBusy]};
     ps[privRead] = new Privilege("read", "Read any calendar object", denial,
                                  privRead, containedRead);
 
@@ -225,16 +224,16 @@ public class Privileges implements PrivilegeDefs {
                                              "Freebusy for scheduling",
                                              denial, privScheduleFreeBusy);
 
-    Privilege[] containedSchedule = {ps[privScheduleRequest],
-                                     ps[privScheduleReply],
-                                     ps[privScheduleFreeBusy]};
+    final Privilege[] containedSchedule = {ps[privScheduleRequest],
+                                           ps[privScheduleReply],
+                                           ps[privScheduleFreeBusy]};
     ps[privSchedule] = new Privilege("schedule", "Scheduling operations",
                                      denial, privSchedule,
                                      containedSchedule);
 
     /* ---------------- bind privileges ----------------------- */
 
-    Privilege[] containedBind = {ps[privSchedule]};
+    final Privilege[] containedBind = {ps[privSchedule]};
     ps[privBind] = new Privilege("create", "Create a calendar object",
                                  denial, privBind, containedBind);
 
@@ -254,11 +253,11 @@ public class Privileges implements PrivilegeDefs {
     ps[privUnbind] = new Privilege("delete", "Delete a calendar object",
                                    denial, privUnbind);
 
-    Privilege[] containedWrite = {ps[privWriteAcl],
-                                  ps[privWriteProperties],
-                                  ps[privWriteContent],
-                                  ps[privBind],
-                                  ps[privUnbind]};
+    final Privilege[] containedWrite = {ps[privWriteAcl],
+                                        ps[privWriteProperties],
+                                        ps[privWriteContent],
+                                        ps[privBind],
+                                        ps[privUnbind]};
     ps[privWrite] = new Privilege("write", "Write any calendar object",
                                   denial, privWrite,
                                   containedWrite);
@@ -280,9 +279,9 @@ public class Privileges implements PrivilegeDefs {
                                                   denial,
                                                   privScheduleQueryFreebusy);
 
-    Privilege[] containedScheduleDeliver = {ps[privScheduleDeliverInvite],
-                                            ps[privScheduleDeliverReply],
-                                            ps[privScheduleQueryFreebusy]};
+    final Privilege[] containedScheduleDeliver = {ps[privScheduleDeliverInvite],
+                                                  ps[privScheduleDeliverReply],
+                                                  ps[privScheduleQueryFreebusy]};
     ps[privScheduleDeliver] = new Privilege("schedule-deliver",
                                             "Scheduling delivery",
                                             denial,
@@ -306,9 +305,9 @@ public class Privileges implements PrivilegeDefs {
                                                  denial,
                                                  privScheduleSendFreebusy);
 
-    Privilege[] containedScheduleSend = {ps[privScheduleSendInvite],
-                                         ps[privScheduleSendReply],
-                                         ps[privScheduleSendFreebusy]};
+    final Privilege[] containedScheduleSend = {ps[privScheduleSendInvite],
+                                               ps[privScheduleSendReply],
+                                               ps[privScheduleSendFreebusy]};
     ps[privScheduleSend] = new Privilege("schedule-send",
                                          "Scheduling send",
                                          denial,
@@ -320,11 +319,11 @@ public class Privileges implements PrivilegeDefs {
     ps[privUnlock] = new Privilege("unlock", "Remove a lock",
                                    denial, privUnlock);
 
-    Privilege[] containedAll = {ps[privRead],
-                                ps[privWrite],
-                                ps[privUnlock],
-                                ps[privScheduleDeliver],
-                                ps[privScheduleSend]};
+    final Privilege[] containedAll = {ps[privRead],
+                                      ps[privWrite],
+                                      ps[privUnlock],
+                                      ps[privScheduleDeliver],
+                                      ps[privScheduleSend]};
     ps[privAll] = new Privilege("all", "All privileges", denial, privAll,
                                 containedAll);
 

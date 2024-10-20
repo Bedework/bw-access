@@ -60,29 +60,29 @@ public class EvaluatedAccessCache implements Serializable {
 
   private static class AccessorsMap extends HashMap<String, PrivSetMap>{}
 
-  private static Map<String, AccessorsMap> ownerHrefs = new HashMap<>();
+  private static final Map<String, AccessorsMap> ownerHrefs = new HashMap<>();
 
   /* Back end of the queue is the most recently referenced. */
-  private static LinkedList<String> accessorQueue = new LinkedList<>();
+  private static final LinkedList<String> accessorQueue = new LinkedList<>();
 
-  private static Access.AccessStatsEntry accessorQueueLen =
+  private static final Access.AccessStatsEntry accessorQueueLen =
     new Access.AccessStatsEntry("Access cache accessor queue len");
 
-  private static Access.AccessStatsEntry numGets =
+  private static final Access.AccessStatsEntry numGets =
     new Access.AccessStatsEntry("Access cache gets");
 
-  private static Access.AccessStatsEntry numHits =
+  private static final Access.AccessStatsEntry numHits =
     new Access.AccessStatsEntry("Access cache hits");
 
-  private static Access.AccessStatsEntry numAclTables =
+  private static final Access.AccessStatsEntry numAclTables =
     new Access.AccessStatsEntry("Access cache ACL tables");
 
-  private static Access.AccessStatsEntry numEntries =
+  private static final Access.AccessStatsEntry numEntries =
     new Access.AccessStatsEntry("Access cache entries");
 
-  private static Collection<Access.AccessStatsEntry> stats = new ArrayList<>();
+  private static final Collection<Access.AccessStatsEntry> stats = new ArrayList<>();
 
-  private static BwLogger logger = 
+  private static final BwLogger logger =
           new BwLogger().setLoggedClass(EvaluatedAccessCache.class);
 
   static {
@@ -109,7 +109,7 @@ public class EvaluatedAccessCache implements Serializable {
     numGets.count++;
 
     synchronized (synch) {
-      AccessorsMap accessors = ownerHrefs.get(ownerHref);
+      final AccessorsMap accessors = ownerHrefs.get(ownerHref);
 
       if (accessors == null) {
         return null;
@@ -117,7 +117,7 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ===================== desired priv ================== */
 
-      PrivSetMap desiredPrivs = accessors.get(accessorHref);
+      final PrivSetMap desiredPrivs = accessors.get(accessorHref);
 
       if (desiredPrivs == null) {
         return null;
@@ -128,7 +128,7 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ===================== max priv ================== */
 
-      PrivMap maxPrivs = desiredPrivs.get(desiredPriv);
+      final PrivMap maxPrivs = desiredPrivs.get(desiredPriv);
 
       if (maxPrivs == null) {
         return null;
@@ -136,7 +136,7 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ===================== acl ================== */
 
-      AccessMap acls = maxPrivs.get(maxAccess);
+      final AccessMap acls = maxPrivs.get(maxAccess);
 
       if (acls == null) {
         return null;
@@ -144,7 +144,7 @@ public class EvaluatedAccessCache implements Serializable {
 
       /* ==================== finally access =============== */
 
-      CurrentAccess ca = acls.get(acl);
+      final CurrentAccess ca = acls.get(acl);
 
       if (ca != null) {
         numHits.count++;
@@ -231,7 +231,7 @@ public class EvaluatedAccessCache implements Serializable {
       if (found) {
         // Let's see if it's the same - it ought to be
 
-        CurrentAccess tca = acls.get(acl);
+        final CurrentAccess tca = acls.get(acl);
         if (tca != null) {
           if (!tca.equals(ca)) {
             // That's bad.
@@ -285,24 +285,22 @@ public class EvaluatedAccessCache implements Serializable {
    * <li>Otherwise apply defaults - for the owner full acccess, for any others no
    * access</li>
    *
-   * @param cb
-   * @param who
-   * @param owner
-   * @param how
-   * @param aclChars
+   * @param cb callback to makeHref
+   * @param who we are evaluating access for
+   * @param owner of resource
+   * @param how access is desired
+   * @param aclChars encoded acl chars
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
-   * @throws AccessException
    */
   public static CurrentAccess evaluateAccess(final Access.AccessCb cb,
                                              final AccessPrincipal who,
                                              final AccessPrincipal owner,
                                              final Privilege[] how,
                                              final char[] aclChars,
-                                             final PrivilegeSet filter)
-          throws AccessException {
-    String aclString = new String(aclChars);
-    PrivilegeSet howPriv = PrivilegeSet.makePrivilegeSet(how);
+                                             final PrivilegeSet filter) {
+    final String aclString = new String(aclChars);
+    final PrivilegeSet howPriv = PrivilegeSet.makePrivilegeSet(how);
 
     CurrentAccess ca = get(owner.getPrincipalRef(),
                            who.getPrincipalRef(),
@@ -315,10 +313,6 @@ public class EvaluatedAccessCache implements Serializable {
 
     ca = evaluateAccessInt(cb, who, owner, how, aclChars, filter);
 
-    if (ca == null) {
-      return null;
-    }
-
     put(owner.getPrincipalRef(),
         who.getPrincipalRef(),
         howPriv, filter,
@@ -328,20 +322,46 @@ public class EvaluatedAccessCache implements Serializable {
     return ca;
   }
 
-  private static CurrentAccess evaluateAccessInt(final Access.AccessCb cb,
-                                          final AccessPrincipal who,
-                                          final AccessPrincipal owner,
-                                          final Privilege[] how,
-                                          final char[] aclChars,
-                                          final PrivilegeSet filter)
-          throws AccessException {
+  private static class DebugBuff {
+    private StringBuilder buffer;
+    private StringBuilder sb() {
+      if (buffer == null) {
+        buffer = new StringBuilder();
+      }
+      return buffer;
+    }
+
+    DebugBuff append(final boolean val) {
+      append(String.valueOf(val));
+
+      return this;
+    }
+
+    DebugBuff append(final String val) {
+      sb().append(val);
+
+      return this;
+    }
+
+    public String toString() {
+      return sb().toString();
+    }
+  }
+
+  private static CurrentAccess evaluateAccessInt(
+          final Access.AccessCb cb,
+          final AccessPrincipal who,
+          final AccessPrincipal owner,
+          final Privilege[] how,
+          final char[] aclChars,
+          final PrivilegeSet filter) {
     evaluations.count++;
 
-    boolean authenticated = !who.getUnauthenticated();
+    final boolean authenticated = !who.getUnauthenticated();
     boolean isOwner = false;
-    CurrentAccess ca = new CurrentAccess();
+    final CurrentAccess ca = new CurrentAccess();
 
-    Acl acl = decode(aclChars);
+    final Acl acl = decode(aclChars);
     ca.acl = acl;
     ca.aclChars = aclChars;
 
@@ -349,10 +369,9 @@ public class EvaluatedAccessCache implements Serializable {
       isOwner = who.equals(owner);
     }
 
-    StringBuilder debugsb = null;
+    final DebugBuff debugsb = new DebugBuff();
 
     if (logger.debug()) {
-      debugsb = new StringBuilder("Check access for '");
       if (aclChars == null) {
         debugsb.append("NULL");
       } else {
@@ -361,14 +380,14 @@ public class EvaluatedAccessCache implements Serializable {
       debugsb.append("'\n");
 
       if (authenticated) {
-        debugsb.append("   with authenticated principal ");
-        debugsb.append(who.getPrincipalRef());
+        debugsb.append("   with authenticated principal ")
+               .append(who.getPrincipalRef());
       } else {
         debugsb.append("   unauthenticated ");
       }
-      debugsb.append(" isOwner = ");
-      debugsb.append(isOwner);
-      debugsb.append("'\n");
+      debugsb.append(" isOwner = ")
+             .append(isOwner)
+             .append("'\n");
     }
 
     if (aclChars == null) {
@@ -387,8 +406,9 @@ public class EvaluatedAccessCache implements Serializable {
 
         if (ca.privileges != null) {
           if (logger.debug()) {
-            debugsb.append("... For unauthenticated got: " + ca.privileges);
-            debugsb.append("'\n");
+            debugsb.append("... For unauthenticated got: ")
+                   .append(ca.privileges.toString())
+                   .append("'\n");
           }
 
           break getPrivileges;
@@ -402,8 +422,9 @@ public class EvaluatedAccessCache implements Serializable {
         }
 
         if (logger.debug()) {
-          debugsb.append("... For owner got: " + ca.privileges);
-          debugsb.append("'\n");
+          debugsb.append("... For owner got: ")
+                 .append(ca.privileges.toString())
+                 .append("'\n");
         }
 
         break getPrivileges;
@@ -439,8 +460,9 @@ public class EvaluatedAccessCache implements Serializable {
 
       if (ca.privileges != null) {
         if (logger.debug()) {
-          debugsb.append("... For user got: " + ca.privileges);
-          debugsb.append("'\n");
+          debugsb.append("... For user got: ")
+                 .append(ca.privileges.toString())
+                 .append("'\n");
         }
 
         break getPrivileges;
@@ -449,13 +471,15 @@ public class EvaluatedAccessCache implements Serializable {
       // No specific user access - look for group access
 
       if (who.getGroupNames() != null) {
-        for (String group: who.getGroupNames()) {
+        for (final String group: who.getGroupNames()) {
           if (logger.debug()) {
-            debugsb.append("...Try access for group " + group);
-            debugsb.append("'\n");
+            debugsb.append("...Try access for group ")
+                   .append(group)
+                   .append("'\n");
           }
-          PrivilegeSet privs = Ace.findMergedPrivilege(acl, cb, group,
-                                                       Ace.whoTypeGroup);
+          final PrivilegeSet privs =
+                  Ace.findMergedPrivilege(acl, cb, group,
+                                          Ace.whoTypeGroup);
           if (privs != null) {
             ca.privileges = PrivilegeSet.mergePrivileges(ca.privileges, privs,
                                                          false);
@@ -465,8 +489,9 @@ public class EvaluatedAccessCache implements Serializable {
 
       if (ca.privileges != null) {
         if (logger.debug()) {
-          debugsb.append("...For groups got: " + ca.privileges);
-          debugsb.append("'\n");
+          debugsb.append("...For groups got: ")
+                 .append(ca.privileges.toString())
+                 .append("'\n");
         }
 
         break getPrivileges;
@@ -480,8 +505,9 @@ public class EvaluatedAccessCache implements Serializable {
 
       if (ca.privileges != null) {
         if (logger.debug()) {
-          debugsb.append("...For authenticated got: " + ca.privileges);
-          debugsb.append("'\n");
+          debugsb.append("...For authenticated got: ")
+                 .append(ca.privileges.toString())
+                 .append("'\n");
         }
 
         break getPrivileges;
@@ -495,21 +521,22 @@ public class EvaluatedAccessCache implements Serializable {
         ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeAll);
       }
 
-      if (ca.privileges != null) {
-        if (logger.debug()) {
-          debugsb.append("...For other got: " + ca.privileges);
-          debugsb.append("'\n");
+      if (logger.debug()) {
+        if (ca.privileges != null) {
+          debugsb.append("...For other got: ")
+                 .append(ca.privileges.toString())
+                 .append("'\n");
+        } else {
+          debugsb.append("...For other got: NULL\n");
         }
-
-        break getPrivileges;
       }
     } // getPrivileges
 
     if (isOwner) {
       // Owner always has read/write acl privilege
 
-      char racl = ca.privileges.getPrivilege(privReadAcl);
-      char wacl = ca.privileges.getPrivilege(privWriteAcl);
+      final char racl = ca.privileges.getPrivilege(privReadAcl);
+      final char wacl = ca.privileges.getPrivilege(privWriteAcl);
 
       if (((racl != allowed) && (racl != allowedInherited)) ||
               ((wacl != allowed) && (wacl != allowedInherited))) {
@@ -521,7 +548,7 @@ public class EvaluatedAccessCache implements Serializable {
 
     if (ca.privileges == null) {
       if (logger.debug()) {
-        logger.debug(debugsb.toString() + "...Check access denied (noprivs)");
+        logger.debug(debugsb + "...Check access denied (noprivs)");
       }
       return ca;
     }
@@ -542,10 +569,10 @@ public class EvaluatedAccessCache implements Serializable {
       ca.accessAllowed = ca.privileges.getAnyAllowed();
       if (logger.debug()) {
         if (ca.accessAllowed) {
-          logger.debug(debugsb.toString() +
-                                "...Check access allowed (any requested)");
+          logger.debug(debugsb +
+                               "...Check access allowed (any requested)");
         } else {
-          logger.debug(debugsb.toString() +
+          logger.debug(debugsb +
                                 "...Check access denied (any requested)");
         }
       }
@@ -557,13 +584,13 @@ public class EvaluatedAccessCache implements Serializable {
      * continue to the next request right.
      */
 
-    for (int i = 0; i < how.length; i++) {
-      char priv = ca.privileges.getPrivilege(how[i].getIndex());
+    for (final Privilege privilege: how) {
+      final char priv = ca.privileges.getPrivilege(privilege.getIndex());
 
       if ((priv != allowed) && (priv != allowedInherited)) {
         if (logger.debug()) {
-          debugsb.append("...Check access denied (!allowed) ");
-          debugsb.append(ca.privileges);
+          debugsb.append("...Check access denied (!allowed) ")
+                 .append(ca.privileges.toString());
           logger.debug(debugsb.toString());
         }
         return ca;
@@ -575,7 +602,7 @@ public class EvaluatedAccessCache implements Serializable {
      */
 
     if (logger.debug()) {
-      logger.debug(debugsb.toString() + "...Check access allowed");
+      logger.debug(debugsb + "...Check access allowed");
     }
 
     ca.accessAllowed = true;

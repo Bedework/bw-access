@@ -18,6 +18,8 @@
 */
 package org.bedework.access;
 
+import org.bedework.util.misc.ToString;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,29 +28,26 @@ import java.util.Collections;
  *
  *  @author Mike Douglass   douglm @ bedework.org
  */
-/**
- * @author douglm
- *
- */
 public class Privilege implements PrivilegeDefs {
-  private String name;
+  private final String name;
 
   /** This will probably go - the description needs to come from a resource
    * and be in the appropriate language.
    */
-  private String description;
+  private final String description;
 
-  private boolean abstractPriv;
+  private final boolean abstractPriv;
 
   /** Is this a denial rather than granting
    */
-  private boolean denial;
+  private final boolean denial;
 
   private int index;
 
   private char encoding;
 
-  private ArrayList<Privilege> containedPrivileges = new ArrayList<Privilege>();
+  private final ArrayList<Privilege> containedPrivileges =
+          new ArrayList<>();
 
   /** Constructor
    *
@@ -58,11 +57,11 @@ public class Privilege implements PrivilegeDefs {
    * @param denial       is it a denial
    * @param index        an index
    */
-  public Privilege(String name,
-                   String description,
-                   boolean abstractPriv,
-                   boolean denial,
-                   int index) {
+  public Privilege(final String name,
+                   final String description,
+                   final boolean abstractPriv,
+                   final boolean denial,
+                   final int index) {
     this.name = name;
     this.description = description;
     this.abstractPriv = abstractPriv;
@@ -76,9 +75,9 @@ public class Privilege implements PrivilegeDefs {
    * @param description  a description
    * @param index        an index
    */
-  public Privilege(String name,
-                   String description,
-                   int index) {
+  public Privilege(final String name,
+                   final String description,
+                   final int index) {
     this(name, description, false, false, index);
   }
 
@@ -89,10 +88,10 @@ public class Privilege implements PrivilegeDefs {
    * @param denial       is it a denial
    * @param index        an index
    */
-  public Privilege(String name,
-                   String description,
-                   boolean denial,
-                   int index) {
+  public Privilege(final String name,
+                   final String description,
+                   final boolean denial,
+                   final int index) {
     this(name, description, false, denial, index);
   }
 
@@ -104,15 +103,13 @@ public class Privilege implements PrivilegeDefs {
    * @param index        an index
    * @param contained    contained privileges
    */
-  public Privilege(String name,
-                   String description,
-                   boolean denial,
-                   int index,
-                   Privilege[] contained) {
+  public Privilege(final String name,
+                   final String description,
+                   final boolean denial,
+                   final int index,
+                   final Privilege[] contained) {
     this(name, description, false, denial, index);
-    for (Privilege p: contained) {
-      containedPrivileges.add(p);
-    }
+    Collections.addAll(containedPrivileges, contained);
   }
 
   /**
@@ -170,15 +167,14 @@ public class Privilege implements PrivilegeDefs {
    * @return Privilege
    * @throws AccessException on error
    */
-  public static Privilege findPriv(Privilege allowedRoot,
-                                   Privilege deniedRoot,
-                                   EncodedAcl acl)
-          throws AccessException {
+  public static Privilege findPriv(final Privilege allowedRoot,
+                                   final Privilege deniedRoot,
+                                   final EncodedAcl acl) {
     if (acl.remaining() < 2) {
       return null;
     }
 
-    Privilege p;
+    final Privilege p;
 
     if (matchDenied(acl)) {
       p = matchEncoding(deniedRoot, acl);
@@ -193,8 +189,8 @@ public class Privilege implements PrivilegeDefs {
     return p;
   }
 
-  private static boolean matchDenied(EncodedAcl acl) throws AccessException {
-    char c = acl.getChar();
+  private static boolean matchDenied(final EncodedAcl acl) {
+    final char c = acl.getChar();
 
     /* Expect the privilege allowed/denied flag
      * (or the oldDenied or oldAllowed flag)
@@ -216,15 +212,14 @@ public class Privilege implements PrivilegeDefs {
    * @param subRoot Privilege
    * @param acl         the encoded ACL
    * @return Privilege or null
-   * @throws AccessException
    */
-  private static Privilege matchEncoding(Privilege subRoot,
-                                         EncodedAcl acl) throws AccessException {
+  private static Privilege matchEncoding(final Privilege subRoot,
+                                         final EncodedAcl acl) {
     if (acl.remaining() < 1) {
       return null;
     }
 
-    char c = acl.getChar();
+    final char c = acl.getChar();
 
     //System.out.println("subRoot.encoding='" + subRoot.encoding + " c='" + c + "'");
     if (subRoot.encoding == c) {
@@ -235,8 +230,8 @@ public class Privilege implements PrivilegeDefs {
 
     acl.back();
 
-    for (Privilege cp: subRoot.getContainedPrivileges()) {
-      Privilege p = matchEncoding(cp, acl);
+    for (final Privilege cp: subRoot.getContainedPrivileges()) {
+      final Privilege p = matchEncoding(cp, acl);
       if (p != null) {
         return p;
       }
@@ -245,19 +240,15 @@ public class Privilege implements PrivilegeDefs {
     return null;
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                 Encoding methods
-   * ==================================================================== */
+   * ============================================================== */
 
   /** Encode this object as a sequence of char.
    *
    * @param acl   EncodedAcl for result.
    */
-  /**
-   * @param acl         the encoded ACL
-   * @throws AccessException
-   */
-  public void encode(EncodedAcl acl) throws AccessException {
+  public void encode(final EncodedAcl acl) {
     if (denial) {
       acl.addChar(denied);
     } else {
@@ -272,35 +263,35 @@ public class Privilege implements PrivilegeDefs {
    * @param val Privilege to clone
    * @return Privilege cloned value
    */
-  public static Privilege cloneDenied(Privilege val) {
-    Privilege newval = new Privilege(val.getName(),
-                                     val.getDescription(),
-                                     val.getAbstractPriv(),
-                                     true,
-                                     val.getIndex());
+  public static Privilege cloneDenied(final Privilege val) {
+    final Privilege newval = new Privilege(val.getName(),
+                                           val.getDescription(),
+                                           val.getAbstractPriv(),
+                                           true,
+                                           val.getIndex());
 
-    for (Privilege p: val.getContainedPrivileges()) {
+    for (final Privilege p: val.getContainedPrivileges()) {
       newval.containedPrivileges.add(cloneDenied(p));
     }
 
     return newval;
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                    private methods
-   * ==================================================================== */
+   * ============================================================== */
 
   /**
    * @param val the index
    */
-  private void setIndex(int val) {
+  private void setIndex(final int val) {
     index = val;
     encoding = privEncoding[index];
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                    Object methods
-   * ==================================================================== */
+   * ============================================================== */
 /*
   public int hashCode() {
     return 31 * entityId * entityType;
@@ -328,12 +319,11 @@ public class Privilege implements PrivilegeDefs {
 
   /** Provide a string representation for user display - this should probably
    * use a localized resource
-   */
-  /**
+   *
    * @return String
    */
   public String toUserString() {
-    StringBuilder sb = new StringBuilder();
+    final StringBuilder sb = new StringBuilder();
 
     if (getDenial()) {
       sb.append("NOT ");
@@ -345,33 +335,27 @@ public class Privilege implements PrivilegeDefs {
   }
 
   public String toString() {
-    StringBuilder sb = new StringBuilder();
+    final ToString ts = new ToString(this);
 
-    sb.append("Privilege{name=");
-    sb.append(name);
-    sb.append(", description=");
-    sb.append(description);
-    sb.append(", abstractPriv=");
-    sb.append(abstractPriv);
-    sb.append(", denial=");
-    sb.append(denial);
-    sb.append(", index=");
-    sb.append(index);
+    ts.append("name", name);
+    ts.append("description", description);
+    ts.append("abstractPriv", abstractPriv);
+    ts.append("denial", denial);
+    ts.append("index", index);
 
     if (!containedPrivileges.isEmpty()) {
-      sb.append(",\n   contains ");
+      ts.newLine().append("contains ");
       boolean first = true;
-      for (Privilege p: containedPrivileges) {
+      for (final Privilege p: containedPrivileges) {
         if (!first) {
-          sb.append(", ");
+          ts.append(", ");
         }
         first = false;
-        sb.append(p.getName());
+        ts.append(p.getName());
       }
     }
-    sb.append("}");
 
-    return sb.toString();
+    return ts.toString();
   }
 
   /** We do not clone the contained privileges - if any.

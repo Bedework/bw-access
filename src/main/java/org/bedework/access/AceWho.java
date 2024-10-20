@@ -19,23 +19,24 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.ToString;
 
 /** describe who we are giving access to. This object once created is immutable.
  *
  * @author douglm - bedework.org
  */
 public final class AceWho implements WhoDefs, Comparable<AceWho> {
-  private String who;
+  private final String who;
 
-  private int whoType;
+  private final int whoType;
 
-  private boolean notWho;
+  private final boolean notWho;
 
-  private static ObjectPool<String> whos = new ObjectPool<String>();
+  private static final ObjectPool<String> whos = new ObjectPool<>();
 
-  private static ObjectPool<AceWho> aceWhos = new ObjectPool<AceWho>();
+  private static final ObjectPool<AceWho> aceWhos = new ObjectPool<>();
 
-  private static boolean poolAceWhos = true;
+  private static final boolean poolAceWhos = true;
 
   /** Represents all */
   public static final AceWho all = getAceWho(null, whoTypeAll, false);
@@ -53,33 +54,29 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
 
   /** Gat an AceWho corresponding to the parameters.
    *
-   * @param who
-   * @param whoType
-   * @param notWho
+   * @param who principal
+   * @param whoType type of principal
+   * @param notWho invert if true
    * @return an AceWho value
    */
-  public static AceWho getAceWho(String who,
-                                 int whoType,
-                                 boolean notWho) {
+  public static AceWho getAceWho(final String who,
+                                 final int whoType,
+                                 final boolean notWho) {
     if (poolAceWhos) {
       return aceWhos.get(new AceWho(who, whoType, notWho));
     } else {
       return new AceWho(who, whoType, notWho);
     }
   }
-  /**
-   */
-  private AceWho() {
-  }
 
   /**
-   * @param who
-   * @param whoType
-   * @param notWho
+   * @param who principal
+   * @param whoType type of principal
+   * @param notWho invert if true
    */
-  private AceWho(String who,
-                 int whoType,
-                 boolean notWho) {
+  private AceWho(final String who,
+                 final int whoType,
+                 final boolean notWho) {
     this.who = whos.get(who);
     this.notWho = notWho;
     this.whoType = whoType;
@@ -108,12 +105,11 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
   }
 
   /**
-   * @param cb
+   * @param cb for makeHref
    * @param pref  full principal name
    * @return boolean true if the name matches
-     * @throws AccessException
    */
-  public boolean whoMatch(Access.AccessCb cb, String pref) throws AccessException {
+  public boolean whoMatch(final Access.AccessCb cb, final String pref) {
     if ((pref == null) && (getWho() == null)) {
       return !getNotWho();
     }
@@ -137,9 +133,8 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
   /** Encode this object as a sequence of char. privs must have been set.
    *
    * @param acl   EncodedAcl
-   * @throws AccessException
    */
-  public void encode(EncodedAcl acl) throws AccessException {
+  public void encode(final EncodedAcl acl) {
     if (notWho) {
       acl.addChar(notWhoFlag);
     } else {
@@ -153,10 +148,9 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
 
   /** Skip the who part in an encoded Acl
    *
-   * @param acl
-   * @throws AccessException
+   * @param acl in encoded form
    */
-  public static void skip(EncodedAcl acl) throws AccessException {
+  public static void skip(final EncodedAcl acl) {
     acl.getChar();
     acl.getChar();
     acl.skipString();
@@ -164,13 +158,12 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
 
   /** Create AceWho from an encoded Acl
    *
-   * @param acl
+   * @param acl in encoded form
    * @return new AceWho
-   * @throws AccessException
    */
-  public static AceWho decode(EncodedAcl acl) throws AccessException {
+  public static AceWho decode(final EncodedAcl acl) {
     char c = acl.getChar();
-    boolean notWho;
+    final boolean notWho;
     int whoType;
 
     if (c == notWhoFlag) {
@@ -203,7 +196,7 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
    * @return String representation
    */
   public String toUserString() {
-    StringBuffer sb = new StringBuffer();
+    final StringBuilder sb = new StringBuilder();
 
     sb.append(whoTypeNames[whoType]);
     if (notWho) {
@@ -220,10 +213,8 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
     return sb.toString();
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Comparable#compareTo(java.lang.Object)
-   */
-  public int compareTo(AceWho that) {
+  @Override
+  public int compareTo(final AceWho that) {
     if (this == that) {
       return 0;
     }
@@ -261,36 +252,31 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
       hc *= 2;
     }
 
-    return hc *= whoType;
+    return hc * whoType;
   }
 
-  public boolean equals(Object o) {
+  public boolean equals(final Object o) {
     return compareTo((AceWho)o) == 0;
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer();
+    final ToString ts = new ToString(this);
 
-    sb.append("AceWho{who=");
-    sb.append(who);
-    sb.append(", notWho=");
-    sb.append(notWho);
-    sb.append(", whoType=");
-    sb.append(whoTypeNames[whoType]);
-    sb.append("(");
-    sb.append(whoType);
-    sb.append(")");
+    ts.append("who", who);
+    ts.append("notWho", notWho);
+    ts.append("whoType", whoTypeNames[whoType]);
+    ts.append("(");
+    ts.append(whoType);
+    ts.append(")");
 
-    sb.append("}");
-
-    return sb.toString();
+    return ts.toString();
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Private methods
-   * ==================================================================== */
+   * ============================================================== */
 
-  private int compareWho(String who1, String who2) {
+  private int compareWho(final String who1, final String who2) {
     if ((who1 == null) && (who2 == null)) {
       return 0;
     }

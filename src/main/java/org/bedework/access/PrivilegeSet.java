@@ -19,6 +19,7 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -32,9 +33,10 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
                                      Comparable<PrivilegeSet> {
   private char[] privileges;
 
-  private static ObjectPool<PrivilegeSet> privSets = new ObjectPool<PrivilegeSet>();
+  private static final ObjectPool<PrivilegeSet> privSets =
+          new ObjectPool<>();
 
-  private static boolean usePool = true;
+  private static final boolean usePool = true;
 
   /** Default privs for an owner
    */
@@ -330,7 +332,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @return PrivilegeSet
    */
   public static PrivilegeSet makePrivileges(final Privilege priv) {
-    PrivilegeSet pset = new PrivilegeSet();
+    final PrivilegeSet pset = new PrivilegeSet();
 
     pset.privileges = new char[privMaxType + 1];
 
@@ -342,7 +344,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
     /* Iterate over the children */
 
-    for (Privilege p: priv.getContainedPrivileges()) {
+    for (final Privilege p: priv.getContainedPrivileges()) {
       pset.setPrivilege(p);
     }
 
@@ -354,10 +356,9 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    *
    * @param acl encode ACL
    * @return char[] access flags
-   * @throws AccessException
    */
-  public static PrivilegeSet fromEncoding(final EncodedAcl acl) throws AccessException {
-    char[] privStates = {
+  public static PrivilegeSet fromEncoding(final EncodedAcl acl) {
+    final char[] privStates = {
       unspecified,   // privAll
       unspecified,   // privRead
       unspecified,   // privReadAcl
@@ -378,14 +379,15 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     };
 
     while (acl.hasMore()) {
-      char c = acl.getChar();
+      final char c = acl.getChar();
       if ((c == ' ') || (c == inheritedFlag)) {
         break;
       }
       acl.back();
 
-      Privilege p = Privilege.findPriv(Privileges.getPrivAll(),
-                                       Privileges.getPrivNone(), acl);
+      final Privilege p = Privilege.findPriv(Privileges.getPrivAll(),
+                                             Privileges.getPrivNone(),
+                                             acl);
       if (p == null) {
         throw AccessException.badACL("unknown priv " + acl.getErrorInfo());
       }
@@ -407,7 +409,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    */
   public static PrivilegeSet addPrivilege(final PrivilegeSet pset,
                                           final Privilege priv) {
-    PrivilegeSet newPset = (PrivilegeSet)pset.clone();
+    final PrivilegeSet newPset = (PrivilegeSet)pset.clone();
 
     if (newPset.privileges == null) {
       newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
@@ -421,7 +423,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
     /* Iterate over the children */
 
-    for (Privilege p: priv.getContainedPrivileges()) {
+    for (final Privilege p: priv.getContainedPrivileges()) {
       newPset.setPrivilege(p);
     }
 
@@ -434,11 +436,11 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @return PrivilegeSet
    */
   public static PrivilegeSet makePrivilegeSet(final Privilege[] privs) {
-    PrivilegeSet newPset = new PrivilegeSet();
+    final PrivilegeSet newPset = new PrivilegeSet();
 
     newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
 
-    for (Privilege priv: privs) {
+    for (final Privilege priv: privs) {
       if (priv.getDenial()) {
         newPset.privileges[priv.getIndex()] = denied;
       } else {
@@ -447,7 +449,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
       /* Iterate over the children */
 
-      for (Privilege p: priv.getContainedPrivileges()) {
+      for (final Privilege p: priv.getContainedPrivileges()) {
         newPset.setPrivilege(p);
       }
     }
@@ -476,13 +478,13 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    */
   public static PrivilegeSet filterPrivileges(final PrivilegeSet pset,
                                               final PrivilegeSet filter) {
-    PrivilegeSet newPset = (PrivilegeSet)pset.clone();
+    final PrivilegeSet newPset = (PrivilegeSet)pset.clone();
 
     if (newPset.privileges == null) {
       newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
     }
 
-    char[] filterPrivs = filter.privileges;
+    final char[] filterPrivs = filter.privileges;
 
     for (int pi = 0; pi < newPset.privileges.length; pi++) {
       if (privAgtB(newPset.privileges[pi], filterPrivs[pi])) {
@@ -502,9 +504,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
       return false;
     }
 
-    for (int pi = 0; pi < privileges.length; pi++) {
-      char pr = privileges[pi];
-
+    for (final char pr: privileges) {
       if (pr == allowed) {
         return true;
       }
@@ -536,11 +536,11 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
   public static PrivilegeSet mergePrivileges(final PrivilegeSet current,
                                              final PrivilegeSet morePriv,
                                              final boolean inherited) {
-    PrivilegeSet mp = (PrivilegeSet)morePriv.clone();
+    final PrivilegeSet mp = (PrivilegeSet)morePriv.clone();
 
     if (inherited) {
       for (int i = 0; i <= privMaxType; i++) {
-        char p = mp.getPrivilege(i);
+        final char p = mp.getPrivilege(i);
         if (p == allowed) {
           mp.setPrivilege(i, allowedInherited);
         } else if (p == denied) {
@@ -554,7 +554,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     }
 
     for (int i = 0; i <= privMaxType; i++) {
-      char priv = mp.getPrivilege(i);
+      final char priv = mp.getPrivilege(i);
       if (current.getPrivilege(i) < priv) {
         current.setPrivilege(i, priv);
       }
@@ -571,7 +571,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    */
   public static PrivilegeSet setUnspecified(final PrivilegeSet pset,
                                             final boolean isOwner) {
-    PrivilegeSet newPset = (PrivilegeSet)pset.clone();
+    final PrivilegeSet newPset = (PrivilegeSet)pset.clone();
 
     if (newPset.privileges == null) {
       newPset.privileges = defaultNonOwnerPrivileges.getPrivileges();
@@ -605,22 +605,22 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    * @return privs
    */
   public Collection<Privilege> getPrivs() {
-    char[] ps = getPrivileges();
+    final char[] ps = getPrivileges();
 
     /* First reset all privs that are included by others
      */
     for (int pi = 0; pi < ps.length; pi++) {
       if (ps[pi] != unspecified) {
-        Privilege priv = Privileges.makePriv(pi);
+        final Privilege priv = Privileges.makePriv(pi);
 
-        for (Privilege pr: priv.getContainedPrivileges()) {
+        for (final Privilege pr: priv.getContainedPrivileges()) {
           setUnspec(ps, pr);
         }
       }
     }
 
     /* Now return the collection */
-    Collection<Privilege> privs = new ArrayList<Privilege>();
+    final Collection<Privilege> privs = new ArrayList<>();
 
     for (int pi = 0; pi < ps.length; pi++) {
       if (ps[pi] != unspecified) {
@@ -638,7 +638,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
   private void setUnspec(final char[] ps, final Privilege priv) {
     ps[priv.getIndex()] = unspecified;
 
-    for (Privilege pr: priv.getContainedPrivileges()) {
+    for (final Privilege pr: priv.getContainedPrivileges()) {
       setUnspec(ps, pr);
     }
 
@@ -666,8 +666,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   /** Set the given privilege
    *
-   * @param index
-   * @param val
+   * @param index of privilege
+   * @param val flag allowed or denied
    */
   private void setPrivilege(final int index, final char val) {
     if (privileges == null) {
@@ -694,7 +694,7 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
     /* Iterate over the children */
 
-    for (Privilege p: priv.getContainedPrivileges()) {
+    for (final Privilege p: priv.getContainedPrivileges()) {
       setPrivilege(p);
     }
   }
@@ -723,14 +723,14 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
     /* Iterate over the children */
 
-    for (Privilege pr: p.getContainedPrivileges()) {
+    for (final Privilege pr: p.getContainedPrivileges()) {
       setState(states, pr, denial);
     }
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                   Object methods
-   * ==================================================================== */
+   * ============================================================== */
 
   public int compareTo(final PrivilegeSet that) {
     if (this == that) {
@@ -750,8 +750,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
     }
 
     for (int pi = 0; pi < privileges.length; pi++) {
-      char thisp = privileges[pi];
-      char thatp = that.privileges[pi];
+      final char thisp = privileges[pi];
+      final char thatp = that.privileges[pi];
 
       if (thisp < thatp) {
         return -1;
@@ -773,8 +773,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
       return hc;
     }
 
-    for (int pi = 0; pi < privileges.length; pi++) {
-      hc *= privileges[pi];
+    for (final char privilege: privileges) {
+      hc *= privilege;
     }
 
     return hc;
@@ -792,11 +792,8 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder("PrivilegeSet[");
-
-    sb.append(privileges);
-    sb.append("]");
-
-    return sb.toString();
+    return new ToString(this)
+            .append(privileges)
+            .toString();
   }
 }

@@ -25,72 +25,72 @@ import java.io.Serializable;
  */
 public interface WhoDefs extends Serializable {
   /** Who defines a principal, NotWho means the principal must not be
-     defined by the 'who',e.g NOT IN group bgroup
+     defined by the 'who', e.g. NOT IN group bgroup
    */
-  public static final char whoFlag = 'W';
+  char whoFlag = 'W';
   /** */
-  public static final char notWhoFlag = 'N';
+  char notWhoFlag = 'N';
 
   /** */
-  public static final char whoFlagOwner = 'O';
+  char whoFlagOwner = 'O';
   /** */
-  public static final char whoFlagUser = 'U';
+  char whoFlagUser = 'U';
   /** */
-  public static final char whoFlagGroup = 'G';
+  char whoFlagGroup = 'G';
   /** */
-  public static final char whoFlagTicket = 'T';
+  char whoFlagTicket = 'T';
   /** */
-  public static final char whoFlagResource = 'R';
+  char whoFlagResource = 'R';
   /** */
-  public static final char whoFlagVenue = 'V';
+  char whoFlagVenue = 'V';
   /** */
-  public static final char whoFlagHost = 'H';
+  char whoFlagHost = 'H';
   /** */
-  public static final char whoFlagUnauthenticated = 'X';
+  char whoFlagUnauthenticated = 'X';
   /** */
-  public static final char whoFlagAuthenticated = 'A';
+  char whoFlagAuthenticated = 'A';
   /** */
-  public static final char whoFlagOther = 'Z';
+  char whoFlagOther = 'Z';
   /** */
-  public static final char whoFlagAll = 'L';
+  char whoFlagAll = 'L';
 
-  /** Define for whom we are checking access */
+  /* Define for whom we are checking access */
 
   /** The entity owner */
-  public static final int whoTypeOwner = 0;
+  int whoTypeOwner = 0;
 
   /** A named user */
-  public static final int whoTypeUser = 1;
+  int whoTypeUser = 1;
 
   /** A named group */
-  public static final int whoTypeGroup = 2;
+  int whoTypeGroup = 2;
 
   /** A named host */
-  public static final int whoTypeHost = 3;  // Named host
+  int whoTypeHost = 3;  // Named host
 
   /** A ticket */
-  public static final int whoTypeTicket = 4;
+  int whoTypeTicket = 4;
 
   /** A resource */
-  public static final int whoTypeResource = 5;
+  int whoTypeResource = 5;
 
   /** A venue */
-  public static final int whoTypeVenue = 6; // or location e.g. room
+  int whoTypeVenue = 6; // or location e.g. room
 
   /** An unauthenticated user */
-  public static final int whoTypeUnauthenticated = 7;  // Unauthenticated user
+  int whoTypeUnauthenticated = 7;  // Unauthenticated user
 
   /** An authenticated user */
-  public static final int whoTypeAuthenticated = 8;  // Authenticated user
+  int whoTypeAuthenticated = 8;  // Authenticated user
 
   /** Somebody other than the owner */
-  public static final int whoTypeOther = 9;
+  int whoTypeOther = 9;
 
   /** Anywho */
-  public static final int whoTypeAll = 10; // Unauth + auth
+  int whoTypeAll = 10; // Unauth + auth
 
   /** indexed by whoType */
-  public static final char[] whoTypeFlags = {
+  char[] whoTypeFlags = {
     whoFlagOwner,
     whoFlagUser,
     whoFlagGroup,
@@ -105,7 +105,7 @@ public interface WhoDefs extends Serializable {
   };
 
   /** indexed by whoType - flag who types that require a name*/
-  public static final boolean[] whoTypeNamed = {
+  boolean[] whoTypeNamed = {
     false,              // whoTypeOwner,
     true,               // whoTypeUser,
     true,               // whoTypeGroup,
@@ -123,7 +123,7 @@ public interface WhoDefs extends Serializable {
    * specific displays
    *
    */
-  public static final String[] whoTypeNames = {
+  String[] whoTypeNames = {
     "owner",              // whoTypeOwner,
     "user",               // whoTypeUser,
     "group",              // whoTypeGroup,

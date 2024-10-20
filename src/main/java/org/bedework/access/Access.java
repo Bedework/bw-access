@@ -105,25 +105,25 @@ public class Access implements Serializable {
 
   /** Default access for public entities
    */
-  private static volatile String defaultPublicAccess;
+  private static final String defaultPublicAccess;
 
   /** Default access for personal entities
    */
-  private static volatile String defaultPersonalAccess;
+  private static final String defaultPersonalAccess;
 
   static {
     try {
-      Collection<Privilege> allPrivs = new ArrayList<Privilege>();
+      final Collection<Privilege> allPrivs = new ArrayList<>();
       allPrivs.add(all);
 
-      Collection<Privilege> readPrivs = new ArrayList<Privilege>();
+      final Collection<Privilege> readPrivs = new ArrayList<>();
       readPrivs.add(read);
 
-      Collection<Privilege> noPrivs = new ArrayList<Privilege>();
+      final Collection<Privilege> noPrivs = new ArrayList<>();
       noPrivs.add(none);
 
-      /** Public - write owner, read others, read unauthenticated */
-      Collection<Ace> aces = new ArrayList<Ace>();
+      /* Public - write owner, read others, read unauthenticated */
+      final Collection<Ace> aces = new ArrayList<>();
 
       aces.add(Ace.makeAce(AceWho.owner, allPrivs, null));
       aces.add(Ace.makeAce(AceWho.other, readPrivs, null));
@@ -134,8 +134,8 @@ public class Access implements Serializable {
       aces.add(Ace.makeAce(AceWho.owner, allPrivs, null));
       aces.add(Ace.makeAce(AceWho.other, noPrivs, null));
       defaultPersonalAccess = new String(new Acl(aces).encode());
-    } catch (Throwable t) {
-      throw new RuntimeException(t);
+    } catch (final Throwable t) {
+      throw new AccessException(t);
     }
   }
 
@@ -164,9 +164,8 @@ public class Access implements Serializable {
      * @param id account
      * @param whoType - from WhoDefs
      * @return String href
-     * @throws AccessException
      */
-    public String makeHref(String id, int whoType) throws AccessException;
+    public String makeHref(String id, int whoType);
   }
 
   /** Get the access statistics
@@ -198,7 +197,7 @@ public class Access implements Serializable {
    * @param priv int access level
    * @return Privilege object defining access
    */
-  public Privilege makePriv(int priv) {
+  public Privilege makePriv(final int priv) {
     return Privileges.makePriv(priv);
   }
 
@@ -239,12 +238,12 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException on error
    */
-  public CurrentAccess evaluateAccess(AccessCb cb,
-                                      AccessPrincipal who,
-                                      AccessPrincipal owner,
-                                      Privilege[] how, String aclString,
-                                      PrivilegeSet filter)
-          throws AccessException {
+  public CurrentAccess evaluateAccess(final AccessCb cb,
+                                      final AccessPrincipal who,
+                                      final AccessPrincipal owner,
+                                      final Privilege[] how,
+                                      final String aclString,
+                                      final PrivilegeSet filter) {
     return EvaluatedAccessCache.evaluateAccess(cb, who, owner, how,
                                                aclString.toCharArray(),
                                                filter);
@@ -261,12 +260,12 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException on error
    */
-  public CurrentAccess evaluateAccess(AccessCb cb,
-                                      AccessPrincipal who,
-                                      AccessPrincipal owner,
-                                      Privilege[] how, char[] aclChars,
-                                      PrivilegeSet filter)
-          throws AccessException {
+  public CurrentAccess evaluateAccess(final AccessCb cb,
+                                      final AccessPrincipal who,
+                                      final AccessPrincipal owner,
+                                      final Privilege[] how,
+                                      final char[] aclChars,
+                                      final PrivilegeSet filter) {
     return EvaluatedAccessCache.evaluateAccess(cb, who, owner, how,
                                                aclChars,
                                                filter);
@@ -282,12 +281,11 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException on error
    */
-  public CurrentAccess checkRead(AccessCb cb,
-                                 AccessPrincipal who,
-                                 AccessPrincipal owner,
-                                 char[] aclChars,
-                                 PrivilegeSet filter)
-          throws AccessException {
+  public CurrentAccess checkRead(final AccessCb cb,
+                                 final AccessPrincipal who,
+                                 final AccessPrincipal owner,
+                                 final char[] aclChars,
+                                 final PrivilegeSet filter) {
     return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
                                                privSetRead, aclChars,
                                                filter);
@@ -303,12 +301,11 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException on error
    */
-  public CurrentAccess checkReadWrite(AccessCb cb,
-                                      AccessPrincipal who,
-                                      AccessPrincipal owner,
-                                      char[] aclChars,
-                                      PrivilegeSet filter)
-          throws AccessException {
+  public CurrentAccess checkReadWrite(final AccessCb cb,
+                                      final AccessPrincipal who,
+                                      final AccessPrincipal owner,
+                                      final char[] aclChars,
+                                      final PrivilegeSet filter) {
     return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
                                                privSetReadWrite, aclChars,
                                                filter);
@@ -324,12 +321,11 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException on error
    */
-  public CurrentAccess checkAny(AccessCb cb,
-                                AccessPrincipal who,
-                                AccessPrincipal owner,
-                                char[] aclChars,
-                                PrivilegeSet filter)
-          throws AccessException {
+  public CurrentAccess checkAny(final AccessCb cb,
+                                final AccessPrincipal who,
+                                final AccessPrincipal owner,
+                                final char[] aclChars,
+                                final PrivilegeSet filter) {
     return EvaluatedAccessCache.evaluateAccess(cb, who, owner, privSetAny, aclChars,
                                                filter);
   }
@@ -345,12 +341,12 @@ public class Access implements Serializable {
    * @return CurrentAccess   access + allowed/disallowed
    * @throws AccessException on error
    */
-  public CurrentAccess evaluateAccess(AccessCb cb,
-                                      AccessPrincipal who,
-                                      AccessPrincipal owner,
-                                      int priv, char[] aclChars,
-                                      PrivilegeSet filter)
-          throws AccessException {
+  public CurrentAccess evaluateAccess(final AccessCb cb,
+                                      final AccessPrincipal who,
+                                      final AccessPrincipal owner,
+                                      final int priv,
+                                      final char[] aclChars,
+                                      final PrivilegeSet filter) {
     return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
                                                new Privilege[]{Privileges.makePriv(priv)},
                                                aclChars, filter);
