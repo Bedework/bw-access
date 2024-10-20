@@ -18,8 +18,6 @@
 */
 package org.bedework.access;
 
-import org.bedework.util.misc.ToString;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -335,27 +333,38 @@ public class Privilege implements PrivilegeDefs {
   }
 
   public String toString() {
-    final ToString ts = new ToString(this);
+    final StringBuilder sb = new StringBuilder("Privilege{");
 
-    ts.append("name", name);
-    ts.append("description", description);
-    ts.append("abstractPriv", abstractPriv);
-    ts.append("denial", denial);
-    ts.append("index", index);
+    sb.append(name)
+      .append(", \"")
+      .append(description)
+      .append("\"");
+    if (abstractPriv) {
+      sb.append(", abstract");
+    }
+
+    if (denial) {
+      sb.append(", denied");
+    } else {
+      sb.append(", allowed");
+    }
+
+    sb.append(", index(").append(index).append(")");
 
     if (!containedPrivileges.isEmpty()) {
-      ts.newLine().append("contains ");
+      sb.append(",\n").append("    contains(");
       boolean first = true;
       for (final Privilege p: containedPrivileges) {
         if (!first) {
-          ts.append(", ");
+          sb.append(", ");
         }
         first = false;
-        ts.append(p.getName());
+        sb.append(p.getName());
       }
+      sb.append(")");
     }
 
-    return ts.toString();
+    return sb.append("}").toString();
   }
 
   /** We do not clone the contained privileges - if any.

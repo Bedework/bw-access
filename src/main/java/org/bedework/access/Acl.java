@@ -19,7 +19,6 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -151,9 +150,9 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
     return new Acl(aces);
   }
 
-  /* ====================================================================
+  /* ==============================================================
    *                 Decoding methods
-   * ==================================================================== */
+   * ============================================================== */
 
 
   /** Given an encoded acl convert to an ordered sequence of fully expanded
@@ -196,7 +195,9 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
       aces.add(ace);
     }
 
-    return new Acl(aces);
+    final var acl = new Acl(aces);
+    acl.setEncoded(val);
+    return acl;
   }
 
   /** Given an encoded acl create a new merged version. This process
@@ -368,26 +369,37 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   @Override
   public String toString() {
-    final ToString ts = new ToString(this);
+    final StringBuilder sb = new StringBuilder("Acl{");
 
     if (!empty()) {
-      rewind();
-      ts.append("encoded", Collections.singletonList(getEncoded()));
-
-      rewind();
+      final var enc = getEncoded();
+      sb.append("encoded: ")
+        .append("\"")
+        .append(new String(enc))
+        .append("\"");
 
       try {
         if (aces == null) {
-          decode(getEncoded());
+          decode(enc);
         }
 
-        ts.append("decoded", aces);
+        if (aces != null) {
+          sb.append("\ndecoded: [");
+          String delim = "\n  ";
+          for (final var ace: aces.values()) {
+            sb.append(delim)
+              .append("\n  ")
+              .append(ace.toString());
+            delim = ",\n    ";
+          }
+          sb.append("]");
+        }
       } catch (final Throwable t) {
-        ts.append("Decode exception", t.getMessage());
+        sb.append("Decode exception").append(t.getMessage());
       }
     }
 
-    return ts.toString();
+    return sb.append("}").toString();
   }
 }
 

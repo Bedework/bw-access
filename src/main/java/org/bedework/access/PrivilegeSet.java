@@ -19,7 +19,6 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -712,7 +711,9 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
    *  So for this we set allowed or denied in the states array for each of those
    *  privileges.
    */
-  private static void setState(final char[] states, final Privilege p, final boolean denial) {
+  private static void setState(final char[] states,
+                               final Privilege p,
+                               final boolean denial) {
     // XXX Should we only set either way of the access is unspecified?
     if (!denial) {
       states[p.getIndex()] = allowed;
@@ -792,8 +793,21 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   @Override
   public String toString() {
-    return new ToString(this)
-            .append(privileges)
-            .toString();
+    final StringBuilder sb = new StringBuilder("PrivilegeSet{");
+
+    String delim = "";
+    for (int i = 0; i <= privileges.length - 1; i++) {
+      final var p = privileges[i];
+      if ((p == allowed) || (p == allowedInherited)) {
+        final var nm = Privileges.makePriv(i).getName();
+        sb.append(delim).append(nm);
+        if (p == allowedInherited) {
+          sb.append("(I)");
+        }
+        delim = ", ";
+      }
+    }
+
+    return sb.append("}").toString();
   }
 }

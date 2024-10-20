@@ -19,7 +19,6 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-import org.bedework.util.misc.ToString;
 
 /** describe who we are giving access to. This object once created is immutable.
  *
@@ -260,21 +259,25 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
   }
 
   public String toString() {
-    final ToString ts = new ToString(this);
+    final StringBuilder sb = new StringBuilder("AceWho{");
 
-    ts.append("who", who);
-    ts.append("notWho", notWho);
-    ts.append("whoType", whoTypeNames[whoType]);
-    ts.append("(");
-    ts.append(whoType);
-    ts.append(")");
+    if (notWho) {
+      sb.append("NOT ");
+    }
+    sb.append(whoTypeNames[whoType])
+      .append("(")
+      .append(whoType)
+      .append(")");
+    if (whoTypeNamed[whoType]) {
+      sb.append(": ").append(who);
+    }
 
-    return ts.toString();
+    return sb.append("}").toString();
   }
 
-  /* ==============================================================
+  /* ========================================================
    *                   Private methods
-   * ============================================================== */
+   * ======================================================== */
 
   private int compareWho(final String who1, final String who2) {
     if ((who1 == null) && (who2 == null)) {

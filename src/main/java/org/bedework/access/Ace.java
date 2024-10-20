@@ -19,7 +19,6 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -388,25 +387,28 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
   }
 
   public String toString() {
-    final ToString ts = new ToString(this);
+    final StringBuilder sb = new StringBuilder("Ace{");
 
-    ts.append(getWho().toString());
+    sb.append(getWho().toString());
     if (how != null) {
-      ts.append("how", how);
+      sb.append(", how=").append(how);
     }
 
     if (getInheritedFrom() != null) {
-      ts.newLine().append("inherited from ", getInheritedFrom());
+      sb.append("\n")
+        .append("inherited from ")
+        .append(getInheritedFrom());
     }
 
-    ts.newLine().append("privs=[");
+    sb.append("\n    privs=[");
 
+    String delim = "";
     for (final Privilege p: privs) {
-      ts.append(p.toString()).newLine();
+      sb.append(delim).append(p.toString());
+      delim = ",\n      ";
     }
-    ts.append("]");
 
-    return ts.toString();
+    return sb.append("]}").toString();
   }
 }
 

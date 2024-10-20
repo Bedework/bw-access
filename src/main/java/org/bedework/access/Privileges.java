@@ -192,7 +192,7 @@ public class Privileges implements PrivilegeDefs {
                                      final boolean denial) {
     /* ---------------- read privileges ----------------------- */
 
-    ps[privReadAcl] = new Privilege("read-acl", "Read calendar accls",
+    ps[privReadAcl] = new Privilege("read-acl", "Read resource acls",
                                     denial, privReadAcl);
 
     ps[privReadCurrentUserPrivilegeSet] =
@@ -207,7 +207,7 @@ public class Privileges implements PrivilegeDefs {
     final Privilege[] containedRead = {ps[privReadAcl],
                                        ps[privReadCurrentUserPrivilegeSet],
                                        ps[privReadFreeBusy]};
-    ps[privRead] = new Privilege("read", "Read any calendar object", denial,
+    ps[privRead] = new Privilege("read", "Read any resource", denial,
                                  privRead, containedRead);
 
     /* -------------- schedule (draft 6) privileges -------------- */
@@ -234,7 +234,7 @@ public class Privileges implements PrivilegeDefs {
     /* ---------------- bind privileges ----------------------- */
 
     final Privilege[] containedBind = {ps[privSchedule]};
-    ps[privBind] = new Privilege("create", "Create a calendar object",
+    ps[privBind] = new Privilege("create", "Create a resource",
                                  denial, privBind, containedBind);
 
     /* ---------------- write privileges ----------------------- */
@@ -243,14 +243,14 @@ public class Privileges implements PrivilegeDefs {
                                      privWriteAcl);
 
     ps[privWriteProperties] = new Privilege("write-properties",
-                                            "Write calendar properties",
+                                            "Write resource properties",
                                             denial, privWriteProperties);
 
     ps[privWriteContent] = new Privilege("write-content",
-                                         "Write calendar content",
+                                         "Write resource content",
                                          denial, privWriteContent);
 
-    ps[privUnbind] = new Privilege("delete", "Delete a calendar object",
+    ps[privUnbind] = new Privilege("delete", "Delete a resource",
                                    denial, privUnbind);
 
     final Privilege[] containedWrite = {ps[privWriteAcl],
@@ -258,7 +258,7 @@ public class Privileges implements PrivilegeDefs {
                                         ps[privWriteContent],
                                         ps[privBind],
                                         ps[privUnbind]};
-    ps[privWrite] = new Privilege("write", "Write any calendar object",
+    ps[privWrite] = new Privilege("write", "Write any resource",
                                   denial, privWrite,
                                   containedWrite);
 

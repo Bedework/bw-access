@@ -184,7 +184,7 @@ public class EncodedAcl implements Serializable, Logged {
 
   /** Test for no more
    *
-   * @return boolean true for no more
+   * @return boolean true for no encoded data
    */
   public boolean empty() {
     return (encoded == null) || (encoded.length == 0);
