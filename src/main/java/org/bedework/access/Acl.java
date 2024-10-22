@@ -19,6 +19,7 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -369,14 +370,12 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("Acl{");
+    final ToString ts = new ToString(this);
 
     if (!empty()) {
       final var enc = getEncoded();
-      sb.append("encoded: ")
-        .append("\"")
-        .append(new String(enc))
-        .append("\"");
+      ts.append("encoded: ")
+        .appendQ(new String(enc));
 
       try {
         if (aces == null) {
@@ -384,22 +383,16 @@ public class Acl extends EncodedAcl implements PrivilegeDefs {
         }
 
         if (aces != null) {
-          sb.append("\ndecoded: [");
-          String delim = "\n  ";
-          for (final var ace: aces.values()) {
-            sb.append(delim)
-              .append("\n  ")
-              .append(ace.toString());
-            delim = ",\n    ";
-          }
-          sb.append("]");
+          ts.newLine()
+            .clearDelim()
+            .append("decoded", aces.values(), true);
         }
       } catch (final Throwable t) {
-        sb.append("Decode exception").append(t.getMessage());
+        ts.append(t);
       }
     }
 
-    return sb.append("}").toString();
+    return ts.toString();
   }
 }
 

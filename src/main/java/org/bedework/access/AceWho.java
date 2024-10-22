@@ -19,12 +19,15 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.ToString;
 
 /** describe who we are giving access to. This object once created is immutable.
  *
  * @author douglm - bedework.org
  */
-public final class AceWho implements WhoDefs, Comparable<AceWho> {
+public final class AceWho
+        implements WhoDefs, Comparable<AceWho>,
+        ToString.ToStringProducer {
   private final String who;
 
   private final int whoType;
@@ -258,21 +261,37 @@ public final class AceWho implements WhoDefs, Comparable<AceWho> {
     return compareTo((AceWho)o) == 0;
   }
 
+  @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("AceWho{");
+    final ToString ts = new ToString(this);
 
+    toStringSegment(ts);
+
+    return ts.toString();
+  }
+
+  public void toStringWith(final ToString ts) {
+    ts.initClass(this);
+
+    toStringSegment(ts);
+
+    ts.closeClass();
+  }
+
+  public void toStringSegment(final ToString ts) {
     if (notWho) {
-      sb.append("NOT ");
-    }
-    sb.append(whoTypeNames[whoType])
-      .append("(")
-      .append(whoType)
-      .append(")");
-    if (whoTypeNamed[whoType]) {
-      sb.append(": ").append(who);
+      ts.append("NOT ").clearDelim();
     }
 
-    return sb.append("}").toString();
+    ts.append(whoTypeNames[whoType])
+      .appendParen(String.valueOf(whoType));
+
+    if (whoTypeNamed[whoType]) {
+      ts.clearDelim()
+        .append(": ")
+        .clearDelim()
+        .append(who);
+    }
   }
 
   /* ========================================================

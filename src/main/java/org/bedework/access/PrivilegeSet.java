@@ -19,6 +19,7 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.ToString;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -28,8 +29,9 @@ import java.util.Collection;
  *
  *  @author Mike Douglass   douglm  bedework.org
  */
-public class PrivilegeSet implements Serializable, PrivilegeDefs,
-                                     Comparable<PrivilegeSet> {
+public class PrivilegeSet
+        implements Serializable, PrivilegeDefs,
+        Comparable<PrivilegeSet>, ToString.ToStringProducer {
   private char[] privileges;
 
   private static final ObjectPool<PrivilegeSet> privSets =
@@ -793,21 +795,31 @@ public class PrivilegeSet implements Serializable, PrivilegeDefs,
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("PrivilegeSet{");
+    final ToString ts = new ToString(this);
 
-    String delim = "";
+    toStringSegment(ts);
+
+    return ts.toString();
+  }
+
+  public void toStringWith(final ToString ts) {
+    ts.initClass(this);
+
+    toStringSegment(ts);
+
+    ts.closeClass();
+  }
+
+  public void toStringSegment(final ToString ts) {
     for (int i = 0; i <= privileges.length - 1; i++) {
       final var p = privileges[i];
       if ((p == allowed) || (p == allowedInherited)) {
-        final var nm = Privileges.makePriv(i).getName();
-        sb.append(delim).append(nm);
+        ts.append(Privileges.makePriv(i).getName());
+
         if (p == allowedInherited) {
-          sb.append("(I)");
+          ts.clearDelim().append("(I)");
         }
-        delim = ", ";
       }
     }
-
-    return sb.append("}").toString();
   }
 }

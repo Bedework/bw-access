@@ -18,6 +18,8 @@
 */
 package org.bedework.access;
 
+import org.bedework.util.misc.ToString;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +28,8 @@ import java.util.Collections;
  *
  *  @author Mike Douglass   douglm @ bedework.org
  */
-public class Privilege implements PrivilegeDefs {
+public class Privilege implements PrivilegeDefs,
+        ToString.ToStringProducer {
   private final String name;
 
   /** This will probably go - the description needs to come from a resource
@@ -332,39 +335,49 @@ public class Privilege implements PrivilegeDefs {
     return sb.toString();
   }
 
+  @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("Privilege{");
+    final ToString ts = new ToString(this);
 
-    sb.append(name)
-      .append(", \"")
-      .append(description)
-      .append("\"");
+    toStringSegment(ts);
+
+    return ts.toString();
+  }
+
+  public void toStringWith(final ToString ts) {
+    ts.initClass(this);
+
+    toStringSegment(ts);
+
+    ts.closeClass();
+  }
+
+  public void toStringSegment(final ToString ts) {
+    ts.append(name)
+      .appendQ(description);
+
     if (abstractPriv) {
-      sb.append(", abstract");
+      ts.append("abstract");
     }
 
     if (denial) {
-      sb.append(", denied");
+      ts.append("denied");
     } else {
-      sb.append(", allowed");
+      ts.append("allowed");
     }
 
-    sb.append(", index(").append(index).append(")");
+    ts.append("index").appendParen(String.valueOf(index));
 
     if (!containedPrivileges.isEmpty()) {
-      sb.append(",\n").append("    contains(");
-      boolean first = true;
-      for (final Privilege p: containedPrivileges) {
-        if (!first) {
-          sb.append(", ");
-        }
-        first = false;
-        sb.append(p.getName());
-      }
-      sb.append(")");
-    }
+      ts.newLine()
+        .append("contains[").clearDelim()
+        .indentIn();
 
-    return sb.append("}").toString();
+      for (final Privilege p: containedPrivileges) {
+        ts.append(p.getName());
+      }
+      ts.indentOut().clearDelim().append("]");
+    }
   }
 
   /** We do not clone the contained privileges - if any.

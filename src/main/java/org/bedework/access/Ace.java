@@ -19,6 +19,7 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
+import org.bedework.util.misc.ToString;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,7 +36,9 @@ import java.util.Map;
  *
  *  @author Mike Douglass   douglm   bedework.org
  */
-public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
+public final class Ace
+        implements PrivilegeDefs, WhoDefs, Comparable<Ace>,
+        ToString.ToStringProducer {
   private final AceWho who;
 
   /** allowed/denied/undefined indexed by Privilege index
@@ -386,29 +389,48 @@ public final class Ace implements PrivilegeDefs, WhoDefs, Comparable<Ace> {
     return compareTo((Ace)o) == 0;
   }
 
+  @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("Ace{");
+    final ToString ts = new ToString(this);
 
-    sb.append(getWho().toString());
+    toStringSegment(ts);
+
+    return ts.toString();
+  }
+
+  public void toStringWith(final ToString ts) {
+    ts.initClass(this);
+
+    toStringSegment(ts);
+
+    ts.closeClass();
+  }
+
+  public void toStringSegment(final ToString ts) {
+    ts.append(getWho());
+
     if (how != null) {
-      sb.append(", how=").append(how);
+      ts.append("how", how);
     }
 
     if (getInheritedFrom() != null) {
-      sb.append("\n")
+      ts.newLine()
         .append("inherited from ")
+        .clearDelim()
         .append(getInheritedFrom());
     }
 
-    sb.append("\n    privs=[");
+    ts.newLine().append("privs=[").clearDelim().indentIn();
 
-    String delim = "";
     for (final Privilege p: privs) {
-      sb.append(delim).append(p.toString());
-      delim = ",\n      ";
+      ts.newLine()
+        .append(p);
     }
 
-    return sb.append("]}").toString();
+    ts.clearDelim()
+      .indentOut()
+      .newLine()
+      .append("]");
   }
 }
 
