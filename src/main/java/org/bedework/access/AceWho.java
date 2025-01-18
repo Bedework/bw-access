@@ -19,7 +19,7 @@
 package org.bedework.access;
 
 import org.bedework.util.caching.ObjectPool;
-import org.bedework.util.misc.ToString;
+import org.bedework.base.ToString;
 
 /** describe who we are giving access to. This object once created is immutable.
  *

@@ -20,7 +20,7 @@ package org.bedework.access;
 
 import org.bedework.util.logging.BwLogger;
 import org.bedework.util.logging.Logged;
-import org.bedework.util.misc.ToString;
+import org.bedework.base.ToString;
 
 import java.io.CharArrayWriter;
 import java.io.Serializable;
