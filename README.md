@@ -1,4 +1,4 @@
-## bw-util [![Build Status](https://travis-ci.org/Bedework/bw-access.svg)](https://travis-ci.org/Bedework/bw-access)
+## bw-access [![Build Status](https://travis-ci.org/Bedework/bw-access.svg)](https://travis-ci.org/Bedework/bw-access)
 
 This project provides a number of access control classes and methods for
 [Bedework](https://www.apereo.org/projects/bedework).
@@ -8,7 +8,7 @@ These classes implement access control as described in the WebDAV and
 
 ### Requirements
 
-1. JDK 11
+1. JDK 17
 2. Maven 3
 
 ### Building Locally
@@ -67,4 +67,19 @@ For full details, see [Sonatype's documentation for using Maven to publish relea
 
 #### 5.0.1
 *  Upgrade library versions
+
+#### 5.0.2
+*  Upgrade library versions
+* Upgrade to junit 5
+* Make AccessException subclass of RuntimeException.
+
+#### 5.0.3
+*  Upgrade library versions
+* Fix up toString for access
+* Fix up toString for access. Add a bunch of features to the ToString class
+
+#### 5.0.4
+*  Upgrade library versions
+* Move response classes and ToString into bw-base module.
+* Pre-jakarta release
 
