@@ -9,7 +9,7 @@
 
 	<artifactId>bw-access</artifactId>
 
-	<version>5.0.4</version>
+	<version>6.0.0-SNAPSHOT</version>
 	<name>Bedework: DAV access control support</name>
   <description>This project provides access control as defined by WebDAV and CalDAV</description>
   <url>https://github.com/Bedework/bw-access</url>
