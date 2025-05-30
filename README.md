@@ -6,80 +6,31 @@ This project provides a number of access control classes and methods for
 These classes implement access control as described in the WebDAV and
  CalDAV standards.
 
-### Requirements
+* RFC4791 - CalDAV access
+* RFC4918 -  HTTP Extensions for Web Distributed Authoring and Versioning (WebDAV)
+* RFC 6638 - Scheduling Extensions to CalDAV
 
-1. JDK 17
+## Requirements
+
+1. JDK 21
 2. Maven 3
 
-### Building Locally
+## Using this project
+Add the artifact(s) as a dependency to your project:
+```
+      <dependency>
+        <groupId>org.bedework</groupId>
+        <artifactId>bw-access</artifactId>
+        <version>${bw-access.version}</version>
+      </dependency>
+```
 
-> mvn clean install
+## Reporting Issues
+Please report issues via the github issues tab at
+> https://github.com/Bedework/bw-access/issues
 
-### Releasing
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Releases of this fork are published to Maven Central via Sonatype.
-
-To create a release, you must have:
-
-1. Permissions to publish to the `org.bedework` groupId.
-2. `gpg` installed with a published key (release artifacts are signed).
-
-To perform a new release:
-
-> mvn -P bedework-dev release:clean release:prepare
-
-When prompted, select the desired version; accept the defaults for scm tag and next development version.
-When the build completes, and the changes are committed and pushed successfully, execute:
-
-> mvn -P bedework-dev release:perform
-
-For full details, see [Sonatype's documentation for using Maven to publish releases](http://central.sonatype.org/pages/apache-maven.html).
-
-## Release Notes
-### 4.0.3
-* Update library versions
-
-#### 4.0.4
-* Update library versions
-* Use bw-util-logging.
-
-#### 4.0.5
-* Update library versions
-
-#### 4.0.6
-* Update library versions
-
-#### 4.0.7
-* Update library versions
-
-#### 4.0.8
-* Update library versions
-
-#### 4.0.9
-* Update library versions
-
-#### 4.0.10
-* Update library versions
-
-#### 5.0.0
-* Use bedework-parent for builds
-*  Upgrade library versions
-
-#### 5.0.1
-*  Upgrade library versions
-
-#### 5.0.2
-*  Upgrade library versions
-* Upgrade to junit 5
-* Make AccessException subclass of RuntimeException.
-
-#### 5.0.3
-*  Upgrade library versions
-* Fix up toString for access
-* Fix up toString for access. Add a bunch of features to the ToString class
-
-#### 5.0.4
-*  Upgrade library versions
-* Move response classes and ToString into bw-base module.
-* Pre-jakarta release
-
+## Security - Vulnerability reporting
+See [SECURITY.md](SECURITY.md).
