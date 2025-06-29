@@ -2,7 +2,9 @@
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased (6.0.0-SNAPSHOT)
+## Unreleased (6.1.0-SNAPSHOT)
+
+## [6.0.0-SNAPSHOT] - 2025-06-28
 * First jakarta release
 
 ## [5.0.3] - 2024-10-21

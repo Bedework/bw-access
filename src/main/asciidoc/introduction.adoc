@@ -1,0 +1,11 @@
+[[access]]
+== DAV ACL support
+This project provides a number of access control classes and methods for
+https://www.apereo.org/projects/bedework[Bedework].
+
+These classes implement access control as described in the WebDAV and
+CalDAV standards.
+
+* RFC4791 - CalDAV access
+* RFC4918 -  HTTP Extensions for Web Distributed Authoring and Versioning (WebDAV)
+* RFC 6638 - Scheduling Extensions to CalDAV

@@ -1,4 +1,4 @@
-## bw-access [![Build Status](https://travis-ci.org/Bedework/bw-access.svg)](https://travis-ci.org/Bedework/bw-access)
+## bw-access 
 
 This project provides a number of access control classes and methods for
 [Bedework](https://www.apereo.org/projects/bedework).
