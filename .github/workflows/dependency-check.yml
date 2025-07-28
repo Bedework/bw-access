@@ -68,8 +68,8 @@ jobs:
       - name: Copy to docs and push changes
         id: deploy
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config --local user.email "github-actions@users.noreply.github.com"
+          git config --local user.name "github-actions"
           git pull
           cp -r ./target/reports docs/
           cp -r ./target/reports src/main/asciidoc/
