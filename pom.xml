@@ -9,7 +9,7 @@
 
 	<artifactId>bw-access</artifactId>
 
-	<version>6.1.0</version>
+	<version>6.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Bedework: access control support</name>
   <description>This project provides access control as defined by WebDAV and CalDAV</description>
