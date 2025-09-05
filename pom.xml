@@ -4,13 +4,14 @@
   <parent>
     <groupId>org.bedework</groupId>
     <artifactId>bedework-parent</artifactId>
-    <version>214</version>
+    <version>235</version>
   </parent>
 
 	<artifactId>bw-access</artifactId>
 
 	<version>6.1.0-SNAPSHOT</version>
-	<name>Bedework: DAV access control support</name>
+  <packaging>pom</packaging>
+  <name>Bedework: DAV access control support</name>
   <description>This project provides access control as defined by WebDAV and CalDAV</description>
   <url>https://github.com/Bedework/bw-access</url>
 
@@ -63,38 +64,7 @@
     </dependency>
 	</dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <groupId>org.apache.maven.plugins</groupId>
-
-        <executions>
-          <execution>
-            <id>copy-generated-asciidoc</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.basedir}/docs/</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${project.build.directory}/generated-docs</directory>
-                  <filtering>false</filtering>
-                  <includes>
-                    <include>index.html</include>
-                    <include>asciidoctor.css</include>
-                    <include>tocbot*/*</include>
-                    <include>docinfo/*</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-    </plugins>
-  </build>
+  <modules>
+    <module>bw-access-asciidocs</module>
+  </modules>
 </project>

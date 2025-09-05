@@ -7,9 +7,10 @@ Virtually every release involves updating any dependencies. If there are no non-
 Only major change summaries are shown below. Read the git log for details.
 
 ## Unreleased (6.1.0-SNAPSHOT)
+- Restructure to make asciidocs a module. No code changes.
 
 ## [6.0.0] - 2025-06-28
-* First jakarta release
+- First jakarta release
 
 ## [5.0.3] - 2024-10-21
 
