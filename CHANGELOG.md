@@ -7,7 +7,10 @@ Virtually every release involves updating any dependencies. If there are no non-
 Only major change summaries are shown below. Read the git log for details.
 
 ## Unreleased (6.1.0-SNAPSHOT)
+
+### Changed
 - Restructure to make asciidocs a module. No code changes.
+- rename bw-access to bw-dav-access and make it another module in bw-access.
 
 ## [6.0.0] - 2025-06-28
 - First jakarta release

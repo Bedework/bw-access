@@ -11,7 +11,7 @@
 
 	<version>6.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>Bedework: DAV access control support</name>
+  <name>Bedework: access control support</name>
   <description>This project provides access control as defined by WebDAV and CalDAV</description>
   <url>https://github.com/Bedework/bw-access</url>
 
@@ -22,49 +22,8 @@
     <tag>HEAD</tag>
   </scm>
 
-	<dependencies>
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-base</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-caching</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-logging</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-misc</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.bedework</groupId>
-      <artifactId>bw-util-xml</artifactId>
-    </dependency>
-
-		<dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-    </dependency>
-	</dependencies>
-
   <modules>
     <module>bw-access-asciidocs</module>
+    <module>bw-dav-access</module>
   </modules>
 </project>
