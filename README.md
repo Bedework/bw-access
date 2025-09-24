@@ -20,8 +20,7 @@ Add the artifact(s) as a dependency to your project:
 ```
       <dependency>
         <groupId>org.bedework</groupId>
-        <artifactId>bw-access</artifactId>
-        <version>${bw-access.version}</version>
+        <artifactId>bw-dav-access</artifactId>
       </dependency>
 ```
 
