@@ -165,12 +165,12 @@ public class Access implements Serializable {
      * @param whoType - from WhoDefs
      * @return String href
      */
-    public String makeHref(String id, int whoType);
+    String makeHref(String id, int whoType);
   }
 
   /** Get the access statistics
    *
-   * @return String value for default access
+   * @return Collection of access stats
    */
   public static Collection<AccessStatsEntry> getStatistics() {
     return Acl.getStatistics();
@@ -230,7 +230,7 @@ public class Access implements Serializable {
    * access</li>
    *
    * @param cb       callback
-   * @param who      Acl.Principal defining who is trying to get access
+   * @param who      Principal defining who is trying to get access
    * @param owner    owner of object
    * @param how      Privilege set definign desired access
    * @param aclString String defining current acls for object
@@ -244,9 +244,10 @@ public class Access implements Serializable {
                                       final Privilege[] how,
                                       final String aclString,
                                       final PrivilegeSet filter) {
-    return EvaluatedAccessCache.evaluateAccess(cb, who, owner, how,
-                                               aclString.toCharArray(),
-                                               filter);
+    return EvaluatedAccessCache.evaluateAccess(
+            cb, who, owner, how,
+            aclString.toCharArray(),
+            filter);
   }
 
   /** convenience method
@@ -266,9 +267,10 @@ public class Access implements Serializable {
                                       final Privilege[] how,
                                       final char[] aclChars,
                                       final PrivilegeSet filter) {
-    return EvaluatedAccessCache.evaluateAccess(cb, who, owner, how,
-                                               aclChars,
-                                               filter);
+    return EvaluatedAccessCache.evaluateAccess(
+            cb, who, owner, how,
+            aclChars,
+            filter);
   }
 
   /** convenience method - check for read access
@@ -286,9 +288,10 @@ public class Access implements Serializable {
                                  final AccessPrincipal owner,
                                  final char[] aclChars,
                                  final PrivilegeSet filter) {
-    return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
-                                               privSetRead, aclChars,
-                                               filter);
+    return EvaluatedAccessCache.evaluateAccess(
+            cb, who, owner,
+            privSetRead, aclChars,
+            filter);
   }
 
   /** convenience method - check for read write access
@@ -306,9 +309,10 @@ public class Access implements Serializable {
                                       final AccessPrincipal owner,
                                       final char[] aclChars,
                                       final PrivilegeSet filter) {
-    return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
-                                               privSetReadWrite, aclChars,
-                                               filter);
+    return EvaluatedAccessCache.evaluateAccess(
+            cb, who, owner,
+            privSetReadWrite, aclChars,
+            filter);
   }
 
   /** convenience method - check for any access
@@ -326,8 +330,9 @@ public class Access implements Serializable {
                                 final AccessPrincipal owner,
                                 final char[] aclChars,
                                 final PrivilegeSet filter) {
-    return EvaluatedAccessCache.evaluateAccess(cb, who, owner, privSetAny, aclChars,
-                                               filter);
+    return EvaluatedAccessCache.evaluateAccess(
+            cb, who, owner, privSetAny, aclChars,
+            filter);
   }
 
   /** convenience method - check for given access
@@ -347,9 +352,10 @@ public class Access implements Serializable {
                                       final int priv,
                                       final char[] aclChars,
                                       final PrivilegeSet filter) {
-    return EvaluatedAccessCache.evaluateAccess(cb, who, owner,
-                                               new Privilege[]{Privileges.makePriv(priv)},
-                                               aclChars, filter);
+    return EvaluatedAccessCache.evaluateAccess(
+            cb, who, owner,
+            new Privilege[]{Privileges.makePriv(priv)},
+            aclChars, filter);
   }
 }
 
