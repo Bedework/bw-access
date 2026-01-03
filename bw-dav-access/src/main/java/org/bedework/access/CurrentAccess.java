@@ -25,7 +25,7 @@ public class CurrentAccess implements Serializable,
 
   PrivilegeSet privileges = null;
 
-  /** Was it succesful */
+  /** Was it successful */
   boolean accessAllowed;
 
   /**
@@ -46,6 +46,11 @@ public class CurrentAccess implements Serializable,
    */
   public CurrentAccess(final boolean accessAllowed) {
     this.accessAllowed = accessAllowed;
+  }
+
+  CurrentAccess(final Acl acl, final char[] aclChars) {
+    this.acl = acl;
+    this.aclChars = aclChars;
   }
 
   /** The Acl used to evaluate the access. We should not necessarily
@@ -112,16 +117,15 @@ public class CurrentAccess implements Serializable,
 
   @Override
   public boolean equals(final Object o) {
-    return compareTo((CurrentAccess)o) == 0;
+    return (o instanceof CurrentAccess) &&
+            compareTo((CurrentAccess)o) == 0;
   }
 
   @Override
   public String toString() {
-    final ToString ts = new ToString(this);
-    ts.append("acl", acl);
-
-    ts.append("accessAllowed", accessAllowed);
-
-    return ts.toString();
+    return new ToString(this)
+            .append("acl", acl)
+            .append("accessAllowed", accessAllowed)
+            .toString();
   }
 }

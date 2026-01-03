@@ -293,25 +293,27 @@ public class EvaluatedAccessCache implements Serializable {
    * @param filter    if not null specifies maximum access
    * @return CurrentAccess   access + allowed/disallowed
    */
-  public static CurrentAccess evaluateAccess(final Access.AccessCb cb,
-                                             final AccessPrincipal who,
-                                             final AccessPrincipal owner,
-                                             final Privilege[] how,
-                                             final char[] aclChars,
-                                             final PrivilegeSet filter) {
+  public static CurrentAccess evaluateAccess(
+          final Access.AccessCb cb,
+          final AccessPrincipal who,
+          final AccessPrincipal owner,
+          final Privilege[] how,
+          final char[] aclChars,
+          final PrivilegeSet filter) {
     final String aclString = new String(aclChars);
     final PrivilegeSet howPriv = PrivilegeSet.makePrivilegeSet(how);
 
-    CurrentAccess ca = get(owner.getPrincipalRef(),
+    final var cacheCa = get(owner.getPrincipalRef(),
                            who.getPrincipalRef(),
                            howPriv, filter,
                            aclString);
 
-    if (ca != null) {
-      return ca;
+    if (cacheCa != null) {
+      return cacheCa;
     }
 
-    ca = evaluateAccessInt(cb, who, owner, how, aclChars, filter);
+    final var ca = evaluateAccessInt(cb, who, owner,
+                                     how, aclChars, filter);
 
     put(owner.getPrincipalRef(),
         who.getPrincipalRef(),
@@ -355,21 +357,13 @@ public class EvaluatedAccessCache implements Serializable {
           final Privilege[] how,
           final char[] aclChars,
           final PrivilegeSet filter) {
+    final var authenticated = !who.getUnauthenticated();
+    final var acl = decode(aclChars);
+    final var ca = new CurrentAccess(acl, aclChars);
+    final var isOwner = authenticated && who.equals(owner);
+    final var debugsb = new DebugBuff();
+
     evaluations.count++;
-
-    final boolean authenticated = !who.getUnauthenticated();
-    boolean isOwner = false;
-    final CurrentAccess ca = new CurrentAccess();
-
-    final Acl acl = decode(aclChars);
-    ca.acl = acl;
-    ca.aclChars = aclChars;
-
-    if (authenticated) {
-      isOwner = who.equals(owner);
-    }
-
-    final DebugBuff debugsb = new DebugBuff();
 
     if (logger.debug()) {
       if (aclChars == null) {
@@ -396,12 +390,14 @@ public class EvaluatedAccessCache implements Serializable {
 
     getPrivileges: {
       if (!authenticated) {
-        ca.privileges = Ace.findMergedPrivilege(acl, cb, null,
-                                                Ace.whoTypeUnauthenticated);
+        ca.privileges = Ace.findMergedPrivilege(
+                acl, cb, null,
+                Ace.whoTypeUnauthenticated);
 
         if (ca.privileges == null) {
           // All might be available
-          ca.privileges = Ace.findMergedPrivilege(acl, cb, null, Ace.whoTypeAll);
+          ca.privileges = Ace.findMergedPrivilege(
+                  acl, cb, null, Ace.whoTypeAll);
         }
 
         if (ca.privileges != null) {
